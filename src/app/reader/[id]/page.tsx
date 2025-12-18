@@ -1,0 +1,281 @@
+"use client"
+
+import { useState, useEffect, useCallback } from "react"
+import { ComicViewer } from "@/components/reader/comic-viewer"
+import { ReaderControls } from "@/components/reader/reader-controls"
+import { SettingsPanel } from "@/components/reader/settings-panel"
+import { QuickNoteButton } from "@/components/reader/quick-note-button"
+import { getComic, getPage, updateReadingProgress, saveBookmark, getBookmarks } from "@/lib/storage"
+import { renderPdfPage, SUPPORTED_FORMATS } from "@/lib/comic-parser"
+import type { Comic, Bookmark } from "@/lib/types"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Upload } from "lucide-react"
+import { AttachFileDialog } from "@/components/library/attach-file-dialog"
+
+export default function ReaderPage({ params }: { params: { id: string } }) {
+  const [comic, setComic] = useState<Comic | null>(null)
+  const [pageUrls, setPageUrls] = useState<string[]>([])
+  const [currentPage, setCurrentPage] = useState(0)
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [controlsVisible, setControlsVisible] = useState(true)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [attachDialogOpen, setAttachDialogOpen] = useState(false)
+  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null)
+  const [pageLoadingIndex, setPageLoadingIndex] = useState<number | null>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    loadComic()
+  }, [params.id])
+
+  useEffect(() => {
+    if (!comic) return
+    loadPages()
+    loadBookmarks()
+  }, [comic])
+
+  useEffect(() => {
+    if (!comic) return
+    const timer = setTimeout(() => {
+      updateReadingProgress(comic.id, currentPage)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [currentPage, comic])
+
+  // Auto-hide controls
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+    if (controlsVisible) {
+      timeout = setTimeout(() => {
+        setControlsVisible(false)
+      }, 3000)
+    }
+    return () => clearTimeout(timeout)
+  }, [controlsVisible])
+
+  // Show controls on interaction
+  useEffect(() => {
+    const handleInteraction = () => setControlsVisible(true)
+    window.addEventListener("mousemove", handleInteraction)
+    window.addEventListener("touchstart", handleInteraction)
+    return () => {
+      window.removeEventListener("mousemove", handleInteraction)
+      window.removeEventListener("touchstart", handleInteraction)
+    }
+  }, [])
+
+  async function loadComic() {
+    try {
+      const loadedComic = await getComic(params.id)
+      if (!loadedComic) {
+        toast.error("Comic not found", {
+          description: "This comic could not be loaded",
+        })
+        router.push("/")
+        return
+      }
+      setComic(loadedComic)
+      setCurrentPage(loadedComic.currentPage)
+    } catch (error) {
+      console.error("[v0] Error loading comic:", error)
+      toast.error("Failed to load comic")
+      router.push("/")
+    }
+  }
+
+  async function loadPages() {
+    if (!comic) return
+
+    if (!comic.hasFile || !comic.totalPages) {
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      // Check if this is a native PDF - load PDF data and render on-demand
+      if (comic.pdfRenderMode === "native") {
+        const pdfBlob = await getPage(comic.id, -1) // PDF data stored at index -1
+        if (pdfBlob) {
+          const arrayBuffer = await pdfBlob.arrayBuffer()
+          setPdfData(arrayBuffer)
+          // Initialize with empty URLs array, will render on demand
+          setPageUrls(new Array(comic.totalPages).fill(""))
+        }
+      } else {
+        // Image-based mode - load all pages
+        const urls: string[] = []
+        for (let i = 0; i < comic.totalPages; i++) {
+          const blob = await getPage(comic.id, i)
+          if (blob) {
+            const url = URL.createObjectURL(blob)
+            urls.push(url)
+          }
+        }
+        setPageUrls(urls)
+      }
+    } catch (error) {
+      console.error("[v0] Error loading pages:", error)
+      toast.error("Failed to load comic pages")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Render PDF page on-demand for native PDF mode
+  async function renderPdfPageOnDemand(pageIndex: number) {
+    if (!pdfData || pageUrls[pageIndex]) return pageUrls[pageIndex]
+
+    setPageLoadingIndex(pageIndex)
+    try {
+      const blob = await renderPdfPage(pdfData, pageIndex + 1) // PDF pages are 1-indexed
+      const url = URL.createObjectURL(blob)
+      setPageUrls((prev) => {
+        const newUrls = [...prev]
+        newUrls[pageIndex] = url
+        return newUrls
+      })
+      return url
+    } catch (error) {
+      console.error(`[reader] Error rendering PDF page ${pageIndex}:`, error)
+      return ""
+    } finally {
+      setPageLoadingIndex(null)
+    }
+  }
+
+  // Pre-render current and adjacent pages for native PDF
+  useEffect(() => {
+    if (!pdfData || !comic?.totalPages) return
+
+    const totalPages = comic.totalPages
+    const pagesToRender = [
+      currentPage,
+      currentPage + 1,
+      currentPage - 1,
+    ].filter((i) => i >= 0 && i < totalPages && !pageUrls[i])
+
+    pagesToRender.forEach((i) => renderPdfPageOnDemand(i))
+  }, [currentPage, pdfData, comic?.totalPages])
+
+  async function loadBookmarks() {
+    if (!comic) return
+    try {
+      const loaded = await getBookmarks(comic.id)
+      setBookmarks(loaded)
+    } catch (error) {
+      console.error("[v0] Error loading bookmarks:", error)
+    }
+  }
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page)
+  }, [])
+
+  const handleBookmark = useCallback(async () => {
+    if (!comic) return
+    try {
+      const bookmarkId = crypto.randomUUID()
+      await saveBookmark({
+        id: bookmarkId,
+        comicId: comic.id,
+        pageNumber: currentPage,
+        createdAt: new Date(),
+        thumbnailUrl: pageUrls[currentPage],
+      })
+      await loadBookmarks()
+      toast.success(`Page ${currentPage + 1} bookmarked`)
+    } catch (error) {
+      console.error("[v0] Error saving bookmark:", error)
+      toast.error("Failed to save bookmark")
+    }
+  }, [comic, currentPage, pageUrls])
+
+  if (isLoading || !comic) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="mt-4 text-sm text-muted-foreground">Loading comic...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!comic.hasFile || !comic.totalPages) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="max-w-md text-center">
+          <div className="rounded-full bg-muted p-6 mx-auto w-fit">
+            <Upload className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <h2 className="mt-6 text-2xl font-bold text-foreground">{comic.title}</h2>
+          {comic.series && (
+            <p className="mt-2 text-muted-foreground">
+              {comic.series}
+              {comic.issue && ` #${comic.issue}`}
+            </p>
+          )}
+          <p className="mt-4 text-sm text-muted-foreground">
+            This comic doesn't have a file attached yet. Upload a {SUPPORTED_FORMATS.description} file to start reading.
+          </p>
+          <div className="mt-6 flex gap-3 justify-center">
+            <Button variant="outline" onClick={() => router.push("/")}>
+              Back to Library
+            </Button>
+            <Button onClick={() => setAttachDialogOpen(true)} className="gap-2">
+              <Upload className="h-4 w-4" />
+              Attach File
+            </Button>
+          </div>
+        </div>
+        <AttachFileDialog
+          comicId={comic.id}
+          open={attachDialogOpen}
+          onOpenChange={setAttachDialogOpen}
+          onFileAttached={() => {
+            loadComic()
+          }}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 overflow-hidden bg-background">
+      <div
+        className={`fixed left-0 right-0 top-0 z-20 border-b border-border bg-background/95 backdrop-blur transition-transform duration-300 supports-[backdrop-filter]:bg-background/80 ${
+          controlsVisible ? "translate-y-0" : "-translate-y-full"
+        }`}
+      >
+        <ReaderControls
+          currentPage={currentPage}
+          totalPages={comic.totalPages}
+          onPageChange={handlePageChange}
+          onSettingsClick={() => setSettingsOpen(true)}
+          onBookmarkClick={handleBookmark}
+          title={comic.title}
+          isVisible={controlsVisible}
+          comicId={comic.id}
+          pages={pageUrls}
+          bookmarks={bookmarks}
+          onRefreshBookmarks={loadBookmarks}
+        />
+      </div>
+
+      {controlsVisible && (
+        <div className="fixed bottom-24 right-4 z-30 md:bottom-28">
+          <QuickNoteButton comicId={comic.id} currentPage={currentPage} />
+        </div>
+      )}
+
+      <main className="h-full w-full">
+        <ComicViewer pages={pageUrls} currentPage={currentPage} onPageChange={handlePageChange} />
+      </main>
+
+      <SettingsPanel open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </div>
+  )
+}
