@@ -1,0 +1,31 @@
+id: "batman-main"
+name: "Batman"
+slug: "batman"
+publisher: "dc-comics"
+startYear: 1940
+currentVolume: 3
+volumeStartYear: 2016
+status: "ongoing"
+genres:
+  - "superhero"
+  - "crime"
+  - "detective"
+description: |
+  The Dark Knight protects Gotham City from its criminal underworld.
+  Following the events of the Failsafe arc, Batman faces new threats
+  while dealing with the fallout of his choices.
+coverUrl: "/covers/series/batman.jpg"
+currentWriters:
+  - "Chip Zdarsky"
+currentArtists:
+  - "Jorge Jiménez"
+  - "Mike Hawthorne"
+releaseSchedule: "monthly"
+typicalReleaseDay: "wednesday"
+relatedSeries:
+  - "detective-comics"
+  - "batman-and-robin"
+  - "batman-dark-age"
+tags:
+  - "bat-family"
+  - "gotham"

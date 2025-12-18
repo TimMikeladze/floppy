@@ -1,0 +1,58 @@
+FLOPPY CSV DATA SOURCE FORMAT SPECIFICATION
+==========================================
+
+PURPOSE
+-------
+Import comic book series into Floppy reader from a flat CSV file.
+Each row represents one page of a comic. Pages are grouped by series + issue.
+
+REQUIRED COLUMNS
+----------------
+series_title   - The name of the comic series (e.g., "Batman", "Spider-Man")
+issue_number   - Issue number within the series (e.g., "1", "2", "Annual 1")
+page_number    - Page number within the issue (integer, 1-based)
+image_url      - Direct URL to the page image (must be CORS-accessible)
+
+OPTIONAL COLUMNS
+----------------
+series_slug    - URL-friendly identifier for series (auto-generated from title if omitted)
+issue_title    - Display title for the issue (defaults to "{series_title} #{issue_number}")
+cover_url      - URL to cover image (defaults to first page's image_url)
+publisher      - Publisher name (e.g., "DC Comics", "Marvel")
+release_date   - Release date string (any format, stored as-is)
+author         - Author/writer name
+tags           - Pipe-separated tags (e.g., "superhero|action|batman")
+
+EXAMPLE CSV
+-----------
+series_title,issue_number,page_number,image_url,cover_url,publisher,tags
+Batman,1,1,https://example.com/batman/1/001.jpg,https://example.com/batman/1/cover.jpg,DC Comics,superhero|batman
+Batman,1,2,https://example.com/batman/1/002.jpg,,,
+Batman,1,3,https://example.com/batman/1/003.jpg,,,
+Batman,2,1,https://example.com/batman/2/001.jpg,https://example.com/batman/2/cover.jpg,DC Comics,superhero|batman
+Batman,2,2,https://example.com/batman/2/002.jpg,,,
+Spider-Man,1,1,https://example.com/spiderman/1/001.jpg,,Marvel,superhero|spider-man
+Spider-Man,1,2,https://example.com/spiderman/1/002.jpg,,,
+
+PROCESSING BEHAVIOR
+-------------------
+1. Rows are grouped by unique (series_title, issue_number) combination
+2. Each group becomes one Comic entry in the library
+3. Pages within an issue are sorted by page_number
+4. If cover_url is not specified, first page's image_url is used as cover
+5. Metadata (publisher, author, tags) only needs to appear on first row of each issue
+6. Empty optional fields are ignored
+
+IMAGE URL REQUIREMENTS
+----------------------
+- Must be direct image URLs (not HTML pages)
+- Must be CORS-accessible (allow cross-origin requests)
+- Supported formats: JPEG, PNG, WebP, GIF
+- Images are fetched anonymously (no cookies, no referrer leaked)
+
+NOTES
+-----
+- CSV must have a header row with column names
+- Column names are case-insensitive and spaces become underscores
+- Quoted fields are supported (for values containing commas)
+- UTF-8 encoding expected

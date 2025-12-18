@@ -1,0 +1,29 @@
+id: "saga-2026-67"
+slug: "saga-67"
+title: "Saga #67"
+series: "saga"
+issueNumber: "67"
+releaseDate: "2026-01-29"
+coverUrl: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=600&fit=crop"
+publisher: "image"
+writers:
+  - "Brian K. Vaughan"
+artists:
+  - "Fiona Staples"
+description: |
+  The family's journey takes them to the edge of known space as
+  Hazel faces her most difficult decision yet. The war continues
+  to reshape the galaxy, and no one is safe from its consequences.
+price: "$3.99"
+format: "single-issue"
+genres:
+  - "sci-fi"
+  - "fantasy"
+  - "drama"
+pageCount: 24
+printRun: 1
+status: "upcoming"
+ageRating: "Mature"
+tags:
+  - "space-opera"
+  - "family"

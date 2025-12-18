@@ -1,0 +1,60 @@
+"use client";
+
+import { Heart } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { useIsPwa } from "@/hooks/use-is-pwa";
+import { SupportDialog } from "./support-dialog";
+
+export function AppFooter() {
+  const pathname = usePathname();
+  const [supportOpen, setSupportOpen] = useState(false);
+  const isPwa = useIsPwa();
+
+  // Hide footer on reader pages, landing page, about page, or in PWA mode
+  if (
+    pathname?.startsWith("/reader") ||
+    pathname === "/" ||
+    pathname === "/about" ||
+    isPwa
+  ) {
+    return null;
+  }
+
+  return (
+    <>
+      <footer className="fixed bottom-0 left-0 right-0 z-40 safe-bottom safe-x border-t border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto w-full max-w-screen-2xl px-3 sm:px-4 md:px-6 py-2.5">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            {/* Left side - Logo and branding */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center">
+                <div className="w-3 h-3 rounded-full bg-primary/40" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium text-foreground">floppy.sh</span>
+                <span className="text-[10px] text-muted-foreground/80">
+                  the comic book app.
+                </span>
+              </div>
+            </div>
+
+            {/* Right side - Icon actions */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSupportOpen(true)}
+                className="group relative"
+                aria-label="Support"
+              >
+                <Heart className="w-4 h-4 text-pink-400/70 fill-pink-400/20 transition-all duration-200 group-hover:text-pink-500 group-hover:fill-pink-500/40 group-hover:scale-110" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
+    </>
+  );
+}

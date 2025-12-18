@@ -1,0 +1,7 @@
+defaultNewReleaseDays: 14
+defaultUpcomingDays: 28
+defaultCalendarMonths: 3
+defaultPullListReminder: 3
+enableVariantCovers: true
+enablePriceAlerts: false
+releaseDay: "wednesday"
