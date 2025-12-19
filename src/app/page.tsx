@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { LibraryHeader } from "@/components/library/library-header"
 import { ComicGrid } from "@/components/library/comic-grid"
 import { UploadDialog } from "@/components/library/upload-dialog"
-import { AddComicDialog } from "@/components/library/add-comic-dialog"
 import { ListManager } from "@/components/library/list-manager"
 import { ComicDetailSheet } from "@/components/library/comic-detail-sheet"
 import { parseComicFile, generateCoverImage, SUPPORTED_FORMATS, detectFormat } from "@/lib/comic-parser"
@@ -342,9 +341,6 @@ export default function HomePage() {
 
       {/* Upload Dialog */}
       <UploadDialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen} onFilesSelected={handleFilesSelected} />
-
-      {/* Add Comic Dialog */}
-      <AddComicDialog onComicAdded={loadComics} />
 
       {/* Lists Management Dialog */}
       <Dialog open={listsSheetOpen} onOpenChange={setListsSheetOpen}>
