@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { BookmarkIcon, Trash2, StickyNote } from "lucide-react"
 import type { Bookmark } from "@/lib/types"
 import { getBookmarks, deleteBookmark } from "@/lib/storage"
@@ -75,17 +75,17 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
   )
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button variant="ghost" size="icon">
           <BookmarkIcon className="h-5 w-5" />
           <span className="sr-only">View bookmarks</span>
         </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Bookmarks</SheetTitle>
-        </SheetHeader>
+      </DialogTrigger>
+      <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Bookmarks</DialogTitle>
+        </DialogHeader>
 
         <div className="mt-4">
           <Input
@@ -96,7 +96,7 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
           />
         </div>
 
-        <ScrollArea className="mt-4 h-[calc(100vh-12rem)]">
+        <ScrollArea className="flex-1 -mx-6 px-6">
           {filteredBookmarks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="rounded-full bg-muted p-4">
@@ -220,7 +220,7 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
             </div>
           )}
         </ScrollArea>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }

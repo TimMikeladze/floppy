@@ -1,6 +1,6 @@
 "use client"
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -58,13 +58,13 @@ export function ComicDetailSheet({ comic, open, onOpenChange, onDelete, onUpdate
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl px-0">
-          <ScrollArea className="h-full">
-            <div className="px-6">
-              <SheetHeader className="text-left pb-4">
-                <SheetTitle className="sr-only">{comic.title}</SheetTitle>
-              </SheetHeader>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col p-0">
+          <ScrollArea className="flex-1">
+            <div className="p-6">
+              <DialogHeader className="text-left pb-4">
+                <DialogTitle className="sr-only">{comic.title}</DialogTitle>
+              </DialogHeader>
 
               {/* Hero section */}
               <div className="flex gap-5 mb-6">
@@ -200,12 +200,10 @@ export function ComicDetailSheet({ comic, open, onOpenChange, onDelete, onUpdate
                 </>
               )}
 
-              {/* Bottom padding for safe area */}
-              <div className="h-8" />
             </div>
           </ScrollArea>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       <AttachFileDialog
         comicId={comic.id}

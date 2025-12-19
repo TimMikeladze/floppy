@@ -8,11 +8,10 @@ import { AddComicDialog } from "@/components/library/add-comic-dialog"
 import { ListManager } from "@/components/library/list-manager"
 import { ComicDetailSheet } from "@/components/library/comic-detail-sheet"
 import { parseComicFile, generateCoverImage, SUPPORTED_FORMATS, detectFormat } from "@/lib/comic-parser"
-import { getAllComics, saveComic, deleteComic, savePage, getAllLists, initializeDefaultLists } from "@/lib/storage"
-import { loadMockComics } from "@/lib/mock-data"
+import { getAllComics, saveComic, deleteComic, savePage, getAllLists } from "@/lib/storage"
 import type { Comic, ComicList } from "@/lib/types"
 import { toast } from "sonner"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 type FilterType = "all" | "reading" | "completed" | "want"
@@ -26,7 +25,6 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState<"title" | "recent" | "progress">("recent")
   const [isLoading, setIsLoading] = useState(true)
-  const [isInitializingMocks, setIsInitializingMocks] = useState(false)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [addComicDialogOpen, setAddComicDialogOpen] = useState(false)
   const [listsSheetOpen, setListsSheetOpen] = useState(false)
@@ -45,26 +43,12 @@ export default function HomePage() {
   async function loadComics() {
     try {
       const allComics = await getAllComics()
-
-      if (allComics.length === 0 && !isInitializingMocks) {
-        setIsInitializingMocks(true)
-        toast.info("Loading sample comics...")
-
-        await initializeDefaultLists()
-        await loadMockComics()
-        const updatedComics = await getAllComics()
-        setComics(updatedComics)
-
-        toast.success("Sample comics loaded")
-      } else {
-        setComics(allComics)
-      }
+      setComics(allComics)
     } catch (error) {
       console.error("Error loading comics:", error)
       toast.error("Failed to load comics")
     } finally {
       setIsLoading(false)
-      setIsInitializingMocks(false)
     }
   }
 
@@ -255,7 +239,7 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
       <LibraryHeader
         onUpload={handleUploadClick}
         onAddComic={() => setAddComicDialogOpen(true)}
@@ -267,9 +251,15 @@ export default function HomePage() {
       />
 
       {/* Filter Pills */}
-      <div className="sticky top-14 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <div className="sticky top-14 z-30 border-b" style={{
+        background: 'var(--glass-bg)',
+        backdropFilter: 'blur(var(--glass-blur))',
+        WebkitBackdropFilter: 'blur(var(--glass-blur))',
+        borderColor: 'var(--glass-border)',
+        boxShadow: '0 1px 3px var(--glass-shadow)'
+      }}>
         <ScrollArea className="w-full">
-          <div className="flex gap-2 px-4 py-3">
+          <div className="flex gap-2 px-3 py-3 sm:px-4 md:px-6">
             {filters.map((filter) => (
               <button
                 key={filter.key}
@@ -311,12 +301,23 @@ export default function HomePage() {
       </div>
 
       {/* Main Content */}
-      <main className="px-4 py-5 sm:px-6">
+      <main className="px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
         {isLoading && comics.length === 0 ? (
           <div className="flex min-h-[60vh] items-center justify-center">
             <div className="text-center">
-              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
-              <p className="mt-4 text-sm text-muted-foreground">Loading library...</p>
+              <div
+                className="mx-auto p-6 rounded-3xl mb-4 inline-block border"
+                style={{
+                  background: 'var(--glass-bg)',
+                  backdropFilter: 'blur(var(--glass-blur))',
+                  WebkitBackdropFilter: 'blur(var(--glass-blur))',
+                  borderColor: 'var(--glass-border)',
+                  boxShadow: '0 4px 16px var(--glass-shadow)'
+                }}
+              >
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+              </div>
+              <p className="text-sm text-muted-foreground">Loading library...</p>
             </div>
           </div>
         ) : (
@@ -345,18 +346,18 @@ export default function HomePage() {
       {/* Add Comic Dialog */}
       <AddComicDialog onComicAdded={loadComics} />
 
-      {/* Lists Management Sheet */}
-      <Sheet open={listsSheetOpen} onOpenChange={setListsSheetOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Manage Lists</SheetTitle>
-            <SheetDescription>Create and organize your comic lists</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6">
+      {/* Lists Management Dialog */}
+      <Dialog open={listsSheetOpen} onOpenChange={setListsSheetOpen}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Manage Lists</DialogTitle>
+            <DialogDescription>Create and organize your comic lists</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="flex-1 -mx-6 px-6">
             <ListManager onListsChange={loadLists} />
-          </div>
-        </SheetContent>
-      </Sheet>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

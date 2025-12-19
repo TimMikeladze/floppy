@@ -39,7 +39,13 @@ export function ReaderControls({
   return (
     <>
       {/* Top bar */}
-      <div className="flex items-center gap-2 px-4 py-3">
+      <div className="flex items-center gap-2 px-4 py-3" style={{
+        background: 'var(--glass-bg)',
+        backdropFilter: 'blur(var(--glass-blur))',
+        WebkitBackdropFilter: 'blur(var(--glass-blur))',
+        borderBottom: '1px solid var(--glass-border)',
+        boxShadow: '0 1px 3px var(--glass-shadow)'
+      }}>
         <Button asChild variant="ghost" size="icon">
           <Link href="/">
             <ArrowLeft className="h-5 w-5" />
@@ -75,9 +81,16 @@ export function ReaderControls({
 
       {/* Bottom bar */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-background/95 backdrop-blur transition-transform duration-300 supports-[backdrop-filter]:bg-background/80 ${
+        className={`fixed bottom-0 left-0 right-0 z-20 border-t transition-transform duration-300 ${
           isVisible ? "translate-y-0" : "translate-y-full"
         }`}
+        style={{
+          background: 'var(--glass-bg)',
+          backdropFilter: 'blur(var(--glass-blur))',
+          WebkitBackdropFilter: 'blur(var(--glass-blur))',
+          borderColor: 'var(--glass-border)',
+          boxShadow: '0 -1px 3px var(--glass-shadow)'
+        }}
       >
         <div className="px-4 py-4">
           <div className="mx-auto flex max-w-3xl items-center gap-4">

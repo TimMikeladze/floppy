@@ -59,7 +59,13 @@ function CardContextMenu({ comic, onDelete, onAttach }: { comic: Comic; onDelete
           <Button
             variant="secondary"
             size="icon"
-            className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-lg"
+            className="h-8 w-8 rounded-full shadow-lg border-0"
+            style={{
+              background: 'var(--glass-bg)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              boxShadow: '0 2px 8px var(--glass-shadow), 0 0 0 1px var(--glass-border)'
+            }}
           >
             <MoreHorizontal className="h-4 w-4" />
             <span className="sr-only">Options</span>
@@ -115,7 +121,7 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
   const CardInner = () => (
     <>
       {/* Cover Image */}
-      <div className="relative aspect-[2/3] overflow-hidden bg-muted">
+      <div className="relative aspect-[2/3] overflow-hidden bg-muted rounded-t-2xl">
         <img
           src={comic.coverImage || "/placeholder.svg"}
           alt=""
@@ -135,8 +141,8 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
       </div>
 
       {/* Metadata */}
-      <div className="p-3 space-y-1.5">
-        <h3 className="font-medium text-sm leading-tight line-clamp-2">
+      <div className="p-3.5 space-y-2">
+        <h3 className="font-semibold text-sm leading-tight line-clamp-2">
           {comic.title}
         </h3>
 
@@ -148,7 +154,7 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
         )}
 
         {/* Progress and time */}
-        <div className="flex items-center justify-between gap-2 pt-1">
+        <div className="flex items-center justify-between gap-2 pt-0.5">
           {hasProgress ? (
             <ProgressDots current={comic.currentPage} total={comic.totalPages!} />
           ) : (
@@ -169,7 +175,7 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
 
   return (
     <>
-      <div className="comic-card group relative rounded-xl overflow-hidden bg-card">
+      <div className="comic-card group relative rounded-2xl overflow-hidden">
         {/* Context menu - outside of any interactive wrapper */}
         <CardContextMenu
           comic={comic}
@@ -190,14 +196,14 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
                   handleCardClick()
                 }
               }}
-              className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
+              className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
             >
               <CardInner />
             </div>
           ) : (
             <Link
               href={`/reader/${comic.id}`}
-              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
+              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
             >
               <CardInner />
             </Link>

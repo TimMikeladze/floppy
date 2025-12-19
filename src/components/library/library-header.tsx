@@ -53,8 +53,14 @@ export function LibraryHeader({
   }
 
   return (
-    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
-      <div className="flex items-center h-14 px-4 gap-3">
+    <header className="sticky top-0 z-40 border-b" style={{
+      background: 'var(--glass-bg)',
+      backdropFilter: 'blur(var(--glass-blur))',
+      WebkitBackdropFilter: 'blur(var(--glass-blur))',
+      borderColor: 'var(--glass-border)',
+      boxShadow: '0 1px 3px var(--glass-shadow)'
+    }}>
+      <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-3">
         {/* Logo / Title - hidden when search is expanded on mobile */}
         {!searchExpanded && (
           <h1 className="text-lg font-semibold tracking-tight">Library</h1>
@@ -71,7 +77,12 @@ export function LibraryHeader({
                   placeholder="Search comics..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="pl-9 h-10 bg-secondary/50 border-0 focus-visible:ring-1"
+                  className="pl-9 h-10 border-0 focus-visible:ring-1"
+                  style={{
+                    background: 'var(--glass-bg)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)'
+                  }}
                   autoFocus
                 />
               </div>
@@ -98,7 +109,12 @@ export function LibraryHeader({
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="w-48 lg:w-64 pl-9 h-9 bg-secondary/50 border-0 focus-visible:ring-1"
+                    className="w-48 lg:w-64 pl-9 h-9 border-0 focus-visible:ring-1"
+                    style={{
+                      background: 'var(--glass-bg)',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)'
+                    }}
                   />
                 </div>
               </div>

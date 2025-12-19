@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { StickyNote, Trash2, Plus, Edit2 } from "lucide-react"
 import type { Note } from "@/lib/types"
 import { getNotes, saveNote, deleteNote } from "@/lib/storage"
@@ -84,17 +84,17 @@ export function NotesPanel({ comicId, currentPage, onPageSelect }: NotesPanelPro
     .filter((n) => n.content.toLowerCase().includes(searchQuery.toLowerCase()))
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button variant="ghost" size="icon">
           <StickyNote className="h-5 w-5" />
           <span className="sr-only">View notes</span>
         </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Notes</SheetTitle>
-        </SheetHeader>
+      </DialogTrigger>
+      <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Notes</DialogTitle>
+        </DialogHeader>
 
         <div className="mt-4 space-y-3">
           <Button
@@ -154,7 +154,7 @@ export function NotesPanel({ comicId, currentPage, onPageSelect }: NotesPanelPro
           </div>
         )}
 
-        <ScrollArea className="mt-4 h-[calc(100vh-20rem)]">
+        <ScrollArea className="flex-1 -mx-6 px-6">
           {filteredNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="rounded-full bg-muted p-4">
@@ -246,7 +246,7 @@ export function NotesPanel({ comicId, currentPage, onPageSelect }: NotesPanelPro
             </div>
           )}
         </ScrollArea>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }

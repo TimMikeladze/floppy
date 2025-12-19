@@ -17,8 +17,17 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
   if (comics.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6">
-          <BookOpen className="w-8 h-8 text-muted-foreground" />
+        <div
+          className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 border"
+          style={{
+            background: 'var(--glass-bg)',
+            backdropFilter: 'blur(var(--glass-blur))',
+            WebkitBackdropFilter: 'blur(var(--glass-blur))',
+            borderColor: 'var(--glass-border)',
+            boxShadow: '0 4px 16px var(--glass-shadow)'
+          }}
+        >
+          <BookOpen className="w-10 h-10 text-muted-foreground" />
         </div>
         <h2 className="text-xl font-semibold mb-2">No comics yet</h2>
         <p className="text-muted-foreground text-sm max-w-xs mb-6">
@@ -36,9 +45,9 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
 
   return (
     <div
-      className="grid gap-4 sm:gap-5 lg:gap-6"
+      className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6"
       style={{
-        gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(min(140px, 100%), 1fr))",
       }}
     >
       {comics.map((comic) => (

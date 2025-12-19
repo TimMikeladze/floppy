@@ -5,7 +5,7 @@ import { useTheme } from "next-themes"
 import { Moon, Sun, Monitor, Zap, Wind, Gauge, BookOpen, Scroll } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 
@@ -24,13 +24,13 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
   }, [])
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Reading Settings</SheetTitle>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Reading Settings</DialogTitle>
+        </DialogHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="space-y-6">
           {/* Theme */}
           <div className="space-y-3">
             <Label>Theme</Label>
@@ -205,7 +205,7 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
             />
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
