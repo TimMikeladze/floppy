@@ -1,7 +1,7 @@
 import JSZip from "jszip"
-import type { ComicFormat, PdfRenderMode } from "./types"
+import type { ComicFormat } from "./types"
 import { parseCbrFile } from "./cbr-parser"
-import { parsePdfAsImages, parsePdfNative, renderPdfPage, getPdfInfo } from "./pdf-parser"
+import { parsePdfFile } from "./pdf-parser"
 
 const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"]
 
@@ -14,11 +14,10 @@ export interface ParseResult {
     fileSize: number
     format: ComicFormat
   }
-  pdfData?: ArrayBuffer // For native PDF rendering
 }
 
 /**
- * Detect file format from extension and magic bytes
+ * Detect file format from extension
  */
 export function detectFormat(file: File): ComicFormat {
   const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."))
@@ -33,32 +32,22 @@ export function detectFormat(file: File): ComicFormat {
     case ".pdf":
       return "pdf"
     default:
-      // Default to CBZ for unknown extensions
       return "cbz"
   }
 }
 
 /**
  * Parse any supported comic file format
- * Routes to format-specific parser based on file extension
  */
-export async function parseComicFile(
-  file: File,
-  options?: { pdfMode?: PdfRenderMode }
-): Promise<ParseResult> {
+export async function parseComicFile(file: File): Promise<ParseResult> {
   const format = detectFormat(file)
 
   try {
     switch (format) {
       case "cbr":
         return await parseCbrFile(file)
-
       case "pdf":
-        if (options?.pdfMode === "native") {
-          return await parsePdfNative(file)
-        }
-        return await parsePdfAsImages(file)
-
+        return await parsePdfFile(file)
       case "cbz":
       default:
         return await parseCbzFile(file)
@@ -76,7 +65,6 @@ async function parseCbzFile(file: File): Promise<ParseResult> {
   const zip = new JSZip()
   const contents = await zip.loadAsync(file)
 
-  // Get all image files and sort them
   const imageFiles = Object.keys(contents.files)
     .filter((fileName) => {
       const ext = fileName.toLowerCase().slice(fileName.lastIndexOf("."))
@@ -86,11 +74,8 @@ async function parseCbzFile(file: File): Promise<ParseResult> {
         !contents.files[fileName].dir
       )
     })
-    .sort((a, b) => {
-      return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
-    })
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }))
 
-  // Extract all images as blobs
   const pages: Blob[] = []
   for (const fileName of imageFiles) {
     const zipFile = contents.files[fileName]
@@ -124,10 +109,6 @@ export function generateCoverImage(blob: Blob): Promise<string> {
   })
 }
 
-// Re-export PDF utilities for native rendering mode
-export { renderPdfPage, getPdfInfo }
-
-// Export supported formats for UI
 export const SUPPORTED_FORMATS = {
   extensions: [".cbz", ".zip", ".cbr", ".rar", ".pdf"],
   accept: ".cbz,.zip,.cbr,.rar,.pdf",

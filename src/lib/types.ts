@@ -1,5 +1,4 @@
 export type ComicFormat = "cbz" | "cbr" | "pdf"
-export type PdfRenderMode = "image" | "native"
 
 export interface Comic {
   id: string
@@ -17,7 +16,6 @@ export interface Comic {
   publisher?: string
   releaseDate?: string
   format?: ComicFormat
-  pdfRenderMode?: PdfRenderMode
   // File handle for File System Access API - allows re-reading file from disk
   fileHandle?: FileSystemFileHandle
 }

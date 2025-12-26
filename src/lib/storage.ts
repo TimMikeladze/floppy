@@ -210,28 +210,23 @@ export function isFileSystemAccessSupported(): boolean {
 }
 
 /**
- * Load comic pages directly from a file handle instead of IndexedDB.
- * This is the preferred method when file handles are available.
+ * Load comic pages directly from a file handle.
+ * All formats (CBZ, CBR, PDF) are parsed to image blobs.
  */
 export async function loadPagesFromHandle(
   fileHandle: FileSystemFileHandle,
-  format: "cbz" | "cbr" | "pdf",
-  pdfRenderMode?: "native" | "image"
-): Promise<{ pages: Blob[]; pdfData?: ArrayBuffer } | null> {
+  format: "cbz" | "cbr" | "pdf"
+): Promise<{ pages: Blob[] } | null> {
   try {
     const file = await getFileFromHandle(fileHandle)
     if (!file) {
       return null
     }
 
-    // Dynamic import to avoid circular dependency
     const { parseComicFile } = await import("./comic-parser")
-    const result = await parseComicFile(file, { pdfMode: pdfRenderMode })
+    const result = await parseComicFile(file)
 
-    return {
-      pages: result.pages,
-      pdfData: result.pdfData,
-    }
+    return { pages: result.pages }
   } catch (error) {
     console.error("[storage] Error loading pages from handle:", error)
     return null
@@ -510,6 +505,26 @@ export async function importLibrary(file: File, options: { merge: boolean } = { 
     notes: data.notes.length,
     lists: data.lists.length,
   }
+}
+
+/**
+ * Clear all data from IndexedDB (comics, bookmarks, notes, lists).
+ * This is destructive and cannot be undone.
+ */
+export async function clearAllData(): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(
+      [COMICS_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
+      "readwrite"
+    )
+    transaction.objectStore(COMICS_STORE).clear()
+    transaction.objectStore(BOOKMARKS_STORE).clear()
+    transaction.objectStore(NOTES_STORE).clear()
+    transaction.objectStore(LISTS_STORE).clear()
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => reject(transaction.error)
+  })
 }
 
 export async function initializeDefaultLists(): Promise<void> {

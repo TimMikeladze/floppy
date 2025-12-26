@@ -24,17 +24,15 @@ export function AttachFileDialog({ comicId, open, onOpenChange, onFileAttached }
   async function processFile(file: File, handle?: FileSystemFileHandle) {
     setUploading(true)
     try {
-      const { pages, metadata, pdfData } = await parseComicFile(file)
+      const { pages, metadata } = await parseComicFile(file)
       const comic = await getComic(comicId)
 
       if (!comic) {
         throw new Error("Comic not found")
       }
 
-      // Generate cover from first page
       const coverImage = await generateCoverImage(pages[0])
 
-      // Update comic with file data - store handle for re-reading from disk
       const updatedComic = {
         ...comic,
         coverImage,
@@ -43,8 +41,7 @@ export function AttachFileDialog({ comicId, open, onOpenChange, onFileAttached }
         fileSize: metadata.fileSize,
         hasFile: true,
         format: metadata.format,
-        pdfRenderMode: pdfData ? "native" as const : undefined,
-        fileHandle: handle, // Store handle for later access
+        fileHandle: handle,
       }
 
       await saveComic(updatedComic)

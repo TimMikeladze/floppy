@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties } from "lucide-react"
+import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -11,6 +11,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useTheme } from "next-themes"
 import { useState, useEffect, useRef } from "react"
 
@@ -28,6 +38,7 @@ interface LibraryHeaderProps {
   onManageLists?: () => void
   onExport?: () => void
   onImport?: (file: File) => void
+  onClearData?: () => void
 }
 
 export function LibraryHeader({
@@ -42,10 +53,12 @@ export function LibraryHeader({
   onManageLists,
   onExport,
   onImport,
+  onClearData,
 }: LibraryHeaderProps) {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [clearDialogOpen, setClearDialogOpen] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
 
   const handleImportClick = () => {
@@ -231,6 +244,18 @@ export function LibraryHeader({
                     System
                     {mounted && theme === "system" && <span className="ml-auto text-xs">✓</span>}
                   </DropdownMenuItem>
+                  {onClearData && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => setClearDialogOpen(true)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Clear All Data
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -267,6 +292,30 @@ export function LibraryHeader({
         onChange={handleFileChange}
         className="hidden"
       />
+
+      {/* Clear data confirmation dialog */}
+      <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all your comics, bookmarks, notes, and lists. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onClearData?.()
+                setClearDialogOpen(false)
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Clear All Data
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   )
 }

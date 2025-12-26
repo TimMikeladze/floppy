@@ -7,7 +7,7 @@ import { ReaderMenu } from "@/components/reader/reader-menu"
 import { PageIndicator } from "@/components/reader/page-indicator"
 import { QuickNoteDialog } from "@/components/reader/quick-note-dialog"
 import { getComic, updateReadingProgress, saveBookmark, getBookmarks, saveNote, loadPagesFromHandle } from "@/lib/storage"
-import { renderPdfPage, SUPPORTED_FORMATS } from "@/lib/comic-parser"
+import { SUPPORTED_FORMATS } from "@/lib/comic-parser"
 import type { Comic, Bookmark } from "@/lib/types"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -26,8 +26,6 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   const [menuOpen, setMenuOpen] = useState(false)
   const [attachDialogOpen, setAttachDialogOpen] = useState(false)
   const [noteDialogOpen, setNoteDialogOpen] = useState(false)
-  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null)
-  const [pageLoadingIndex, setPageLoadingIndex] = useState<number | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -48,7 +46,6 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     return () => clearTimeout(timer)
   }, [currentPage, comic])
 
-  // Auto-hide controls after delay (but not when menu is open)
   useEffect(() => {
     if (!controlsVisible || menuOpen) return
     const timeout = setTimeout(() => {
@@ -57,7 +54,6 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     return () => clearTimeout(timeout)
   }, [controlsVisible, menuOpen])
 
-  // Toggle controls on tap (center area is handled by ComicViewer for page nav)
   const toggleControls = useCallback(() => {
     setControlsVisible((prev) => !prev)
   }, [])
@@ -75,7 +71,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       setComic(loadedComic)
       setCurrentPage(loadedComic.currentPage)
     } catch (error) {
-      console.error("[v0] Error loading comic:", error)
+      console.error("[reader] Error loading comic:", error)
       toast.error("Failed to load comic")
       router.push("/")
     }
@@ -90,20 +86,11 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     }
 
     try {
-      const result = await loadPagesFromHandle(
-        comic.fileHandle,
-        comic.format,
-        comic.pdfRenderMode
-      )
+      const result = await loadPagesFromHandle(comic.fileHandle, comic.format)
 
       if (result) {
-        if (comic.pdfRenderMode === "native" && result.pdfData) {
-          setPdfData(result.pdfData)
-          setPageUrls(new Array(comic.totalPages).fill(""))
-        } else {
-          const urls = result.pages.map((blob) => URL.createObjectURL(blob))
-          setPageUrls(urls)
-        }
+        const urls = result.pages.map((blob) => URL.createObjectURL(blob))
+        setPageUrls(urls)
       }
     } catch (error) {
       console.error("[reader] Error loading pages:", error)
@@ -113,49 +100,13 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     }
   }
 
-  // Render PDF page on-demand for native PDF mode
-  async function renderPdfPageOnDemand(pageIndex: number) {
-    if (!pdfData || pageUrls[pageIndex]) return pageUrls[pageIndex]
-
-    setPageLoadingIndex(pageIndex)
-    try {
-      const blob = await renderPdfPage(pdfData, pageIndex + 1) // PDF pages are 1-indexed
-      const url = URL.createObjectURL(blob)
-      setPageUrls((prev) => {
-        const newUrls = [...prev]
-        newUrls[pageIndex] = url
-        return newUrls
-      })
-      return url
-    } catch (error) {
-      console.error(`[reader] Error rendering PDF page ${pageIndex}:`, error)
-      return ""
-    } finally {
-      setPageLoadingIndex(null)
-    }
-  }
-
-  // Pre-render current and adjacent pages for native PDF
-  useEffect(() => {
-    if (!pdfData || !comic?.totalPages) return
-
-    const totalPages = comic.totalPages
-    const pagesToRender = [
-      currentPage,
-      currentPage + 1,
-      currentPage - 1,
-    ].filter((i) => i >= 0 && i < totalPages && !pageUrls[i])
-
-    pagesToRender.forEach((i) => renderPdfPageOnDemand(i))
-  }, [currentPage, pdfData, comic?.totalPages])
-
   async function loadBookmarks() {
     if (!comic) return
     try {
       const loaded = await getBookmarks(comic.id)
       setBookmarks(loaded)
     } catch (error) {
-      console.error("[v0] Error loading bookmarks:", error)
+      console.error("[reader] Error loading bookmarks:", error)
     }
   }
 
@@ -177,7 +128,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       await loadBookmarks()
       toast.success(`Page ${currentPage + 1} bookmarked`)
     } catch (error) {
-      console.error("[v0] Error saving bookmark:", error)
+      console.error("[reader] Error saving bookmark:", error)
       toast.error("Failed to save bookmark")
     }
   }, [comic, currentPage, pageUrls])
@@ -201,7 +152,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       })
       toast.success(`Note added to page ${currentPage + 1}`)
     } catch (error) {
-      console.error("[v0] Error saving note:", error)
+      console.error("[reader] Error saving note:", error)
       toast.error("Failed to save note")
     }
   }, [comic, currentPage])
@@ -260,7 +211,6 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-black">
-      {/* Top toolbar */}
       <ReaderToolbar
         title={comic.title}
         isVisible={controlsVisible}
@@ -270,19 +220,16 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         isBookmarked={isCurrentPageBookmarked}
       />
 
-      {/* Main viewer - tap center to toggle controls */}
       <main className="h-full w-full" onClick={toggleControls}>
         <ComicViewer pages={pageUrls} currentPage={currentPage} onPageChange={handlePageChange} />
       </main>
 
-      {/* Floating page indicator - visible when controls are hidden */}
       <PageIndicator
         currentPage={currentPage}
         totalPages={comic.totalPages}
         isVisible={!controlsVisible && !menuOpen}
       />
 
-      {/* Bottom drawer menu */}
       <ReaderMenu
         open={menuOpen}
         onOpenChange={setMenuOpen}
@@ -296,7 +243,6 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         onRefreshBookmarks={loadBookmarks}
       />
 
-      {/* Quick note dialog */}
       <QuickNoteDialog
         open={noteDialogOpen}
         onOpenChange={setNoteDialogOpen}
