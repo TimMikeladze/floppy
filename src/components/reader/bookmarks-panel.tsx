@@ -18,9 +18,10 @@ interface BookmarksPanelProps {
   currentPage: number
   onPageSelect: (page: number) => void
   onRefresh?: () => void
+  variant?: "icon" | "menu"
 }
 
-export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRefresh }: BookmarksPanelProps) {
+export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRefresh, variant = "icon" }: BookmarksPanelProps) {
   const [open, setOpen] = useState(false)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -74,13 +75,22 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
       `page ${b.pageNumber + 1}`.includes(searchQuery.toLowerCase()),
   )
 
+  const trigger = variant === "menu" ? (
+    <Button variant="ghost" size="sm" className="flex-col gap-1 h-auto py-2 px-3">
+      <BookmarkIcon className="h-5 w-5" />
+      <span className="text-xs">Bookmarks</span>
+    </Button>
+  ) : (
+    <Button variant="ghost" size="icon">
+      <BookmarkIcon className="h-5 w-5" />
+      <span className="sr-only">View bookmarks</span>
+    </Button>
+  )
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <BookmarkIcon className="h-5 w-5" />
-          <span className="sr-only">View bookmarks</span>
-        </Button>
+        {trigger}
       </DialogTrigger>
       <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>

@@ -91,10 +91,13 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
     const zoneWidth = rect.width / 3
 
     if (clickX < zoneWidth) {
+      e.stopPropagation() // Prevent toggle controls
       handlePrevPage()
     } else if (clickX > zoneWidth * 2) {
+      e.stopPropagation() // Prevent toggle controls
       handleNextPage()
     }
+    // Center zone click bubbles up to toggle controls
   }
 
   // Mouse drag handlers

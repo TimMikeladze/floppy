@@ -391,6 +391,150 @@ export async function removeComicFromList(listId: string, comicId: string): Prom
   })
 }
 
+// ============ IMPORT/EXPORT ============
+
+interface ExportData {
+  version: number
+  exportDate: string
+  comics: Comic[]
+  bookmarks: Bookmark[]
+  notes: Note[]
+  lists: ComicList[]
+  pages: { comicId: string; pageNumber: number; data: string }[] // base64 encoded
+}
+
+async function getAllPages(): Promise<{ comicId: string; pageNumber: number; blob: Blob }[]> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([PAGES_STORE], "readonly")
+    const store = transaction.objectStore(PAGES_STORE)
+    const request = store.getAll()
+
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+function base64ToBlob(base64: string): Blob {
+  const parts = base64.split(",")
+  const mime = parts[0].match(/:(.*?);/)?.[1] || "application/octet-stream"
+  const data = atob(parts[1])
+  const array = new Uint8Array(data.length)
+  for (let i = 0; i < data.length; i++) {
+    array[i] = data.charCodeAt(i)
+  }
+  return new Blob([array], { type: mime })
+}
+
+export async function exportLibrary(includeFiles: boolean = true): Promise<Blob> {
+  const comics = await getAllComics()
+  const bookmarks = await getAllBookmarks()
+  const notes = await getAllNotes()
+  const lists = await getAllLists()
+
+  let pages: { comicId: string; pageNumber: number; data: string }[] = []
+
+  if (includeFiles) {
+    const allPages = await getAllPages()
+    pages = await Promise.all(
+      allPages.map(async (page) => ({
+        comicId: page.comicId,
+        pageNumber: page.pageNumber,
+        data: await blobToBase64(page.blob),
+      }))
+    )
+  }
+
+  const exportData: ExportData = {
+    version: 1,
+    exportDate: new Date().toISOString(),
+    comics,
+    bookmarks,
+    notes,
+    lists,
+    pages,
+  }
+
+  const json = JSON.stringify(exportData)
+  return new Blob([json], { type: "application/json" })
+}
+
+export async function importLibrary(file: File, options: { merge: boolean } = { merge: false }): Promise<{ comics: number; bookmarks: number; notes: number; lists: number; pages: number }> {
+  const text = await file.text()
+  const data: ExportData = JSON.parse(text)
+
+  if (!data.version || !data.comics) {
+    throw new Error("Invalid backup file format")
+  }
+
+  // Clear existing data if not merging
+  if (!options.merge) {
+    const database = await initDB()
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(
+        [COMICS_STORE, PAGES_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
+        "readwrite"
+      )
+      transaction.objectStore(COMICS_STORE).clear()
+      transaction.objectStore(PAGES_STORE).clear()
+      transaction.objectStore(BOOKMARKS_STORE).clear()
+      transaction.objectStore(NOTES_STORE).clear()
+      transaction.objectStore(LISTS_STORE).clear()
+      transaction.oncomplete = () => resolve()
+      transaction.onerror = () => reject(transaction.error)
+    })
+  }
+
+  // Import comics
+  for (const comic of data.comics) {
+    // Convert date strings back to Date objects
+    if (comic.lastRead) comic.lastRead = new Date(comic.lastRead)
+    await saveComic(comic)
+  }
+
+  // Import bookmarks
+  for (const bookmark of data.bookmarks) {
+    bookmark.createdAt = new Date(bookmark.createdAt)
+    await saveBookmark(bookmark)
+  }
+
+  // Import notes
+  for (const note of data.notes) {
+    note.createdAt = new Date(note.createdAt)
+    note.updatedAt = new Date(note.updatedAt)
+    await saveNote(note)
+  }
+
+  // Import lists
+  for (const list of data.lists) {
+    list.createdAt = new Date(list.createdAt)
+    await saveList(list)
+  }
+
+  // Import pages
+  for (const page of data.pages) {
+    const blob = base64ToBlob(page.data)
+    await savePage(page.comicId, page.pageNumber, blob)
+  }
+
+  return {
+    comics: data.comics.length,
+    bookmarks: data.bookmarks.length,
+    notes: data.notes.length,
+    lists: data.lists.length,
+    pages: data.pages.length,
+  }
+}
+
 export async function initializeDefaultLists(): Promise<void> {
   const lists = await getAllLists()
   if (lists.length === 0) {

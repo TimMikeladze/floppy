@@ -16,9 +16,10 @@ interface NotesPanelProps {
   comicId: string
   currentPage: number
   onPageSelect: (page: number) => void
+  variant?: "icon" | "menu"
 }
 
-export function NotesPanel({ comicId, currentPage, onPageSelect }: NotesPanelProps) {
+export function NotesPanel({ comicId, currentPage, onPageSelect, variant = "icon" }: NotesPanelProps) {
   const [open, setOpen] = useState(false)
   const [notes, setNotes] = useState<Note[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -83,13 +84,22 @@ export function NotesPanel({ comicId, currentPage, onPageSelect }: NotesPanelPro
     .filter((n) => !showCurrentPageOnly || n.pageNumber === currentPage)
     .filter((n) => n.content.toLowerCase().includes(searchQuery.toLowerCase()))
 
+  const trigger = variant === "menu" ? (
+    <Button variant="ghost" size="sm" className="flex-col gap-1 h-auto py-2 px-3">
+      <StickyNote className="h-5 w-5" />
+      <span className="text-xs">Notes</span>
+    </Button>
+  ) : (
+    <Button variant="ghost" size="icon">
+      <StickyNote className="h-5 w-5" />
+      <span className="sr-only">View notes</span>
+    </Button>
+  )
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <StickyNote className="h-5 w-5" />
-          <span className="sr-only">View notes</span>
-        </Button>
+        {trigger}
       </DialogTrigger>
       <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>

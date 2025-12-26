@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Upload, Moon, Sun, Menu, SortAsc, ListFilter, X, Monitor } from "lucide-react"
+import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -12,7 +12,9 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 import { useTheme } from "next-themes"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+
+type ViewMode = "grid" | "table"
 
 interface LibraryHeaderProps {
   onUpload: () => void
@@ -21,20 +23,43 @@ interface LibraryHeaderProps {
   onSearchChange: (query: string) => void
   sortBy: "title" | "recent" | "progress"
   onSortChange: (sort: "title" | "recent" | "progress") => void
+  viewMode: ViewMode
+  onViewModeChange: (mode: ViewMode) => void
   onManageLists?: () => void
+  onExport?: () => void
+  onImport?: (file: File) => void
 }
 
 export function LibraryHeader({
   onUpload,
+  onAddComic,
   searchQuery,
   onSearchChange,
   sortBy,
   onSortChange,
+  viewMode,
+  onViewModeChange,
   onManageLists,
+  onExport,
+  onImport,
 }: LibraryHeaderProps) {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const importInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImportClick = () => {
+    importInputRef.current?.click()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && onImport) {
+      onImport(file)
+    }
+    // Reset input so same file can be selected again
+    e.target.value = ""
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -53,17 +78,16 @@ export function LibraryHeader({
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b" style={{
-      background: 'var(--glass-bg)',
-      backdropFilter: 'blur(var(--glass-blur))',
-      WebkitBackdropFilter: 'blur(var(--glass-blur))',
-      borderColor: 'var(--glass-border)',
-      boxShadow: '0 1px 3px var(--glass-shadow)'
+    <header className="sticky top-0 z-40 border-b border-border/50" style={{
+      background: 'oklch(from var(--background) l c h / 0.85)',
+      backdropFilter: 'blur(24px) saturate(1.2)',
+      WebkitBackdropFilter: 'blur(24px) saturate(1.2)',
+      boxShadow: '0 1px 0 var(--border), 0 4px 20px oklch(0 0 0 / 0.1)'
     }}>
       <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-3">
         {/* Logo / Title - hidden when search is expanded on mobile */}
         {!searchExpanded && (
-          <h1 className="text-lg font-semibold tracking-tight">Library</h1>
+          <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text">Library</h1>
         )}
 
         {/* Search - expandable on mobile */}
@@ -77,12 +101,7 @@ export function LibraryHeader({
                   placeholder="Search comics..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="pl-9 h-10 border-0 focus-visible:ring-1"
-                  style={{
-                    background: 'var(--glass-bg)',
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)'
-                  }}
+                  className="pl-9 h-10 bg-secondary border-border/50 placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/50"
                   autoFocus
                 />
               </div>
@@ -93,7 +112,7 @@ export function LibraryHeader({
                   setSearchExpanded(false)
                   onSearchChange("")
                 }}
-                className="shrink-0"
+                className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -109,12 +128,7 @@ export function LibraryHeader({
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="w-48 lg:w-64 pl-9 h-9 border-0 focus-visible:ring-1"
-                    style={{
-                      background: 'var(--glass-bg)',
-                      backdropFilter: 'blur(8px)',
-                      WebkitBackdropFilter: 'blur(8px)'
-                    }}
+                    className="w-48 lg:w-64 pl-9 h-9 bg-secondary border-border/50 placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:border-primary/30"
                   />
                 </div>
               </div>
@@ -148,11 +162,33 @@ export function LibraryHeader({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* More menu */}
+              {/* View toggle */}
+              <div className="hidden sm:flex items-center border rounded-md">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-8 w-8 rounded-r-none ${viewMode === "grid" ? "bg-accent" : ""}`}
+                  onClick={() => onViewModeChange("grid")}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  <span className="sr-only">Grid view</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-8 w-8 rounded-l-none ${viewMode === "table" ? "bg-accent" : ""}`}
+                  onClick={() => onViewModeChange("table")}
+                >
+                  <TableProperties className="h-4 w-4" />
+                  <span className="sr-only">Table view</span>
+                </Button>
+              </div>
+
+              {/* Settings menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="touch-target">
-                    <Menu className="h-5 w-5" />
+                    <Settings className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -165,6 +201,20 @@ export function LibraryHeader({
                       <DropdownMenuSeparator />
                     </>
                   )}
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Library</DropdownMenuLabel>
+                  {onExport && (
+                    <DropdownMenuItem onClick={onExport}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export Library
+                    </DropdownMenuItem>
+                  )}
+                  {onImport && (
+                    <DropdownMenuItem onClick={handleImportClick}>
+                      <FolderUp className="mr-2 h-4 w-4" />
+                      Import Library
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => setTheme("light")}>
                     <Sun className="mr-2 h-4 w-4" />
@@ -184,8 +234,23 @@ export function LibraryHeader({
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* Add Comic button */}
+              <Button
+                onClick={onAddComic}
+                variant="outline"
+                size="sm"
+                className="gap-2 ml-1 bg-transparent"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Add</span>
+              </Button>
+
               {/* Primary action - Upload */}
-              <Button onClick={onUpload} size="sm" className="gap-2 ml-1">
+              <Button
+                onClick={onUpload}
+                size="sm"
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+              >
                 <Upload className="h-4 w-4" />
                 <span className="hidden sm:inline">Upload</span>
               </Button>
@@ -193,6 +258,15 @@ export function LibraryHeader({
           )}
         </div>
       </div>
+
+      {/* Hidden file input for import */}
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleFileChange}
+        className="hidden"
+      />
     </header>
   )
 }

@@ -3,17 +3,20 @@
 import { useState, useEffect } from "react"
 import { LibraryHeader } from "@/components/library/library-header"
 import { ComicGrid } from "@/components/library/comic-grid"
+import { ComicTable } from "@/components/library/comic-table"
 import { UploadDialog } from "@/components/library/upload-dialog"
 import { ListManager } from "@/components/library/list-manager"
 import { ComicDetailSheet } from "@/components/library/comic-detail-sheet"
 import { parseComicFile, generateCoverImage, SUPPORTED_FORMATS, detectFormat } from "@/lib/comic-parser"
-import { getAllComics, saveComic, deleteComic, savePage, getAllLists } from "@/lib/storage"
+import { getAllComics, saveComic, deleteComic, savePage, getAllLists, exportLibrary, importLibrary } from "@/lib/storage"
 import type { Comic, ComicList } from "@/lib/types"
+import { AddComicDialogControlled } from "@/components/library/add-comic-dialog"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 type FilterType = "all" | "reading" | "completed" | "want"
+type ViewMode = "grid" | "table"
 
 export default function HomePage() {
   const [comics, setComics] = useState<Comic[]>([])
@@ -23,6 +26,7 @@ export default function HomePage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState<"title" | "recent" | "progress">("recent")
+  const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [isLoading, setIsLoading] = useState(true)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [addComicDialogOpen, setAddComicDialogOpen] = useState(false)
@@ -152,7 +156,7 @@ export default function HomePage() {
     }
 
     setIsLoading(true)
-    toast.loading(`Importing ${validFiles.length} comic${validFiles.length > 1 ? "s" : ""}...`)
+    const toastId = toast.loading(`Importing ${validFiles.length} comic${validFiles.length > 1 ? "s" : ""}...`)
 
     let successCount = 0
     let failCount = 0
@@ -200,6 +204,7 @@ export default function HomePage() {
 
     await loadComics()
 
+    toast.dismiss(toastId)
     if (successCount > 0) {
       toast.success(
         `${successCount} comic${successCount > 1 ? "s" : ""} imported`,
@@ -220,6 +225,62 @@ export default function HomePage() {
     } catch (error) {
       console.error("Error deleting comic:", error)
       toast.error("Failed to delete comic")
+    }
+  }
+
+  async function handleBulkDelete(ids: string[]) {
+    const toastId = toast.loading(`Deleting ${ids.length} comics...`)
+    try {
+      for (const id of ids) {
+        await deleteComic(id)
+      }
+      setComics((prev) => prev.filter((c) => !ids.includes(c.id)))
+      toast.dismiss(toastId)
+      toast.success(`Deleted ${ids.length} comics`)
+    } catch (error) {
+      console.error("Error deleting comics:", error)
+      toast.dismiss(toastId)
+      toast.error("Failed to delete some comics")
+    }
+  }
+
+  async function handleExport() {
+    const toastId = toast.loading("Exporting library...")
+    try {
+      const blob = await exportLibrary(false)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `floppy-library-${new Date().toISOString().split("T")[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.dismiss(toastId)
+      toast.success("Library exported successfully")
+    } catch (error) {
+      console.error("Error exporting library:", error)
+      toast.dismiss(toastId)
+      toast.error("Failed to export library")
+    }
+  }
+
+  async function handleImport(file: File) {
+    const toastId = toast.loading("Importing library...")
+    try {
+      const result = await importLibrary(file, { merge: true })
+      await loadComics()
+      await loadLists()
+      toast.dismiss(toastId)
+      toast.success("Library imported", {
+        description: `${result.comics} comics, ${result.bookmarks} bookmarks, ${result.notes} notes`,
+      })
+    } catch (error) {
+      console.error("Error importing library:", error)
+      toast.dismiss(toastId)
+      toast.error("Failed to import library", {
+        description: error instanceof Error ? error.message : "Invalid file format",
+      })
     }
   }
 
@@ -246,16 +307,18 @@ export default function HomePage() {
         onSearchChange={setSearchQuery}
         sortBy={sortBy}
         onSortChange={setSortBy}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         onManageLists={() => setListsSheetOpen(true)}
+        onExport={handleExport}
+        onImport={handleImport}
       />
 
       {/* Filter Pills */}
-      <div className="sticky top-14 z-30 border-b" style={{
-        background: 'var(--glass-bg)',
-        backdropFilter: 'blur(var(--glass-blur))',
-        WebkitBackdropFilter: 'blur(var(--glass-blur))',
-        borderColor: 'var(--glass-border)',
-        boxShadow: '0 1px 3px var(--glass-shadow)'
+      <div className="sticky top-14 z-30 border-b border-border/50" style={{
+        background: 'oklch(from var(--background) l c h / 0.9)',
+        backdropFilter: 'blur(20px) saturate(1.1)',
+        WebkitBackdropFilter: 'blur(20px) saturate(1.1)'
       }}>
         <ScrollArea className="w-full">
           <div className="flex gap-2 px-3 py-3 sm:px-4 md:px-6">
@@ -305,27 +368,32 @@ export default function HomePage() {
           <div className="flex min-h-[60vh] items-center justify-center">
             <div className="text-center">
               <div
-                className="mx-auto p-6 rounded-3xl mb-4 inline-block border"
+                className="mx-auto p-6 rounded-3xl mb-4 inline-block"
                 style={{
-                  background: 'var(--glass-bg)',
-                  backdropFilter: 'blur(var(--glass-blur))',
-                  WebkitBackdropFilter: 'blur(var(--glass-blur))',
-                  borderColor: 'var(--glass-border)',
-                  boxShadow: '0 4px 16px var(--glass-shadow)'
+                  background: 'linear-gradient(135deg, var(--card) 0%, var(--secondary) 100%)',
+                  boxShadow: '0 8px 32px oklch(0 0 0 / 0.2), 0 0 0 1px var(--border)'
                 }}
               >
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               </div>
-              <p className="text-sm text-muted-foreground">Loading library...</p>
+              <p className="text-sm text-muted-foreground font-medium">Loading library...</p>
             </div>
           </div>
-        ) : (
+        ) : viewMode === "grid" ? (
           <ComicGrid
             comics={filteredComics}
             onDelete={handleDelete}
             onUpdate={loadComics}
             onSelect={handleComicSelect}
             onUpload={handleUploadClick}
+          />
+        ) : (
+          <ComicTable
+            comics={filteredComics}
+            onDelete={handleDelete}
+            onBulkDelete={handleBulkDelete}
+            onUpdate={loadComics}
+            onSelect={handleComicSelect}
           />
         )}
       </main>
@@ -354,6 +422,13 @@ export default function HomePage() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      {/* Add Comic Dialog */}
+      <AddComicDialogControlled
+        open={addComicDialogOpen}
+        onOpenChange={setAddComicDialogOpen}
+        onComicAdded={loadComics}
+      />
     </div>
   )
 }

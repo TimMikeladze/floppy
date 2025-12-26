@@ -12,19 +12,29 @@ interface PageNavigatorProps {
   currentPage: number
   onPageSelect: (page: number) => void
   bookmarks?: Bookmark[]
+  variant?: "icon" | "menu"
 }
 
-export function PageNavigator({ pages, currentPage, onPageSelect, bookmarks = [] }: PageNavigatorProps) {
+export function PageNavigator({ pages, currentPage, onPageSelect, bookmarks = [], variant = "icon" }: PageNavigatorProps) {
   const [open, setOpen] = useState(false)
   const bookmarkedPages = new Set(bookmarks.map((b) => b.pageNumber))
+
+  const trigger = variant === "menu" ? (
+    <Button variant="ghost" size="sm" className="flex-col gap-1 h-auto py-2 px-3">
+      <LayoutGrid className="h-5 w-5" />
+      <span className="text-xs">Pages</span>
+    </Button>
+  ) : (
+    <Button variant="ghost" size="icon">
+      <LayoutGrid className="h-5 w-5" />
+      <span className="sr-only">Page navigator</span>
+    </Button>
+  )
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <LayoutGrid className="h-5 w-5" />
-          <span className="sr-only">Page navigator</span>
-        </Button>
+        {trigger}
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>

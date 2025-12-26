@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "postinstall": "cp node_modules/libarchive.js/dist/worker-bundle.js public/libarchive-worker.js && cp node_modules/libarchive.js/dist/libarchive.wasm public/libarchive.wasm"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

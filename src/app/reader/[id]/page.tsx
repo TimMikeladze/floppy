@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, use } from "react"
 import { ComicViewer } from "@/components/reader/comic-viewer"
-import { ReaderControls } from "@/components/reader/reader-controls"
-import { SettingsPanel } from "@/components/reader/settings-panel"
-import { QuickNoteButton } from "@/components/reader/quick-note-button"
-import { getComic, getPage, updateReadingProgress, saveBookmark, getBookmarks } from "@/lib/storage"
+import { ReaderToolbar } from "@/components/reader/reader-toolbar"
+import { ReaderMenu } from "@/components/reader/reader-menu"
+import { PageIndicator } from "@/components/reader/page-indicator"
+import { QuickNoteDialog } from "@/components/reader/quick-note-dialog"
+import { getComic, getPage, updateReadingProgress, saveBookmark, getBookmarks, saveNote } from "@/lib/storage"
 import { renderPdfPage, SUPPORTED_FORMATS } from "@/lib/comic-parser"
 import type { Comic, Bookmark } from "@/lib/types"
 import { toast } from "sonner"
@@ -14,22 +15,24 @@ import { Button } from "@/components/ui/button"
 import { Upload } from "lucide-react"
 import { AttachFileDialog } from "@/components/library/attach-file-dialog"
 
-export default function ReaderPage({ params }: { params: { id: string } }) {
+export default function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [comic, setComic] = useState<Comic | null>(null)
   const [pageUrls, setPageUrls] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(0)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [controlsVisible, setControlsVisible] = useState(true)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [controlsVisible, setControlsVisible] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [attachDialogOpen, setAttachDialogOpen] = useState(false)
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false)
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null)
   const [pageLoadingIndex, setPageLoadingIndex] = useState<number | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     loadComic()
-  }, [params.id])
+  }, [id])
 
   useEffect(() => {
     if (!comic) return
@@ -45,31 +48,23 @@ export default function ReaderPage({ params }: { params: { id: string } }) {
     return () => clearTimeout(timer)
   }, [currentPage, comic])
 
-  // Auto-hide controls
+  // Auto-hide controls after delay (but not when menu is open)
   useEffect(() => {
-    let timeout: NodeJS.Timeout
-    if (controlsVisible) {
-      timeout = setTimeout(() => {
-        setControlsVisible(false)
-      }, 3000)
-    }
+    if (!controlsVisible || menuOpen) return
+    const timeout = setTimeout(() => {
+      setControlsVisible(false)
+    }, 4000)
     return () => clearTimeout(timeout)
-  }, [controlsVisible])
+  }, [controlsVisible, menuOpen])
 
-  // Show controls on interaction
-  useEffect(() => {
-    const handleInteraction = () => setControlsVisible(true)
-    window.addEventListener("mousemove", handleInteraction)
-    window.addEventListener("touchstart", handleInteraction)
-    return () => {
-      window.removeEventListener("mousemove", handleInteraction)
-      window.removeEventListener("touchstart", handleInteraction)
-    }
+  // Toggle controls on tap (center area is handled by ComicViewer for page nav)
+  const toggleControls = useCallback(() => {
+    setControlsVisible((prev) => !prev)
   }, [])
 
   async function loadComic() {
     try {
-      const loadedComic = await getComic(params.id)
+      const loadedComic = await getComic(id)
       if (!loadedComic) {
         toast.error("Comic not found", {
           description: "This comic could not be loaded",
@@ -193,6 +188,32 @@ export default function ReaderPage({ params }: { params: { id: string } }) {
     }
   }, [comic, currentPage, pageUrls])
 
+  const handleQuickNote = useCallback(() => {
+    setNoteDialogOpen(true)
+  }, [])
+
+  const handleSaveNote = useCallback(async (content: string) => {
+    if (!comic) return
+
+    try {
+      await saveNote({
+        id: crypto.randomUUID(),
+        comicId: comic.id,
+        pageNumber: currentPage,
+        content,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        color: "#e85d4d",
+      })
+      toast.success(`Note added to page ${currentPage + 1}`)
+    } catch (error) {
+      console.error("[v0] Error saving note:", error)
+      toast.error("Failed to save note")
+    }
+  }, [comic, currentPage])
+
+  const isCurrentPageBookmarked = bookmarks.some((b) => b.pageNumber === currentPage)
+
   if (isLoading || !comic) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -244,38 +265,50 @@ export default function ReaderPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-background">
-      <div
-        className={`fixed left-0 right-0 top-0 z-20 border-b border-border bg-background/95 backdrop-blur transition-transform duration-300 supports-[backdrop-filter]:bg-background/80 ${
-          controlsVisible ? "translate-y-0" : "-translate-y-full"
-        }`}
-      >
-        <ReaderControls
-          currentPage={currentPage}
-          totalPages={comic.totalPages}
-          onPageChange={handlePageChange}
-          onSettingsClick={() => setSettingsOpen(true)}
-          onBookmarkClick={handleBookmark}
-          title={comic.title}
-          isVisible={controlsVisible}
-          comicId={comic.id}
-          pages={pageUrls}
-          bookmarks={bookmarks}
-          onRefreshBookmarks={loadBookmarks}
-        />
-      </div>
+    <div className="fixed inset-0 overflow-hidden bg-black">
+      {/* Top toolbar */}
+      <ReaderToolbar
+        title={comic.title}
+        isVisible={controlsVisible}
+        onMenuClick={() => setMenuOpen(true)}
+        onBookmarkClick={handleBookmark}
+        onNoteClick={handleQuickNote}
+        isBookmarked={isCurrentPageBookmarked}
+      />
 
-      {controlsVisible && (
-        <div className="fixed bottom-24 right-4 z-30 md:bottom-28">
-          <QuickNoteButton comicId={comic.id} currentPage={currentPage} />
-        </div>
-      )}
-
-      <main className="h-full w-full">
+      {/* Main viewer - tap center to toggle controls */}
+      <main className="h-full w-full" onClick={toggleControls}>
         <ComicViewer pages={pageUrls} currentPage={currentPage} onPageChange={handlePageChange} />
       </main>
 
-      <SettingsPanel open={settingsOpen} onOpenChange={setSettingsOpen} />
+      {/* Floating page indicator - visible when controls are hidden */}
+      <PageIndicator
+        currentPage={currentPage}
+        totalPages={comic.totalPages}
+        isVisible={!controlsVisible && !menuOpen}
+      />
+
+      {/* Bottom drawer menu */}
+      <ReaderMenu
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        currentPage={currentPage}
+        totalPages={comic.totalPages}
+        onPageChange={handlePageChange}
+        onBookmarkClick={handleBookmark}
+        comicId={comic.id}
+        pages={pageUrls}
+        bookmarks={bookmarks}
+        onRefreshBookmarks={loadBookmarks}
+      />
+
+      {/* Quick note dialog */}
+      <QuickNoteDialog
+        open={noteDialogOpen}
+        onOpenChange={setNoteDialogOpen}
+        currentPage={currentPage}
+        onSave={handleSaveNote}
+      />
     </div>
   )
 }
