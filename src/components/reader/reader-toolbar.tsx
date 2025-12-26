@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, MoreVertical, Bookmark, StickyNote } from "lucide-react"
+import { ArrowLeft, MoreVertical, Bookmark, StickyNote, Maximize, Minimize } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
@@ -11,6 +11,8 @@ interface ReaderToolbarProps {
   onBookmarkClick: () => void
   onNoteClick: () => void
   isBookmarked: boolean
+  isFullscreen?: boolean
+  onFullscreenToggle?: () => void
 }
 
 export function ReaderToolbar({
@@ -20,6 +22,8 @@ export function ReaderToolbar({
   onBookmarkClick,
   onNoteClick,
   isBookmarked,
+  isFullscreen,
+  onFullscreenToggle,
 }: ReaderToolbarProps) {
   return (
     <div
@@ -66,6 +70,22 @@ export function ReaderToolbar({
           <StickyNote className="h-5 w-5" />
           <span className="sr-only">Add note</span>
         </Button>
+
+        {onFullscreenToggle && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 text-white hover:bg-white/20"
+            onClick={onFullscreenToggle}
+          >
+            {isFullscreen ? (
+              <Minimize className="h-5 w-5" />
+            ) : (
+              <Maximize className="h-5 w-5" />
+            )}
+            <span className="sr-only">{isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}</span>
+          </Button>
+        )}
 
         <Button
           variant="ghost"

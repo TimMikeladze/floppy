@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, use } from "react"
+import React, { useState, useEffect, useCallback, use, useRef } from "react"
 import { ComicViewer } from "@/components/reader/comic-viewer"
 import { ReaderToolbar } from "@/components/reader/reader-toolbar"
 import { ReaderMenu } from "@/components/reader/reader-menu"
@@ -28,6 +28,8 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   const [menuOpen, setMenuOpen] = useState(false)
   const [attachDialogOpen, setAttachDialogOpen] = useState(false)
   const [noteDialogOpen, setNoteDialogOpen] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -99,9 +101,54 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     }
   }, [comic?.sourceType])
 
-  const toggleControls = useCallback(() => {
-    setControlsVisible((prev) => !prev)
+  // Fullscreen change listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isNowFullscreen = !!document.fullscreenElement
+      setIsFullscreen(isNowFullscreen)
+      if (!isNowFullscreen) {
+        setControlsVisible(false)
+      }
+    }
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange)
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange)
   }, [])
+
+  // Keyboard shortcut for fullscreen (F key)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "f" || e.key === "F") {
+        // Don't trigger if user is typing in an input
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+        toggleFullscreen()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
+  const toggleFullscreen = useCallback(async () => {
+    if (!containerRef.current) return
+
+    try {
+      if (!document.fullscreenElement) {
+        await containerRef.current.requestFullscreen()
+      } else {
+        await document.exitFullscreen()
+      }
+    } catch (error) {
+      console.error("[reader] Fullscreen error:", error)
+      toast.error("Fullscreen not supported")
+    }
+  }, [])
+
+  const toggleControls = useCallback(() => {
+    // In fullscreen mode, don't toggle on center click - only hover reveals toolbar
+    if (isFullscreen) return
+    setControlsVisible((prev) => !prev)
+  }, [isFullscreen])
 
   async function loadComic() {
     try {
@@ -301,8 +348,25 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
 
   const totalPages = isRemote ? remotePageData.length : (comic.totalPages ?? 0)
 
+  // Handler to show controls when mouse is near top edge in fullscreen
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isFullscreen) return
+
+    // Show toolbar when mouse is in top 60px
+    if (e.clientY <= 60) {
+      setControlsVisible(true)
+    } else if (controlsVisible && e.clientY > 120) {
+      // Hide when mouse moves away from top area
+      setControlsVisible(false)
+    }
+  }, [isFullscreen, controlsVisible])
+
   return (
-    <div className="fixed inset-0 overflow-hidden bg-black">
+    <div
+      ref={containerRef}
+      className="fixed inset-0 overflow-hidden bg-black"
+      onMouseMove={handleMouseMove}
+    >
       <ReaderToolbar
         title={comic.title}
         isVisible={controlsVisible}
@@ -310,6 +374,8 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         onBookmarkClick={handleBookmark}
         onNoteClick={handleQuickNote}
         isBookmarked={isCurrentPageBookmarked}
+        isFullscreen={isFullscreen}
+        onFullscreenToggle={toggleFullscreen}
       />
 
       <main className="h-full w-full" onClick={toggleControls}>
@@ -319,7 +385,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       <PageIndicator
         currentPage={currentPage}
         totalPages={totalPages}
-        isVisible={!controlsVisible && !menuOpen}
+        isVisible={!controlsVisible && !menuOpen && !isFullscreen}
       />
 
       <ReaderMenu
