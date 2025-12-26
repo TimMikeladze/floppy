@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs"
 import { LibraryHeader } from "@/components/library/library-header"
 import { ComicGrid } from "@/components/library/comic-grid"
@@ -27,6 +27,35 @@ const viewModes = ["grid", "table"] as const
 type ViewMode = (typeof viewModes)[number]
 
 export default function HomePage() {
+  return (
+    <Suspense fallback={<HomePageLoading />}>
+      <HomePageContent />
+    </Suspense>
+  )
+}
+
+function HomePageLoading() {
+  return (
+    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div
+            className="mx-auto p-6 rounded-3xl mb-4 inline-block"
+            style={{
+              background: 'linear-gradient(135deg, var(--card) 0%, var(--secondary) 100%)',
+              boxShadow: '0 8px 32px oklch(0 0 0 / 0.2), 0 0 0 1px var(--border)'
+            }}
+          >
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+          <p className="text-sm text-muted-foreground font-medium">Loading library...</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HomePageContent() {
   // URL state with nuqs
   const [searchQuery, setSearchQuery] = useQueryState("q", parseAsString.withDefault(""))
   const [sortBy, setSortBy] = useQueryState("sort", parseAsStringLiteral(sortTypes).withDefault("recent"))
@@ -247,7 +276,7 @@ export default function HomePage() {
   async function handleExport() {
     const toastId = toast.loading("Exporting library...")
     try {
-      const blob = await exportLibrary(false)
+      const blob = await exportLibrary()
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url

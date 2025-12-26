@@ -6,7 +6,7 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { parseComicFile, generateCoverImage, SUPPORTED_FORMATS } from "@/lib/comic-parser"
-import { getComic, saveComic, savePage } from "@/lib/storage"
+import { getComic, saveComic, isFileSystemAccessSupported } from "@/lib/storage"
 import { Upload, FileCheck } from "lucide-react"
 import { toast } from "sonner"
 
@@ -19,11 +19,9 @@ interface AttachFileDialogProps {
 
 export function AttachFileDialog({ comicId, open, onOpenChange, onFileAttached }: AttachFileDialogProps) {
   const [uploading, setUploading] = useState(false)
+  const supportsFileSystem = typeof window !== "undefined" && isFileSystemAccessSupported()
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  async function processFile(file: File, handle?: FileSystemFileHandle) {
     setUploading(true)
     try {
       const { pages, metadata, pdfData } = await parseComicFile(file)
@@ -36,7 +34,7 @@ export function AttachFileDialog({ comicId, open, onOpenChange, onFileAttached }
       // Generate cover from first page
       const coverImage = await generateCoverImage(pages[0])
 
-      // Update comic with file data
+      // Update comic with file data - store handle for re-reading from disk
       const updatedComic = {
         ...comic,
         coverImage,
@@ -46,21 +44,10 @@ export function AttachFileDialog({ comicId, open, onOpenChange, onFileAttached }
         hasFile: true,
         format: metadata.format,
         pdfRenderMode: pdfData ? "native" as const : undefined,
+        fileHandle: handle, // Store handle for later access
       }
 
       await saveComic(updatedComic)
-
-      // Save pages
-      if (pdfData) {
-        // Native PDF mode - store raw PDF data
-        await savePage(comicId, -1, new Blob([pdfData], { type: "application/pdf" }))
-        await savePage(comicId, 0, pages[0])
-      } else {
-        // Image-based mode - save all pages
-        for (let i = 0; i < pages.length; i++) {
-          await savePage(comicId, i, pages[i])
-        }
-      }
 
       toast.success("File attached", {
         description: `${metadata.totalPages} pages loaded successfully`,
@@ -76,6 +63,40 @@ export function AttachFileDialog({ comicId, open, onOpenChange, onFileAttached }
     }
   }
 
+  // Use File System Access API when available for file handles
+  async function handleFilePicker() {
+    if (!supportsFileSystem) return
+
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [
+          {
+            description: "Comic files",
+            accept: {
+              "application/zip": [".cbz", ".zip"],
+              "application/x-rar-compressed": [".cbr", ".rar"],
+              "application/pdf": [".pdf"],
+            },
+          },
+        ],
+      })
+
+      const file = await handle.getFile()
+      await processFile(file, handle)
+    } catch (error) {
+      if ((error as Error).name !== "AbortError") {
+        console.error("Error picking file:", error)
+        toast.error("Failed to select file")
+      }
+    }
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    await processFile(file)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -86,31 +107,51 @@ export function AttachFileDialog({ comicId, open, onOpenChange, onFileAttached }
           <p className="text-sm text-muted-foreground">Upload a {SUPPORTED_FORMATS.description} file to make this comic readable</p>
 
           <div className="flex flex-col gap-3">
-            <label htmlFor="attach-file">
-              <input
-                id="attach-file"
-                type="file"
-                accept={SUPPORTED_FORMATS.accept}
-                onChange={handleFileSelect}
+            {supportsFileSystem ? (
+              <Button
+                onClick={handleFilePicker}
                 disabled={uploading}
-                className="hidden"
-              />
-              <Button asChild disabled={uploading} className="w-full gap-2">
-                <span>
-                  {uploading ? (
-                    <>
-                      <FileCheck className="h-4 w-4 animate-pulse" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4" />
-                      Select File
-                    </>
-                  )}
-                </span>
+                className="w-full gap-2"
+              >
+                {uploading ? (
+                  <>
+                    <FileCheck className="h-4 w-4 animate-pulse" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Select File
+                  </>
+                )}
               </Button>
-            </label>
+            ) : (
+              <label htmlFor="attach-file">
+                <input
+                  id="attach-file"
+                  type="file"
+                  accept={SUPPORTED_FORMATS.accept}
+                  onChange={handleFileSelect}
+                  disabled={uploading}
+                  className="hidden"
+                />
+                <Button asChild disabled={uploading} className="w-full gap-2">
+                  <span>
+                    {uploading ? (
+                      <>
+                        <FileCheck className="h-4 w-4 animate-pulse" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Select File
+                      </>
+                    )}
+                  </span>
+                </Button>
+              </label>
+            )}
           </div>
         </div>
       </DialogContent>

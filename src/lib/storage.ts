@@ -1,9 +1,8 @@
 import type { Comic, Bookmark, Note, ComicList } from "./types"
 
 const DB_NAME = "comic-reader-db"
-const DB_VERSION = 3
+const DB_VERSION = 4
 const COMICS_STORE = "comics"
-const PAGES_STORE = "pages"
 const BOOKMARKS_STORE = "bookmarks"
 const NOTES_STORE = "notes"
 const LISTS_STORE = "lists"
@@ -32,10 +31,9 @@ async function initDB(): Promise<IDBDatabase> {
         comicsStore.createIndex("title", "title", { unique: false })
       }
 
-      // Pages store
-      if (!database.objectStoreNames.contains(PAGES_STORE)) {
-        const pagesStore = database.createObjectStore(PAGES_STORE, { keyPath: ["comicId", "pageNumber"] })
-        pagesStore.createIndex("comicId", "comicId", { unique: false })
+      // Delete legacy pages store if exists
+      if (database.objectStoreNames.contains("pages")) {
+        database.deleteObjectStore("pages")
       }
 
       // Bookmarks store
@@ -100,26 +98,13 @@ export async function deleteComic(id: string): Promise<void> {
   const database = await initDB()
   return new Promise((resolve, reject) => {
     const transaction = database.transaction(
-      [COMICS_STORE, PAGES_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
+      [COMICS_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
       "readwrite",
     )
 
     // Delete comic
     const comicsStore = transaction.objectStore(COMICS_STORE)
     comicsStore.delete(id)
-
-    // Delete all pages for this comic
-    const pagesStore = transaction.objectStore(PAGES_STORE)
-    const index = pagesStore.index("comicId")
-    const pagesCursor = index.openCursor(IDBKeyRange.only(id))
-
-    pagesCursor.onsuccess = (event) => {
-      const cursor = (event.target as IDBRequest).result
-      if (cursor) {
-        pagesStore.delete(cursor.primaryKey)
-        cursor.continue()
-      }
-    }
 
     // Delete all bookmarks for this comic
     const bookmarksStore = transaction.objectStore(BOOKMARKS_STORE)
@@ -163,30 +148,6 @@ export async function deleteComic(id: string): Promise<void> {
 
     transaction.oncomplete = () => resolve()
     transaction.onerror = () => reject(transaction.error)
-  })
-}
-
-export async function savePage(comicId: string, pageNumber: number, blob: Blob): Promise<void> {
-  const database = await initDB()
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction([PAGES_STORE], "readwrite")
-    const store = transaction.objectStore(PAGES_STORE)
-    const request = store.put({ comicId, pageNumber, blob })
-
-    request.onsuccess = () => resolve()
-    request.onerror = () => reject(request.error)
-  })
-}
-
-export async function getPage(comicId: string, pageNumber: number): Promise<Blob | null> {
-  const database = await initDB()
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction([PAGES_STORE], "readonly")
-    const store = transaction.objectStore(PAGES_STORE)
-    const request = store.get([comicId, pageNumber])
-
-    request.onsuccess = () => resolve(request.result?.blob || null)
-    request.onerror = () => reject(request.error)
   })
 }
 
@@ -246,6 +207,35 @@ export async function getFileFromHandle(fileHandle: FileSystemFileHandle): Promi
 
 export function isFileSystemAccessSupported(): boolean {
   return "showOpenFilePicker" in window
+}
+
+/**
+ * Load comic pages directly from a file handle instead of IndexedDB.
+ * This is the preferred method when file handles are available.
+ */
+export async function loadPagesFromHandle(
+  fileHandle: FileSystemFileHandle,
+  format: "cbz" | "cbr" | "pdf",
+  pdfRenderMode?: "native" | "image"
+): Promise<{ pages: Blob[]; pdfData?: ArrayBuffer } | null> {
+  try {
+    const file = await getFileFromHandle(fileHandle)
+    if (!file) {
+      return null
+    }
+
+    // Dynamic import to avoid circular dependency
+    const { parseComicFile } = await import("./comic-parser")
+    const result = await parseComicFile(file, { pdfMode: pdfRenderMode })
+
+    return {
+      pages: result.pages,
+      pdfData: result.pdfData,
+    }
+  } catch (error) {
+    console.error("[storage] Error loading pages from handle:", error)
+    return null
+  }
 }
 
 export async function saveBookmark(bookmark: Bookmark): Promise<void> {
@@ -437,75 +427,31 @@ interface ExportData {
   bookmarks: Bookmark[]
   notes: Note[]
   lists: ComicList[]
-  pages: { comicId: string; pageNumber: number; data: string }[] // base64 encoded
 }
 
-async function getAllPages(): Promise<{ comicId: string; pageNumber: number; blob: Blob }[]> {
-  const database = await initDB()
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction([PAGES_STORE], "readonly")
-    const store = transaction.objectStore(PAGES_STORE)
-    const request = store.getAll()
-
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
-}
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(blob)
-  })
-}
-
-function base64ToBlob(base64: string): Blob {
-  const parts = base64.split(",")
-  const mime = parts[0].match(/:(.*?);/)?.[1] || "application/octet-stream"
-  const data = atob(parts[1])
-  const array = new Uint8Array(data.length)
-  for (let i = 0; i < data.length; i++) {
-    array[i] = data.charCodeAt(i)
-  }
-  return new Blob([array], { type: mime })
-}
-
-export async function exportLibrary(includeFiles: boolean = true): Promise<Blob> {
+export async function exportLibrary(): Promise<Blob> {
   const comics = await getAllComics()
   const bookmarks = await getAllBookmarks()
   const notes = await getAllNotes()
   const lists = await getAllLists()
 
-  let pages: { comicId: string; pageNumber: number; data: string }[] = []
-
-  if (includeFiles) {
-    const allPages = await getAllPages()
-    pages = await Promise.all(
-      allPages.map(async (page) => ({
-        comicId: page.comicId,
-        pageNumber: page.pageNumber,
-        data: await blobToBase64(page.blob),
-      }))
-    )
-  }
+  // Strip fileHandle from comics (not serializable)
+  const exportableComics = comics.map(({ fileHandle, ...rest }) => rest)
 
   const exportData: ExportData = {
-    version: 1,
+    version: 2,
     exportDate: new Date().toISOString(),
-    comics,
+    comics: exportableComics,
     bookmarks,
     notes,
     lists,
-    pages,
   }
 
   const json = JSON.stringify(exportData)
   return new Blob([json], { type: "application/json" })
 }
 
-export async function importLibrary(file: File, options: { merge: boolean } = { merge: false }): Promise<{ comics: number; bookmarks: number; notes: number; lists: number; pages: number }> {
+export async function importLibrary(file: File, options: { merge: boolean } = { merge: false }): Promise<{ comics: number; bookmarks: number; notes: number; lists: number }> {
   const text = await file.text()
   const data: ExportData = JSON.parse(text)
 
@@ -518,11 +464,10 @@ export async function importLibrary(file: File, options: { merge: boolean } = { 
     const database = await initDB()
     await new Promise<void>((resolve, reject) => {
       const transaction = database.transaction(
-        [COMICS_STORE, PAGES_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
+        [COMICS_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
         "readwrite"
       )
       transaction.objectStore(COMICS_STORE).clear()
-      transaction.objectStore(PAGES_STORE).clear()
       transaction.objectStore(BOOKMARKS_STORE).clear()
       transaction.objectStore(NOTES_STORE).clear()
       transaction.objectStore(LISTS_STORE).clear()
@@ -531,10 +476,12 @@ export async function importLibrary(file: File, options: { merge: boolean } = { 
     })
   }
 
-  // Import comics
+  // Import comics (without file handles - user must re-attach files)
   for (const comic of data.comics) {
-    // Convert date strings back to Date objects
     if (comic.lastRead) comic.lastRead = new Date(comic.lastRead)
+    // Mark as needing file re-attachment
+    comic.hasFile = false
+    comic.fileHandle = undefined
     await saveComic(comic)
   }
 
@@ -557,18 +504,11 @@ export async function importLibrary(file: File, options: { merge: boolean } = { 
     await saveList(list)
   }
 
-  // Import pages
-  for (const page of data.pages) {
-    const blob = base64ToBlob(page.data)
-    await savePage(page.comicId, page.pageNumber, blob)
-  }
-
   return {
     comics: data.comics.length,
     bookmarks: data.bookmarks.length,
     notes: data.notes.length,
     lists: data.lists.length,
-    pages: data.pages.length,
   }
 }
 

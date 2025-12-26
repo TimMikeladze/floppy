@@ -6,7 +6,7 @@ import { ReaderToolbar } from "@/components/reader/reader-toolbar"
 import { ReaderMenu } from "@/components/reader/reader-menu"
 import { PageIndicator } from "@/components/reader/page-indicator"
 import { QuickNoteDialog } from "@/components/reader/quick-note-dialog"
-import { getComic, getPage, updateReadingProgress, saveBookmark, getBookmarks, saveNote } from "@/lib/storage"
+import { getComic, updateReadingProgress, saveBookmark, getBookmarks, saveNote, loadPagesFromHandle } from "@/lib/storage"
 import { renderPdfPage, SUPPORTED_FORMATS } from "@/lib/comic-parser"
 import type { Comic, Bookmark } from "@/lib/types"
 import { toast } from "sonner"
@@ -84,35 +84,29 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   async function loadPages() {
     if (!comic) return
 
-    if (!comic.hasFile || !comic.totalPages) {
+    if (!comic.hasFile || !comic.totalPages || !comic.fileHandle || !comic.format) {
       setIsLoading(false)
       return
     }
 
     try {
-      // Check if this is a native PDF - load PDF data and render on-demand
-      if (comic.pdfRenderMode === "native") {
-        const pdfBlob = await getPage(comic.id, -1) // PDF data stored at index -1
-        if (pdfBlob) {
-          const arrayBuffer = await pdfBlob.arrayBuffer()
-          setPdfData(arrayBuffer)
-          // Initialize with empty URLs array, will render on demand
+      const result = await loadPagesFromHandle(
+        comic.fileHandle,
+        comic.format,
+        comic.pdfRenderMode
+      )
+
+      if (result) {
+        if (comic.pdfRenderMode === "native" && result.pdfData) {
+          setPdfData(result.pdfData)
           setPageUrls(new Array(comic.totalPages).fill(""))
+        } else {
+          const urls = result.pages.map((blob) => URL.createObjectURL(blob))
+          setPageUrls(urls)
         }
-      } else {
-        // Image-based mode - load all pages
-        const urls: string[] = []
-        for (let i = 0; i < comic.totalPages; i++) {
-          const blob = await getPage(comic.id, i)
-          if (blob) {
-            const url = URL.createObjectURL(blob)
-            urls.push(url)
-          }
-        }
-        setPageUrls(urls)
       }
     } catch (error) {
-      console.error("[v0] Error loading pages:", error)
+      console.error("[reader] Error loading pages:", error)
       toast.error("Failed to load comic pages")
     } finally {
       setIsLoading(false)
