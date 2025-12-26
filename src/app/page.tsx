@@ -9,7 +9,7 @@ import { UploadDialog } from "@/components/library/upload-dialog"
 import { ListManager } from "@/components/library/list-manager"
 import { ComicDetailSheet } from "@/components/library/comic-detail-sheet"
 import { parseComicFile, generateCoverImage, SUPPORTED_FORMATS, detectFormat } from "@/lib/comic-parser"
-import { getAllComics, saveComic, deleteComic, getAllLists, exportLibrary, importLibrary, clearAllData } from "@/lib/storage"
+import { getAllComics, saveComic, deleteComic, getAllLists, exportLibrary, importLibrary, clearAllData, savePagesForComic } from "@/lib/storage"
 import type { FileWithHandle } from "@/components/library/upload-dialog"
 import type { Comic, ComicList } from "@/lib/types"
 import { AddComicDialogControlled } from "@/components/library/add-comic-dialog"
@@ -222,6 +222,12 @@ function HomePageContent() {
         }
 
         await saveComic(comic)
+
+        // If no file handle (iOS/Safari), store pages in IndexedDB
+        if (!handle) {
+          await savePagesForComic(comicId, pages)
+        }
+
         successCount++
       } catch (error) {
         console.error(`Error uploading ${file.name}:`, error)

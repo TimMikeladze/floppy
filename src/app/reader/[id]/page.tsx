@@ -6,7 +6,7 @@ import { ReaderToolbar } from "@/components/reader/reader-toolbar"
 import { ReaderMenu } from "@/components/reader/reader-menu"
 import { PageIndicator } from "@/components/reader/page-indicator"
 import { QuickNoteDialog } from "@/components/reader/quick-note-dialog"
-import { getComic, updateReadingProgress, saveBookmark, getBookmarks, saveNote, loadPagesFromHandle } from "@/lib/storage"
+import { getComic, updateReadingProgress, saveBookmark, getBookmarks, saveNote, loadPagesFromHandle, getPagesForComic } from "@/lib/storage"
 import { SUPPORTED_FORMATS } from "@/lib/comic-parser"
 import type { Comic, Bookmark } from "@/lib/types"
 import { toast } from "sonner"
@@ -80,16 +80,29 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   async function loadPages() {
     if (!comic) return
 
-    if (!comic.hasFile || !comic.totalPages || !comic.fileHandle || !comic.format) {
+    if (!comic.hasFile || !comic.totalPages) {
       setIsLoading(false)
       return
     }
 
     try {
-      const result = await loadPagesFromHandle(comic.fileHandle, comic.format)
+      let pages: Blob[] | null = null
 
-      if (result) {
-        const urls = result.pages.map((blob) => URL.createObjectURL(blob))
+      // Try file handle first (desktop Chrome/Edge)
+      if (comic.fileHandle && comic.format) {
+        const result = await loadPagesFromHandle(comic.fileHandle, comic.format)
+        if (result) {
+          pages = result.pages
+        }
+      }
+
+      // Fall back to IndexedDB storage (iOS/Safari)
+      if (!pages) {
+        pages = await getPagesForComic(comic.id)
+      }
+
+      if (pages && pages.length > 0) {
+        const urls = pages.map((blob) => URL.createObjectURL(blob))
         setPageUrls(urls)
       }
     } catch (error) {

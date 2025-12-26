@@ -6,7 +6,7 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { parseComicFile, generateCoverImage, SUPPORTED_FORMATS } from "@/lib/comic-parser"
-import { getComic, saveComic, isFileSystemAccessSupported } from "@/lib/storage"
+import { getComic, saveComic, isFileSystemAccessSupported, savePagesForComic } from "@/lib/storage"
 import { Upload, FileCheck } from "lucide-react"
 import { toast } from "sonner"
 
@@ -45,6 +45,11 @@ export function AttachFileDialog({ comicId, open, onOpenChange, onFileAttached }
       }
 
       await saveComic(updatedComic)
+
+      // If no file handle (iOS/Safari), store pages in IndexedDB
+      if (!handle) {
+        await savePagesForComic(comicId, pages)
+      }
 
       toast.success("File attached", {
         description: `${metadata.totalPages} pages loaded successfully`,

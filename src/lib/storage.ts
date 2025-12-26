@@ -1,8 +1,9 @@
 import type { Comic, Bookmark, Note, ComicList } from "./types"
 
 const DB_NAME = "comic-reader-db"
-const DB_VERSION = 4
+const DB_VERSION = 5
 const COMICS_STORE = "comics"
+const PAGES_STORE = "pages" // For iOS/Safari - stores pages when File System Access unavailable
 const BOOKMARKS_STORE = "bookmarks"
 const NOTES_STORE = "notes"
 const LISTS_STORE = "lists"
@@ -31,9 +32,9 @@ async function initDB(): Promise<IDBDatabase> {
         comicsStore.createIndex("title", "title", { unique: false })
       }
 
-      // Delete legacy pages store if exists
-      if (database.objectStoreNames.contains("pages")) {
-        database.deleteObjectStore("pages")
+      // Pages store - for iOS/Safari where File System Access API is unavailable
+      if (!database.objectStoreNames.contains(PAGES_STORE)) {
+        database.createObjectStore(PAGES_STORE, { keyPath: "comicId" })
       }
 
       // Bookmarks store
@@ -98,13 +99,17 @@ export async function deleteComic(id: string): Promise<void> {
   const database = await initDB()
   return new Promise((resolve, reject) => {
     const transaction = database.transaction(
-      [COMICS_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
+      [COMICS_STORE, PAGES_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
       "readwrite",
     )
 
     // Delete comic
     const comicsStore = transaction.objectStore(COMICS_STORE)
     comicsStore.delete(id)
+
+    // Delete pages (for iOS/Safari storage)
+    const pagesStore = transaction.objectStore(PAGES_STORE)
+    pagesStore.delete(id)
 
     // Delete all bookmarks for this comic
     const bookmarksStore = transaction.objectStore(BOOKMARKS_STORE)
@@ -231,6 +236,56 @@ export async function loadPagesFromHandle(
     console.error("[storage] Error loading pages from handle:", error)
     return null
   }
+}
+
+/**
+ * Save comic pages to IndexedDB.
+ * Used for iOS/Safari where File System Access API is unavailable.
+ */
+export async function savePagesForComic(comicId: string, pages: Blob[]): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([PAGES_STORE], "readwrite")
+    const store = transaction.objectStore(PAGES_STORE)
+    const request = store.put({ comicId, pages })
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Get comic pages from IndexedDB.
+ * Used for iOS/Safari where File System Access API is unavailable.
+ */
+export async function getPagesForComic(comicId: string): Promise<Blob[] | null> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([PAGES_STORE], "readonly")
+    const store = transaction.objectStore(PAGES_STORE)
+    const request = store.get(comicId)
+
+    request.onsuccess = () => {
+      const result = request.result
+      resolve(result ? result.pages : null)
+    }
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Delete pages for a comic from IndexedDB.
+ */
+export async function deletePagesForComic(comicId: string): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([PAGES_STORE], "readwrite")
+    const store = transaction.objectStore(PAGES_STORE)
+    const request = store.delete(comicId)
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
 }
 
 export async function saveBookmark(bookmark: Bookmark): Promise<void> {
@@ -508,17 +563,18 @@ export async function importLibrary(file: File, options: { merge: boolean } = { 
 }
 
 /**
- * Clear all data from IndexedDB (comics, bookmarks, notes, lists).
+ * Clear all data from IndexedDB (comics, pages, bookmarks, notes, lists).
  * This is destructive and cannot be undone.
  */
 export async function clearAllData(): Promise<void> {
   const database = await initDB()
   return new Promise((resolve, reject) => {
     const transaction = database.transaction(
-      [COMICS_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
+      [COMICS_STORE, PAGES_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
       "readwrite"
     )
     transaction.objectStore(COMICS_STORE).clear()
+    transaction.objectStore(PAGES_STORE).clear()
     transaction.objectStore(BOOKMARKS_STORE).clear()
     transaction.objectStore(NOTES_STORE).clear()
     transaction.objectStore(LISTS_STORE).clear()
