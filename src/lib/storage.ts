@@ -1,12 +1,14 @@
-import type { Comic, Bookmark, Note, ComicList } from "./types"
+import type { Comic, Bookmark, Note, ComicList, ComicSource, RemotePages } from "./types"
 
 const DB_NAME = "comic-reader-db"
-const DB_VERSION = 5
+const DB_VERSION = 6
 const COMICS_STORE = "comics"
 const PAGES_STORE = "pages" // For iOS/Safari - stores pages when File System Access unavailable
 const BOOKMARKS_STORE = "bookmarks"
 const NOTES_STORE = "notes"
 const LISTS_STORE = "lists"
+const SOURCES_STORE = "sources" // Data sources (CSV imports)
+const REMOTE_PAGES_STORE = "remotePages" // Page URLs for remote comics
 
 let db: IDBDatabase | null = null
 
@@ -55,6 +57,17 @@ async function initDB(): Promise<IDBDatabase> {
       if (!database.objectStoreNames.contains(LISTS_STORE)) {
         database.createObjectStore(LISTS_STORE, { keyPath: "id" })
       }
+
+      // Sources store (data sources like CSV imports)
+      if (!database.objectStoreNames.contains(SOURCES_STORE)) {
+        database.createObjectStore(SOURCES_STORE, { keyPath: "id" })
+      }
+
+      // Remote pages store (page URLs for remote comics)
+      if (!database.objectStoreNames.contains(REMOTE_PAGES_STORE)) {
+        const remotePagesStore = database.createObjectStore(REMOTE_PAGES_STORE, { keyPath: "comicId" })
+        remotePagesStore.createIndex("comicId", "comicId", { unique: true })
+      }
     }
   })
 }
@@ -99,7 +112,7 @@ export async function deleteComic(id: string): Promise<void> {
   const database = await initDB()
   return new Promise((resolve, reject) => {
     const transaction = database.transaction(
-      [COMICS_STORE, PAGES_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
+      [COMICS_STORE, PAGES_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE, REMOTE_PAGES_STORE],
       "readwrite",
     )
 
@@ -110,6 +123,10 @@ export async function deleteComic(id: string): Promise<void> {
     // Delete pages (for iOS/Safari storage)
     const pagesStore = transaction.objectStore(PAGES_STORE)
     pagesStore.delete(id)
+
+    // Delete remote pages (for remote comics)
+    const remotePagesStore = transaction.objectStore(REMOTE_PAGES_STORE)
+    remotePagesStore.delete(id)
 
     // Delete all bookmarks for this comic
     const bookmarksStore = transaction.objectStore(BOOKMARKS_STORE)
@@ -563,14 +580,14 @@ export async function importLibrary(file: File, options: { merge: boolean } = { 
 }
 
 /**
- * Clear all data from IndexedDB (comics, pages, bookmarks, notes, lists).
+ * Clear all data from IndexedDB (comics, pages, bookmarks, notes, lists, sources, remote pages).
  * This is destructive and cannot be undone.
  */
 export async function clearAllData(): Promise<void> {
   const database = await initDB()
   return new Promise((resolve, reject) => {
     const transaction = database.transaction(
-      [COMICS_STORE, PAGES_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE],
+      [COMICS_STORE, PAGES_STORE, BOOKMARKS_STORE, NOTES_STORE, LISTS_STORE, SOURCES_STORE, REMOTE_PAGES_STORE],
       "readwrite"
     )
     transaction.objectStore(COMICS_STORE).clear()
@@ -578,6 +595,8 @@ export async function clearAllData(): Promise<void> {
     transaction.objectStore(BOOKMARKS_STORE).clear()
     transaction.objectStore(NOTES_STORE).clear()
     transaction.objectStore(LISTS_STORE).clear()
+    transaction.objectStore(SOURCES_STORE).clear()
+    transaction.objectStore(REMOTE_PAGES_STORE).clear()
     transaction.oncomplete = () => resolve()
     transaction.onerror = () => reject(transaction.error)
   })
@@ -614,4 +633,102 @@ export async function initializeDefaultLists(): Promise<void> {
       await saveList(list)
     }
   }
+}
+
+// ============ SOURCES (Data Sources) ============
+
+export async function saveSource(source: ComicSource): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([SOURCES_STORE], "readwrite")
+    const store = transaction.objectStore(SOURCES_STORE)
+    const request = store.put(source)
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function getSource(id: string): Promise<ComicSource | null> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([SOURCES_STORE], "readonly")
+    const store = transaction.objectStore(SOURCES_STORE)
+    const request = store.get(id)
+
+    request.onsuccess = () => resolve(request.result || null)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function getAllSources(): Promise<ComicSource[]> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([SOURCES_STORE], "readonly")
+    const store = transaction.objectStore(SOURCES_STORE)
+    const request = store.getAll()
+
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function deleteSource(id: string): Promise<void> {
+  const database = await initDB()
+
+  // First, get all comics with this sourceId and delete them
+  const comics = await getAllComics()
+  const comicsToDelete = comics.filter(c => c.sourceId === id)
+
+  for (const comic of comicsToDelete) {
+    await deleteComic(comic.id)
+  }
+
+  // Then delete the source itself
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([SOURCES_STORE], "readwrite")
+    const store = transaction.objectStore(SOURCES_STORE)
+    const request = store.delete(id)
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+// ============ REMOTE PAGES ============
+
+export async function saveRemotePages(remotePages: RemotePages): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([REMOTE_PAGES_STORE], "readwrite")
+    const store = transaction.objectStore(REMOTE_PAGES_STORE)
+    const request = store.put(remotePages)
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function getRemotePages(comicId: string): Promise<RemotePages | null> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([REMOTE_PAGES_STORE], "readonly")
+    const store = transaction.objectStore(REMOTE_PAGES_STORE)
+    const request = store.get(comicId)
+
+    request.onsuccess = () => resolve(request.result || null)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function deleteRemotePages(comicId: string): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([REMOTE_PAGES_STORE], "readwrite")
+    const store = transaction.objectStore(REMOTE_PAGES_STORE)
+    const request = store.delete(comicId)
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
 }

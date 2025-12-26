@@ -1,7 +1,7 @@
 "use client"
 
 import { formatDistanceToNow } from "date-fns"
-import { MoreHorizontal, Trash2, FolderPlus, Upload, BookOpen } from "lucide-react"
+import { MoreHorizontal, Trash2, FolderPlus, Upload, BookOpen, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -13,8 +13,9 @@ import {
 import type { Comic } from "@/lib/types"
 import Link from "next/link"
 import { AddToListDialog } from "./add-to-list-dialog"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AttachFileDialog } from "./attach-file-dialog"
+import { loadRemoteImage, revokeRemoteImage } from "@/lib/remote-loader"
 
 interface ComicCardProps {
   comic: Comic
@@ -48,6 +49,8 @@ function ProgressDots({ current, total }: { current: number; total: number }) {
 }
 
 function CardContextMenu({ comic, onDelete, onAttach }: { comic: Comic; onDelete: () => void; onAttach: () => void }) {
+  const isRemote = comic.sourceType === 'remote'
+
   return (
     <div
       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-10"
@@ -72,7 +75,7 @@ function CardContextMenu({ comic, onDelete, onAttach }: { comic: Comic; onDelete
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          {!comic.hasFile && (
+          {!comic.hasFile && !isRemote && (
             <>
               <DropdownMenuItem onClick={onAttach}>
                 <Upload className="mr-2 h-4 w-4" />
@@ -110,7 +113,39 @@ function CardContextMenu({ comic, onDelete, onAttach }: { comic: Comic; onDelete
 
 export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProps) {
   const [attachDialogOpen, setAttachDialogOpen] = useState(false)
+  const [remoteCoverUrl, setRemoteCoverUrl] = useState<string | null>(null)
+  const [coverLoading, setCoverLoading] = useState(false)
   const hasProgress = comic.currentPage > 0 && comic.totalPages
+  const isRemote = comic.sourceType === 'remote'
+
+  // Load remote cover on demand
+  useEffect(() => {
+    if (!isRemote || !comic.coverUrl || comic.coverImage) return
+
+    let cancelled = false
+    setCoverLoading(true)
+
+    loadRemoteImage(comic.coverUrl)
+      .then(url => {
+        if (!cancelled) {
+          setRemoteCoverUrl(url)
+          setCoverLoading(false)
+        }
+      })
+      .catch(err => {
+        console.error('[comic-card] Failed to load remote cover:', err)
+        if (!cancelled) {
+          setCoverLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+      if (remoteCoverUrl) {
+        revokeRemoteImage(comic.coverUrl!)
+      }
+    }
+  }, [isRemote, comic.coverUrl, comic.coverImage])
 
   const handleCardClick = () => {
     if (onSelect) {
@@ -118,19 +153,35 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
     }
   }
 
+  // Determine the cover image to display
+  const displayCover = comic.coverImage || remoteCoverUrl || "/placeholder.svg"
+
   const CardInner = () => (
     <>
       {/* Cover Image */}
       <div className="relative aspect-[2/3] overflow-hidden bg-muted rounded-t-2xl">
-        <img
-          src={comic.coverImage || "/placeholder.svg"}
-          alt=""
-          className="h-full w-full object-cover"
-          loading="lazy"
-        />
+        {coverLoading ? (
+          <div className="h-full w-full flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <img
+            src={displayCover}
+            alt=""
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        )}
 
-        {/* No file overlay */}
-        {!comic.hasFile && (
+        {/* Remote indicator */}
+        {isRemote && (
+          <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm rounded-full p-1.5">
+            <Globe className="h-3 w-3 text-white" />
+          </div>
+        )}
+
+        {/* No file overlay - only for local comics without files */}
+        {!comic.hasFile && !isRemote && (
           <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
             <div className="text-center p-4">
               <BookOpen className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
@@ -183,8 +234,8 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
           onAttach={() => setAttachDialogOpen(true)}
         />
 
-        {/* Clickable area */}
-        {comic.hasFile ? (
+        {/* Clickable area - local comics with files OR remote comics can be read */}
+        {(comic.hasFile || isRemote) ? (
           onSelect ? (
             <div
               role="button"

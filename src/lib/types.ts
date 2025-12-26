@@ -1,9 +1,10 @@
 export type ComicFormat = "cbz" | "cbr" | "pdf"
+export type ComicSourceType = "local" | "remote"
 
 export interface Comic {
   id: string
   title: string
-  coverImage: string // base64 data URL for the cover
+  coverImage: string // base64 data URL for the cover, or empty for remote (loaded on demand)
   totalPages: number | null
   currentPage: number
   lastRead?: Date
@@ -18,6 +19,10 @@ export interface Comic {
   format?: ComicFormat
   // File handle for File System Access API - allows re-reading file from disk
   fileHandle?: FileSystemFileHandle
+  // Remote source fields
+  sourceType: ComicSourceType
+  sourceId?: string // Links to ComicSource for remote comics
+  coverUrl?: string // Remote cover URL (fetched on demand)
 }
 
 export interface ComicPage {
@@ -66,4 +71,22 @@ export interface ComicList {
   color: string
   createdAt: Date
   comicIds: string[]
+}
+
+export interface ComicSource {
+  id: string
+  name: string
+  importedAt: Date
+  comicCount: number
+  fileName?: string
+}
+
+export interface RemotePage {
+  pageNumber: number
+  imageUrl: string
+}
+
+export interface RemotePages {
+  comicId: string
+  pages: RemotePage[]
 }

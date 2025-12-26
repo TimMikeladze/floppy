@@ -6,9 +6,10 @@ import { ReaderToolbar } from "@/components/reader/reader-toolbar"
 import { ReaderMenu } from "@/components/reader/reader-menu"
 import { PageIndicator } from "@/components/reader/page-indicator"
 import { QuickNoteDialog } from "@/components/reader/quick-note-dialog"
-import { getComic, updateReadingProgress, saveBookmark, getBookmarks, saveNote, loadPagesFromHandle, getPagesForComic } from "@/lib/storage"
+import { getComic, updateReadingProgress, saveBookmark, getBookmarks, saveNote, loadPagesFromHandle, getPagesForComic, getRemotePages } from "@/lib/storage"
 import { SUPPORTED_FORMATS } from "@/lib/comic-parser"
-import type { Comic, Bookmark } from "@/lib/types"
+import { loadRemoteImage, revokeAllRemoteImages } from "@/lib/remote-loader"
+import type { Comic, Bookmark, RemotePage } from "@/lib/types"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   const { id } = use(params)
   const [comic, setComic] = useState<Comic | null>(null)
   const [pageUrls, setPageUrls] = useState<string[]>([])
+  const [remotePageData, setRemotePageData] = useState<RemotePage[]>([])
   const [currentPage, setCurrentPage] = useState(0)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -54,6 +56,49 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     return () => clearTimeout(timeout)
   }, [controlsVisible, menuOpen])
 
+  // Load remote pages on demand (current page + adjacent for smooth navigation)
+  useEffect(() => {
+    if (!comic || comic.sourceType !== 'remote' || remotePageData.length === 0) return
+
+    const pagesToLoad = [
+      currentPage - 1,
+      currentPage,
+      currentPage + 1,
+    ].filter(p => p >= 0 && p < remotePageData.length)
+
+    async function loadRemotePages() {
+      for (const pageIndex of pagesToLoad) {
+        // Skip if already loaded
+        if (pageUrls[pageIndex]) continue
+
+        const pageData = remotePageData[pageIndex]
+        if (!pageData) continue
+
+        try {
+          const blobUrl = await loadRemoteImage(pageData.imageUrl)
+          setPageUrls(prev => {
+            const updated = [...prev]
+            updated[pageIndex] = blobUrl
+            return updated
+          })
+        } catch (error) {
+          console.error(`[reader] Failed to load remote page ${pageIndex}:`, error)
+        }
+      }
+    }
+
+    loadRemotePages()
+  }, [currentPage, comic, remotePageData])
+
+  // Cleanup remote image URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (comic?.sourceType === 'remote') {
+        revokeAllRemoteImages()
+      }
+    }
+  }, [comic?.sourceType])
+
   const toggleControls = useCallback(() => {
     setControlsVisible((prev) => !prev)
   }, [])
@@ -80,6 +125,27 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   async function loadPages() {
     if (!comic) return
 
+    // Handle remote comics
+    if (comic.sourceType === 'remote') {
+      try {
+        const remotePagesRecord = await getRemotePages(comic.id)
+        if (remotePagesRecord && remotePagesRecord.pages.length > 0) {
+          // Sort pages by page number
+          const sortedPages = [...remotePagesRecord.pages].sort((a, b) => a.pageNumber - b.pageNumber)
+          setRemotePageData(sortedPages)
+          // Initialize pageUrls with placeholders (will be loaded on demand)
+          setPageUrls(sortedPages.map(() => ''))
+        }
+      } catch (error) {
+        console.error("[reader] Error loading remote pages:", error)
+        toast.error("Failed to load comic pages")
+      } finally {
+        setIsLoading(false)
+      }
+      return
+    }
+
+    // Handle local comics
     if (!comic.hasFile || !comic.totalPages) {
       setIsLoading(false)
       return
@@ -183,7 +249,11 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     )
   }
 
-  if (!comic.hasFile || !comic.totalPages) {
+  // Remote comics have pages loaded from URLs, not files
+  const isRemote = comic.sourceType === 'remote'
+  const hasContent = isRemote ? remotePageData.length > 0 : (comic.hasFile && comic.totalPages)
+
+  if (!hasContent) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="max-w-md text-center">
@@ -198,29 +268,38 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
             </p>
           )}
           <p className="mt-4 text-sm text-muted-foreground">
-            This comic doesn't have a file attached yet. Upload a {SUPPORTED_FORMATS.description} file to start reading.
+            {isRemote
+              ? "This comic's pages could not be loaded."
+              : `This comic doesn't have a file attached yet. Upload a ${SUPPORTED_FORMATS.description} file to start reading.`
+            }
           </p>
           <div className="mt-6 flex gap-3 justify-center">
             <Button variant="outline" onClick={() => router.push("/")}>
               Back to Library
             </Button>
-            <Button onClick={() => setAttachDialogOpen(true)} className="gap-2">
-              <Upload className="h-4 w-4" />
-              Attach File
-            </Button>
+            {!isRemote && (
+              <Button onClick={() => setAttachDialogOpen(true)} className="gap-2">
+                <Upload className="h-4 w-4" />
+                Attach File
+              </Button>
+            )}
           </div>
         </div>
-        <AttachFileDialog
-          comicId={comic.id}
-          open={attachDialogOpen}
-          onOpenChange={setAttachDialogOpen}
-          onFileAttached={() => {
-            loadComic()
-          }}
-        />
+        {!isRemote && (
+          <AttachFileDialog
+            comicId={comic.id}
+            open={attachDialogOpen}
+            onOpenChange={setAttachDialogOpen}
+            onFileAttached={() => {
+              loadComic()
+            }}
+          />
+        )}
       </div>
     )
   }
+
+  const totalPages = isRemote ? remotePageData.length : (comic.totalPages ?? 0)
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-black">
@@ -239,7 +318,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
 
       <PageIndicator
         currentPage={currentPage}
-        totalPages={comic.totalPages}
+        totalPages={totalPages}
         isVisible={!controlsVisible && !menuOpen}
       />
 
@@ -247,7 +326,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         open={menuOpen}
         onOpenChange={setMenuOpen}
         currentPage={currentPage}
-        totalPages={comic.totalPages}
+        totalPages={totalPages}
         onPageChange={handlePageChange}
         onBookmarkClick={handleBookmark}
         comicId={comic.id}

@@ -13,6 +13,7 @@ import { getAllComics, saveComic, deleteComic, getAllLists, exportLibrary, impor
 import type { FileWithHandle } from "@/components/library/upload-dialog"
 import type { Comic, ComicList } from "@/lib/types"
 import { AddComicDialogControlled } from "@/components/library/add-comic-dialog"
+import { ImportDataSourceDialog } from "@/components/library/import-data-source-dialog"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
@@ -70,6 +71,7 @@ function HomePageContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [addComicDialogOpen, setAddComicDialogOpen] = useState(false)
+  const [importDataSourceDialogOpen, setImportDataSourceDialogOpen] = useState(false)
   const [listsSheetOpen, setListsSheetOpen] = useState(false)
   const [selectedComic, setSelectedComic] = useState<Comic | null>(null)
   const [detailSheetOpen, setDetailSheetOpen] = useState(false)
@@ -219,6 +221,7 @@ function HomePageContent() {
           hasFile: true,
           format: metadata.format,
           fileHandle: handle,
+          sourceType: 'local',
         }
 
         await saveComic(comic)
@@ -360,6 +363,7 @@ function HomePageContent() {
         onManageLists={() => setListsSheetOpen(true)}
         onExport={handleExport}
         onImport={handleImport}
+        onImportDataSource={() => setImportDataSourceDialogOpen(true)}
         onClearData={handleClearData}
       />
 
@@ -477,6 +481,13 @@ function HomePageContent() {
         open={addComicDialogOpen}
         onOpenChange={setAddComicDialogOpen}
         onComicAdded={loadComics}
+      />
+
+      {/* Import Data Source Dialog */}
+      <ImportDataSourceDialog
+        open={importDataSourceDialogOpen}
+        onOpenChange={setImportDataSourceDialogOpen}
+        onImportComplete={loadComics}
       />
     </div>
   )

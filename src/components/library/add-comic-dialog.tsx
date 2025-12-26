@@ -51,6 +51,7 @@ export function AddComicDialogControlled({ open, onOpenChange, onComicAdded }: A
         totalPages: null,
         currentPage: 0,
         hasFile: false,
+        sourceType: 'local',
       }
 
       await saveComic(comic)
@@ -207,6 +208,7 @@ export function AddComicDialog({ onComicAdded }: AddComicDialogProps) {
         totalPages: null,
         currentPage: 0,
         hasFile: false,
+        sourceType: 'local',
       }
 
       await saveComic(comic)

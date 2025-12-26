@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2 } from "lucide-react"
+import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -38,6 +38,7 @@ interface LibraryHeaderProps {
   onManageLists?: () => void
   onExport?: () => void
   onImport?: (file: File) => void
+  onImportDataSource?: () => void
   onClearData?: () => void
 }
 
@@ -53,6 +54,7 @@ export function LibraryHeader({
   onManageLists,
   onExport,
   onImport,
+  onImportDataSource,
   onClearData,
 }: LibraryHeaderProps) {
   const { theme, setTheme, resolvedTheme } = useTheme()
@@ -225,6 +227,12 @@ export function LibraryHeader({
                     <DropdownMenuItem onClick={handleImportClick}>
                       <FolderUp className="mr-2 h-4 w-4" />
                       Import Library
+                    </DropdownMenuItem>
+                  )}
+                  {onImportDataSource && (
+                    <DropdownMenuItem onClick={onImportDataSource}>
+                      <Database className="mr-2 h-4 w-4" />
+                      Import Data Source
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
