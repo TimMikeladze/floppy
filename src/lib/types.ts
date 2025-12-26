@@ -4,7 +4,7 @@ export type PdfRenderMode = "image" | "native"
 export interface Comic {
   id: string
   title: string
-  coverImage: string
+  coverImage: string // base64 data URL for the cover
   totalPages: number | null
   currentPage: number
   lastRead?: Date
@@ -18,6 +18,8 @@ export interface Comic {
   releaseDate?: string
   format?: ComicFormat
   pdfRenderMode?: PdfRenderMode
+  // File handle for File System Access API - allows re-reading file from disk
+  fileHandle?: FileSystemFileHandle
 }
 
 export interface ComicPage {

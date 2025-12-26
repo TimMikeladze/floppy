@@ -211,6 +211,43 @@ export async function updateReadingProgress(comicId: string, currentPage: number
   })
 }
 
+// File System Access API helpers
+export async function verifyFilePermission(
+  fileHandle: FileSystemFileHandle,
+  withWrite = false
+): Promise<boolean> {
+  const options: FileSystemHandlePermissionDescriptor = { mode: withWrite ? "readwrite" : "read" }
+
+  // Check if permission is already granted
+  if ((await fileHandle.queryPermission(options)) === "granted") {
+    return true
+  }
+
+  // Request permission
+  if ((await fileHandle.requestPermission(options)) === "granted") {
+    return true
+  }
+
+  return false
+}
+
+export async function getFileFromHandle(fileHandle: FileSystemFileHandle): Promise<File | null> {
+  try {
+    const hasPermission = await verifyFilePermission(fileHandle)
+    if (!hasPermission) {
+      return null
+    }
+    return await fileHandle.getFile()
+  } catch (error) {
+    console.error("[storage] Error getting file from handle:", error)
+    return null
+  }
+}
+
+export function isFileSystemAccessSupported(): boolean {
+  return "showOpenFilePicker" in window
+}
+
 export async function saveBookmark(bookmark: Bookmark): Promise<void> {
   const database = await initDB()
   return new Promise((resolve, reject) => {

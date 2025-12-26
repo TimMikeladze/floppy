@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs"
 import { LibraryHeader } from "@/components/library/library-header"
 import { ComicGrid } from "@/components/library/comic-grid"
 import { ComicTable } from "@/components/library/comic-table"
@@ -8,25 +9,35 @@ import { UploadDialog } from "@/components/library/upload-dialog"
 import { ListManager } from "@/components/library/list-manager"
 import { ComicDetailSheet } from "@/components/library/comic-detail-sheet"
 import { parseComicFile, generateCoverImage, SUPPORTED_FORMATS, detectFormat } from "@/lib/comic-parser"
-import { getAllComics, saveComic, deleteComic, savePage, getAllLists, exportLibrary, importLibrary } from "@/lib/storage"
+import { getAllComics, saveComic, deleteComic, getAllLists, exportLibrary, importLibrary } from "@/lib/storage"
+import type { FileWithHandle } from "@/components/library/upload-dialog"
 import type { Comic, ComicList } from "@/lib/types"
 import { AddComicDialogControlled } from "@/components/library/add-comic-dialog"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
-type FilterType = "all" | "reading" | "completed" | "want"
-type ViewMode = "grid" | "table"
+const filterTypes = ["all", "reading", "completed", "want"] as const
+type FilterType = (typeof filterTypes)[number]
+
+const sortTypes = ["title", "recent", "progress"] as const
+type SortType = (typeof sortTypes)[number]
+
+const viewModes = ["grid", "table"] as const
+type ViewMode = (typeof viewModes)[number]
 
 export default function HomePage() {
+  // URL state with nuqs
+  const [searchQuery, setSearchQuery] = useQueryState("q", parseAsString.withDefault(""))
+  const [sortBy, setSortBy] = useQueryState("sort", parseAsStringLiteral(sortTypes).withDefault("recent"))
+  const [viewMode, setViewMode] = useQueryState("view", parseAsStringLiteral(viewModes).withDefault("grid"))
+  const [activeFilter, setActiveFilter] = useQueryState("filter", parseAsStringLiteral(filterTypes).withDefault("all"))
+  const [selectedListId, setSelectedListId] = useQueryState("list", parseAsString)
+
+  // Local state
   const [comics, setComics] = useState<Comic[]>([])
   const [filteredComics, setFilteredComics] = useState<Comic[]>([])
   const [lists, setLists] = useState<ComicList[]>([])
-  const [selectedListId, setSelectedListId] = useState<string | null>(null)
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [sortBy, setSortBy] = useState<"title" | "recent" | "progress">("recent")
-  const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [isLoading, setIsLoading] = useState(true)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [addComicDialogOpen, setAddComicDialogOpen] = useState(false)
@@ -141,11 +152,11 @@ export default function HomePage() {
     setUploadDialogOpen(true)
   }
 
-  async function handleFilesSelected(files: FileList | null) {
-    if (!files || files.length === 0) return
+  async function handleFilesSelected(filesWithHandles: FileWithHandle[]) {
+    if (!filesWithHandles || filesWithHandles.length === 0) return
 
     const validExtensions = SUPPORTED_FORMATS.extensions
-    const validFiles = Array.from(files).filter((file) => {
+    const validFiles = filesWithHandles.filter(({ file }) => {
       const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."))
       return validExtensions.includes(ext)
     })
@@ -161,26 +172,14 @@ export default function HomePage() {
     let successCount = 0
     let failCount = 0
 
-    for (const file of validFiles) {
+    for (const { file, handle } of validFiles) {
       try {
         const { pages, metadata, pdfData } = await parseComicFile(file)
         const coverImage = await generateCoverImage(pages[0])
 
         const comicId = crypto.randomUUID()
 
-        // Save pages (for PDFs in native mode, we save the raw PDF data as page 0)
-        if (pdfData) {
-          // Native PDF mode - store raw PDF data
-          await savePage(comicId, -1, new Blob([pdfData], { type: "application/pdf" }))
-          // Still save cover as page 0 for thumbnails
-          await savePage(comicId, 0, pages[0])
-        } else {
-          // Image-based mode - save all pages
-          for (let i = 0; i < pages.length; i++) {
-            await savePage(comicId, i, pages[i])
-          }
-        }
-
+        // Only store metadata and cover image - file handle allows re-reading from disk
         const comic: Comic = {
           id: comicId,
           title: metadata.title,
@@ -192,6 +191,7 @@ export default function HomePage() {
           hasFile: true,
           format: metadata.format,
           pdfRenderMode: pdfData ? "native" : undefined,
+          fileHandle: handle, // Store file handle for later access
         }
 
         await saveComic(comic)

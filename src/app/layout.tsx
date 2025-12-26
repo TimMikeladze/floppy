@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Geist } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { NuqsAdapter } from "nuqs/adapters/next/app"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ReadingProvider } from "@/lib/reading-context"
 import { Toaster } from "sonner"
@@ -60,15 +61,17 @@ export default function RootLayout({
   return (
     <html lang="en" className={geist.variable} suppressHydrationWarning>
       <body className="font-sans antialiased overscroll-none">
-        <ThemeProvider>
-          <ReadingProvider>{children}</ReadingProvider>
-        </ThemeProvider>
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            className: "!bg-card !text-card-foreground !border-border",
-          }}
-        />
+        <NuqsAdapter>
+          <ThemeProvider>
+            <ReadingProvider>{children}</ReadingProvider>
+          </ThemeProvider>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              className: "!bg-card !text-card-foreground !border-border",
+            }}
+          />
+        </NuqsAdapter>
         <Analytics />
       </body>
     </html>
