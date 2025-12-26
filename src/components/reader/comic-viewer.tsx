@@ -276,7 +276,7 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
         {settings.pageLayout === "double" && nextPageUrl ? (
           <div className="flex h-full items-center justify-center gap-1">
             <img
-              src={settings.readingDirection === "rtl" ? nextPageUrl : currentPageUrl}
+              src={(settings.readingDirection === "rtl" ? nextPageUrl : currentPageUrl) || "/placeholder.svg"}
               alt={`Page ${settings.readingDirection === "rtl" ? currentPage + 2 : currentPage + 1}`}
               className={`max-h-full select-none ${transitionClass} ${
                 settings.fitMode === "fit-width"
@@ -294,7 +294,7 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
               onTouchStart={handleDoubleTap}
             />
             <img
-              src={settings.readingDirection === "rtl" ? currentPageUrl : nextPageUrl}
+              src={(settings.readingDirection === "rtl" ? currentPageUrl : nextPageUrl) || "/placeholder.svg"}
               alt={`Page ${settings.readingDirection === "rtl" ? currentPage + 1 : currentPage + 2}`}
               className={`max-h-full select-none ${transitionClass} ${
                 settings.fitMode === "fit-width"
