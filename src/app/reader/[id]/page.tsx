@@ -13,7 +13,7 @@ import type { Comic, Bookmark, RemotePage } from "@/lib/types"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Upload } from "lucide-react"
+import { Upload, Settings2 } from "lucide-react"
 import { AttachFileDialog } from "@/components/library/attach-file-dialog"
 
 export default function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
@@ -115,19 +115,34 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange)
   }, [])
 
-  // Keyboard shortcut for fullscreen (F key)
+  // Keyboard shortcuts (F for fullscreen, M/Escape for menu, Space for controls)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+
       if (e.key === "f" || e.key === "F") {
-        // Don't trigger if user is typing in an input
-        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
         toggleFullscreen()
+      } else if (e.key === "m" || e.key === "M") {
+        // Toggle menu with M key
+        setMenuOpen(prev => !prev)
+      } else if (e.key === "Escape") {
+        // Close menu if open, otherwise toggle controls
+        if (menuOpen) {
+          setMenuOpen(false)
+        } else {
+          setControlsVisible(prev => !prev)
+        }
+      } else if (e.key === " ") {
+        // Space bar toggles controls (prevent scroll)
+        e.preventDefault()
+        setControlsVisible(prev => !prev)
       }
     }
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [])
+  }, [menuOpen])
 
   const toggleFullscreen = useCallback(async () => {
     if (!containerRef.current) return
@@ -145,10 +160,9 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   }, [])
 
   const toggleControls = useCallback(() => {
-    // In fullscreen mode, don't toggle on center click - only hover reveals toolbar
-    if (isFullscreen) return
+    // Toggle controls on center click in both normal and fullscreen modes
     setControlsVisible((prev) => !prev)
-  }, [isFullscreen])
+  }, [])
 
   async function loadComic() {
     try {
@@ -407,6 +421,18 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         currentPage={currentPage}
         onSave={handleSaveNote}
       />
+
+      {/* Floating menu button - always visible on desktop, hidden on mobile */}
+      <Button
+        variant="secondary"
+        size="icon"
+        className="fixed bottom-6 right-6 z-50 hidden h-12 w-12 rounded-full shadow-lg md:flex opacity-70 hover:opacity-100 transition-opacity"
+        onClick={() => setMenuOpen(true)}
+        title="Open menu (M)"
+      >
+        <Settings2 className="h-5 w-5" />
+        <span className="sr-only">Open menu</span>
+      </Button>
     </div>
   )
 }

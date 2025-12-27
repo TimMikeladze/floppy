@@ -21,7 +21,13 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
-  const touchStartRef = useRef({ x: 0, y: 0, distance: 0 })
+  const touchStartRef = useRef({
+    x: 0,
+    y: 0,
+    distance: 0,
+    scale: 1,
+    position: { x: 0, y: 0 }
+  })
 
   // Reset zoom and position when page changes or layout mode changes
   useEffect(() => {
@@ -120,10 +126,28 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
     setIsDragging(false)
   }
 
+  // Get container dimensions for boundary calculations
+  const getContainerRect = () => containerRef.current?.getBoundingClientRect()
+
+  // Clamp position to keep image within reasonable bounds when zoomed
+  const clampPosition = (pos: { x: number; y: number }, currentScale: number) => {
+    const rect = getContainerRect()
+    if (!rect || currentScale <= 1) return { x: 0, y: 0 }
+
+    // Allow panning up to half the container size beyond edges
+    const maxX = (rect.width * (currentScale - 1)) / 2
+    const maxY = (rect.height * (currentScale - 1)) / 2
+
+    return {
+      x: Math.max(-maxX, Math.min(maxX, pos.x)),
+      y: Math.max(-maxY, Math.min(maxY, pos.y)),
+    }
+  }
+
   // Touch handlers for pinch zoom and pan
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2 && settings.layoutMode !== "scrolling") {
-      // Pinch zoom start
+      // Pinch zoom start - store initial state
       const touch1 = e.touches[0]
       const touch2 = e.touches[1]
       const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY)
@@ -131,6 +155,8 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
         x: (touch1.clientX + touch2.clientX) / 2,
         y: (touch1.clientY + touch2.clientY) / 2,
         distance,
+        scale,
+        position: { ...position }
       }
     } else if (e.touches.length === 1 && (scale > 1 || settings.layoutMode === "scrolling")) {
       // Pan start
@@ -144,48 +170,111 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 2 && settings.layoutMode !== "scrolling") {
-      // Pinch zoom
+      // Pinch zoom - zoom toward pinch center
       e.preventDefault()
       const touch1 = e.touches[0]
       const touch2 = e.touches[1]
       const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY)
+      const rect = getContainerRect()
+      if (!rect) return
+
+      // Calculate new scale based on initial scale (not current)
       const scaleDelta = distance / touchStartRef.current.distance
-      const newScale = Math.max(1, Math.min(4, scale * scaleDelta))
+      const newScale = Math.max(1, Math.min(4, touchStartRef.current.scale * scaleDelta))
+
+      // Calculate pinch center relative to container center
+      const pinchCenterX = (touch1.clientX + touch2.clientX) / 2
+      const pinchCenterY = (touch1.clientY + touch2.clientY) / 2
+      const containerCenterX = rect.left + rect.width / 2
+      const containerCenterY = rect.top + rect.height / 2
+
+      // Offset from container center to pinch center
+      const offsetX = pinchCenterX - containerCenterX
+      const offsetY = pinchCenterY - containerCenterY
+
+      // Adjust position to zoom toward pinch center
+      const scaleRatio = newScale / touchStartRef.current.scale
+      const newPosition = {
+        x: touchStartRef.current.position.x - offsetX * (scaleRatio - 1),
+        y: touchStartRef.current.position.y - offsetY * (scaleRatio - 1),
+      }
+
       setScale(newScale)
-      touchStartRef.current.distance = distance
+      setPosition(clampPosition(newPosition, newScale))
     } else if (e.touches.length === 1 && isDragging && (scale > 1 || settings.layoutMode === "scrolling")) {
-      // Pan
+      // Pan with boundaries
       if (scale > 1 || settings.layoutMode === "scrolling") {
         e.preventDefault()
       }
-      setPosition({
+      const newPos = {
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y,
-      })
+      }
+      setPosition(scale > 1 ? clampPosition(newPos, scale) : newPos)
     }
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (e.touches.length === 0) {
       setIsDragging(false)
+      // Snap back to no zoom if scale is very close to 1
+      if (scale < 1.1) {
+        setScale(1)
+        setPosition({ x: 0, y: 0 })
+      }
+    } else if (e.touches.length === 1 && scale > 1) {
+      // Transitioning from pinch to pan - update drag start
+      setIsDragging(true)
+      setDragStart({
+        x: e.touches[0].clientX - position.x,
+        y: e.touches[0].clientY - position.y,
+      })
     }
   }
 
-  // Double tap to zoom
-  const lastTapRef = useRef(0)
+  // Double tap to zoom toward tap location
+  const lastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 })
   const handleDoubleTap = (e: React.TouchEvent) => {
     if (settings.layoutMode === "scrolling") return
 
+    const touch = e.touches[0]
+    if (!touch) return
+
     const now = Date.now()
-    if (now - lastTapRef.current < 300) {
+    const tapX = touch.clientX
+    const tapY = touch.clientY
+
+    // Check if this is a double tap (same area within 300ms)
+    const timeDiff = now - lastTapRef.current.time
+    const distDiff = Math.hypot(tapX - lastTapRef.current.x, tapY - lastTapRef.current.y)
+
+    if (timeDiff < 300 && distDiff < 50) {
+      const rect = getContainerRect()
+      if (!rect) return
+
       if (scale === 1) {
-        setScale(2)
+        // Zoom in to 2.5x centered on tap location
+        const newScale = 2.5
+        const containerCenterX = rect.left + rect.width / 2
+        const containerCenterY = rect.top + rect.height / 2
+        const offsetX = tapX - containerCenterX
+        const offsetY = tapY - containerCenterY
+
+        // Move position so tap point stays under finger
+        const newPosition = {
+          x: -offsetX * (newScale - 1),
+          y: -offsetY * (newScale - 1),
+        }
+        setScale(newScale)
+        setPosition(clampPosition(newPosition, newScale))
       } else {
+        // Zoom out
         setScale(1)
         setPosition({ x: 0, y: 0 })
       }
     }
-    lastTapRef.current = now
+
+    lastTapRef.current = { time: now, x: tapX, y: tapY }
   }
 
   // Wheel zoom
@@ -270,7 +359,10 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onWheel={handleWheel}
-      style={{ cursor: scale > 1 ? (isDragging ? "grabbing" : "grab") : "default" }}
+      style={{
+        cursor: scale > 1 ? (isDragging ? "grabbing" : "grab") : "default",
+        touchAction: "none", // Prevent browser default touch handling
+      }}
     >
       <div className="flex h-full items-center justify-center">
         {settings.pageLayout === "double" && nextPageUrl ? (
@@ -338,13 +430,13 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 transition-opacity hover:opacity-100 md:opacity-50"
+              className="absolute left-4 top-1/2 -translate-y-1/2 h-16 w-16 rounded-full bg-black/30 text-white opacity-0 transition-opacity hover:opacity-100 hover:bg-black/50 md:opacity-70"
               onClick={(e) => {
                 e.stopPropagation()
                 handlePrevPage()
               }}
             >
-              <ChevronLeft className="h-8 w-8" />
+              <ChevronLeft className="h-10 w-10" />
               <span className="sr-only">Previous page</span>
             </Button>
           )}
@@ -352,13 +444,13 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 transition-opacity hover:opacity-100 md:opacity-50"
+              className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-16 rounded-full bg-black/30 text-white opacity-0 transition-opacity hover:opacity-100 hover:bg-black/50 md:opacity-70"
               onClick={(e) => {
                 e.stopPropagation()
                 handleNextPage()
               }}
             >
-              <ChevronRight className="h-8 w-8" />
+              <ChevronRight className="h-10 w-10" />
               <span className="sr-only">Next page</span>
             </Button>
           )}
