@@ -17,9 +17,15 @@ import {
   Maximize,
   AlignVerticalJustifyCenter,
   Square,
+  PanelLeft,
+  PanelRight,
+  PanelTop,
+  PanelBottom,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import {
   Drawer,
   DrawerContent,
@@ -63,16 +69,25 @@ export function ReaderMenu({
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState("navigate")
+  const [isDesktop, setIsDesktop] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+    // Check for desktop on mount and window resize
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768)
+    checkDesktop()
+    window.addEventListener("resize", checkDesktop)
+    return () => window.removeEventListener("resize", checkDesktop)
   }, [])
+
+  // Use bottom on mobile, respect toolbarPosition on desktop
+  const drawerDirection = isDesktop ? (settings.toolbarPosition ?? "right") : "bottom"
 
   const isBookmarked = bookmarks.some((b) => b.pageNumber === currentPage)
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
+    <Drawer open={open} onOpenChange={onOpenChange} direction={drawerDirection}>
+      <DrawerContent className={drawerDirection === "bottom" || drawerDirection === "top" ? "max-h-[85vh]" : ""}>
         {/* Page Scrubber - Always visible at top */}
         <div className="px-4 pt-6 pb-2">
           <div className="flex items-center gap-4">
@@ -291,6 +306,61 @@ export function ReaderMenu({
                     >
                       <Square className="h-4 w-4" />
                       Original
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Page Numbers */}
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="show-page-numbers" className="text-sm font-medium">
+                    Show Page Numbers
+                  </Label>
+                  <Switch
+                    id="show-page-numbers"
+                    checked={settings.showPageNumbers ?? false}
+                    onCheckedChange={(checked) => updateSettings({ showPageNumbers: checked })}
+                  />
+                </div>
+
+                {/* Toolbar Position (desktop only) */}
+                <div className="space-y-2 hidden md:block">
+                  <h3 className="text-sm font-medium">Menu Position</h3>
+                  <div className="grid grid-cols-4 gap-2">
+                    <Button
+                      variant={settings.toolbarPosition === "left" ? "default" : "outline"}
+                      onClick={() => updateSettings({ toolbarPosition: "left" })}
+                      size="sm"
+                      className="gap-1"
+                    >
+                      <PanelLeft className="h-4 w-4" />
+                      Left
+                    </Button>
+                    <Button
+                      variant={settings.toolbarPosition === "right" ? "default" : "outline"}
+                      onClick={() => updateSettings({ toolbarPosition: "right" })}
+                      size="sm"
+                      className="gap-1"
+                    >
+                      <PanelRight className="h-4 w-4" />
+                      Right
+                    </Button>
+                    <Button
+                      variant={settings.toolbarPosition === "top" ? "default" : "outline"}
+                      onClick={() => updateSettings({ toolbarPosition: "top" })}
+                      size="sm"
+                      className="gap-1"
+                    >
+                      <PanelTop className="h-4 w-4" />
+                      Top
+                    </Button>
+                    <Button
+                      variant={settings.toolbarPosition === "bottom" ? "default" : "outline"}
+                      onClick={() => updateSettings({ toolbarPosition: "bottom" })}
+                      size="sm"
+                      className="gap-1"
+                    >
+                      <PanelBottom className="h-4 w-4" />
+                      Bottom
                     </Button>
                   </div>
                 </div>

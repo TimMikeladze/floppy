@@ -10,6 +10,8 @@ const defaultSettings: Omit<ReadingSettings, "theme"> = {
   fitMode: "fit-height",
   brightness: 100,
   layoutMode: "paged",
+  showPageNumbers: false,
+  toolbarPosition: "right",
 }
 
 type ReadingSettingsWithoutTheme = Omit<ReadingSettings, "theme">
