@@ -34,7 +34,7 @@ export function ReaderToolbar({
       {/* Gradient fade for better readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none" />
 
-      <div className="relative flex items-center gap-1 px-2 py-3 safe-area-inset-top">
+      <div className="relative flex items-center gap-1 px-2 py-3 safe-top safe-x">
         <Button
           asChild
           variant="ghost"

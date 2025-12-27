@@ -93,7 +93,7 @@ export function LibraryHeader({
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/50" style={{
+    <header className="sticky top-0 z-40 border-b border-border/50 safe-top safe-x" style={{
       background: 'oklch(from var(--background) l c h / 0.85)',
       backdropFilter: 'blur(24px) saturate(1.2)',
       WebkitBackdropFilter: 'blur(24px) saturate(1.2)',
