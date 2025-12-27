@@ -6,7 +6,7 @@ import { ReaderToolbar } from "@/components/reader/reader-toolbar"
 import { ReaderMenu } from "@/components/reader/reader-menu"
 import { PageIndicator } from "@/components/reader/page-indicator"
 import { QuickNoteDialog } from "@/components/reader/quick-note-dialog"
-import { getComic, updateReadingProgress, saveBookmark, getBookmarks, saveNote, loadPagesFromHandle, getPagesForComic, getRemotePages } from "@/lib/storage"
+import { getComic, updateReadingProgress, saveBookmark, getBookmarks, saveNote, loadPagesFromHandle, getPagesForComic, getRemotePages, getAllComics } from "@/lib/storage"
 import { SUPPORTED_FORMATS } from "@/lib/comic-parser"
 import { loadRemoteImage, revokeAllRemoteImages } from "@/lib/remote-loader"
 import type { Comic, Bookmark, RemotePage } from "@/lib/types"
@@ -15,7 +15,9 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Upload, Settings2 } from "lucide-react"
 import { AttachFileDialog } from "@/components/library/attach-file-dialog"
+import { NextIssueOverlay } from "@/components/reader/next-issue-overlay"
 import { useReading } from "@/lib/reading-context"
+import { findNextIssue } from "@/lib/series-utils"
 
 export default function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -31,6 +33,8 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   const [attachDialogOpen, setAttachDialogOpen] = useState(false)
   const [noteDialogOpen, setNoteDialogOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [nextIssue, setNextIssue] = useState<Comic | null>(null)
+  const [nextIssueDismissed, setNextIssueDismissed] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -42,7 +46,21 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     if (!comic) return
     loadPages()
     loadBookmarks()
+    loadNextIssue()
   }, [comic])
+
+  // Load the next issue in the series
+  async function loadNextIssue() {
+    if (!comic) return
+    try {
+      const allComics = await getAllComics()
+      const next = findNextIssue(comic, allComics)
+      setNextIssue(next)
+      setNextIssueDismissed(false) // Reset dismissal when comic changes
+    } catch (error) {
+      console.error("[reader] Error finding next issue:", error)
+    }
+  }
 
   useEffect(() => {
     if (!comic) return
@@ -439,6 +457,15 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         <Settings2 className="h-5 w-5" />
         <span className="sr-only">Open menu</span>
       </Button>
+
+      {/* Next issue overlay - shown when on last page */}
+      {nextIssue && (
+        <NextIssueOverlay
+          nextIssue={nextIssue}
+          isVisible={currentPage === totalPages - 1 && !nextIssueDismissed && !menuOpen}
+          onDismiss={() => setNextIssueDismissed(true)}
+        />
+      )}
     </div>
   )
 }
