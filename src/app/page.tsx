@@ -17,6 +17,7 @@ import { ImportDataSourceDialog } from "@/components/library/import-data-source-
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { csvImportFlag } from "@/flags"
 
 const filterTypes = ["all", "reading", "completed", "want"] as const
 type FilterType = (typeof filterTypes)[number]
@@ -75,11 +76,18 @@ function HomePageContent() {
   const [listsSheetOpen, setListsSheetOpen] = useState(false)
   const [selectedComic, setSelectedComic] = useState<Comic | null>(null)
   const [detailSheetOpen, setDetailSheetOpen] = useState(false)
+  const [csvImportEnabled, setCsvImportEnabled] = useState(false)
 
   useEffect(() => {
     loadComics()
     loadLists()
+    checkCsvImportFlag()
   }, [])
+
+  async function checkCsvImportFlag() {
+    const enabled = await csvImportFlag()
+    setCsvImportEnabled(enabled)
+  }
 
   useEffect(() => {
     filterAndSortComics()
@@ -363,7 +371,7 @@ function HomePageContent() {
         onManageLists={() => setListsSheetOpen(true)}
         onExport={handleExport}
         onImport={handleImport}
-        onImportDataSource={() => setImportDataSourceDialogOpen(true)}
+        onImportDataSource={csvImportEnabled ? () => setImportDataSourceDialogOpen(true) : undefined}
         onClearData={handleClearData}
       />
 
@@ -484,11 +492,13 @@ function HomePageContent() {
       />
 
       {/* Import Data Source Dialog */}
-      <ImportDataSourceDialog
-        open={importDataSourceDialogOpen}
-        onOpenChange={setImportDataSourceDialogOpen}
-        onImportComplete={loadComics}
-      />
+      {csvImportEnabled && (
+        <ImportDataSourceDialog
+          open={importDataSourceDialogOpen}
+          onOpenChange={setImportDataSourceDialogOpen}
+          onImportComplete={loadComics}
+        />
+      )}
     </div>
   )
 }
