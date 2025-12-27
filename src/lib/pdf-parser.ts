@@ -6,7 +6,8 @@ let pdfjsLib: typeof import("pdfjs-dist") | null = null
 async function getPdfjs() {
   if (!pdfjsLib) {
     pdfjsLib = await import("pdfjs-dist")
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+    // Use HTTPS protocol explicitly to avoid issues with protocol-relative URLs
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
   }
   return pdfjsLib
 }
@@ -39,15 +40,20 @@ export async function parsePdfFile(file: File, scale = 2): Promise<PdfParseResul
     const canvas = document.createElement("canvas")
     canvas.width = viewport.width
     canvas.height = viewport.height
-    const ctx = canvas.getContext("2d")!
+    const ctx = canvas.getContext("2d")
 
-    await page.render({ canvasContext: ctx, viewport, canvas }).promise
+    if (!ctx) {
+      throw new Error(`Failed to get canvas context for page ${i}`)
+    }
+
+    // pdfjs-dist v5+ requires canvas: null when using canvasContext
+    await page.render({ canvasContext: ctx, viewport, canvas: null }).promise
 
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (blob) => {
           if (blob) resolve(blob)
-          else reject(new Error("Failed to create blob from canvas"))
+          else reject(new Error(`Failed to create blob from canvas for page ${i}`))
         },
         "image/png",
         0.92
@@ -55,6 +61,9 @@ export async function parsePdfFile(file: File, scale = 2): Promise<PdfParseResul
     })
 
     pages.push(blob)
+
+    // Clean up to reduce memory usage for large PDFs
+    page.cleanup()
   }
 
   const title = file.name.replace(/\.pdf$/i, "")
