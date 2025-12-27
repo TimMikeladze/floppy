@@ -7,7 +7,7 @@ const defaultSettings: Omit<ReadingSettings, "theme"> = {
   pageLayout: "single",
   pageTransition: "slide",
   readingDirection: "ltr",
-  fitMode: "fit-width",
+  fitMode: "fit-height",
   brightness: 100,
   layoutMode: "paged",
 }
