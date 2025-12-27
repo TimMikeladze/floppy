@@ -401,7 +401,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       <PageIndicator
         currentPage={currentPage}
         totalPages={totalPages}
-        isVisible={!controlsVisible && !menuOpen && !isFullscreen && (settings.showPageNumbers ?? false)}
+        isVisible={!controlsVisible && !menuOpen && !isFullscreen && (settings.showPageNumbers ?? false) && settings.layoutMode !== "scrolling"}
       />
 
       <ReaderMenu
@@ -428,7 +428,11 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       <Button
         variant="secondary"
         size="icon"
-        className="fixed bottom-6 right-6 z-50 hidden h-12 w-12 rounded-full shadow-lg md:flex opacity-70 hover:opacity-100 transition-opacity"
+        className="fixed z-50 hidden h-12 w-12 rounded-full shadow-lg md:flex opacity-70 hover:opacity-100 transition-opacity"
+        style={{
+          bottom: 'calc(1.5rem + var(--safe-area-bottom))',
+          right: 'calc(1.5rem + var(--safe-area-right))'
+        }}
         onClick={() => setMenuOpen(true)}
         title="Open menu (M)"
       >

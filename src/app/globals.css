@@ -71,7 +71,10 @@
   --bottom-nav-height: 4rem;
 
   /* Safe area for notched devices */
+  --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
 .dark {
@@ -204,8 +207,38 @@
 
 /* Mobile-first responsive utilities */
 @layer utilities {
+  /* Safe area utilities for notched devices */
+  .safe-top {
+    padding-top: var(--safe-area-top);
+  }
+
   .safe-bottom {
     padding-bottom: calc(var(--space-md) + var(--safe-area-bottom));
+  }
+
+  .safe-left {
+    padding-left: var(--safe-area-left);
+  }
+
+  .safe-right {
+    padding-right: var(--safe-area-right);
+  }
+
+  .safe-x {
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+  }
+
+  .safe-y {
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+  }
+
+  .safe-all {
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
   }
 
   .touch-target {
@@ -453,4 +486,67 @@ html.dark {
     transform: scale(0.95);
     transition: transform 0.1s ease;
   }
+}
+
+/* PWA Standalone Mode - iOS fullscreen with notch support */
+@media all and (display-mode: standalone) {
+  html,
+  body {
+    /* Prevent overscroll/bounce effects in standalone mode */
+    overscroll-behavior: none;
+    /* Ensure full height in standalone mode */
+    height: 100%;
+    height: 100dvh;
+  }
+
+  /* Apply safe area insets to body in standalone mode */
+  body {
+    padding-top: var(--safe-area-top);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+  }
+}
+
+/* iOS Safari specific - covers the notch area */
+@supports (padding-top: env(safe-area-inset-top)) {
+  html {
+    /* Ensure the background extends behind the notch */
+    background: var(--background);
+  }
+
+  /* Fixed headers should account for notch */
+  .fixed-header {
+    padding-top: calc(var(--space-md) + var(--safe-area-top));
+  }
+
+  /* Fixed bottom elements account for home indicator */
+  .fixed-bottom {
+    padding-bottom: calc(var(--space-md) + var(--safe-area-bottom));
+  }
+}
+
+/* Disable text selection on interactive elements in PWA */
+@media all and (display-mode: standalone) {
+  button,
+  a,
+  [role="button"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Full-screen reader mode - extends content to edges */
+.fullscreen-reader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+}
+
+/* Ensure content area respects safe areas */
+.content-area {
+  min-height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
 }
