@@ -234,8 +234,11 @@ function HomePageContent() {
 
         await saveComic(comic)
 
-        // If no file handle (iOS/Safari), store pages in IndexedDB
-        if (!handle) {
+        // Store pages in IndexedDB for:
+        // 1. iOS/Safari where File System Access API is unavailable (no handle)
+        // 2. PDF files - since they're already rendered to images at import time,
+        //    storing them avoids re-parsing on every view
+        if (!handle || metadata.format === "pdf") {
           await savePagesForComic(comicId, pages)
         }
 

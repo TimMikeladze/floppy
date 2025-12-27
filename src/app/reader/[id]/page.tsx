@@ -235,15 +235,21 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     try {
       let pages: Blob[] | null = null
 
-      // Try file handle first (desktop Chrome/Edge)
-      if (comic.fileHandle && comic.format) {
+      // For PDFs, always try IndexedDB first since pages are pre-rendered at import time
+      // This is faster and more reliable than re-parsing from file handle
+      if (comic.format === "pdf") {
+        pages = await getPagesForComic(comic.id)
+      }
+
+      // Try file handle for non-PDF formats (desktop Chrome/Edge)
+      if (!pages && comic.fileHandle && comic.format) {
         const result = await loadPagesFromHandle(comic.fileHandle, comic.format)
         if (result) {
           pages = result.pages
         }
       }
 
-      // Fall back to IndexedDB storage (iOS/Safari)
+      // Fall back to IndexedDB storage (iOS/Safari or if handle failed)
       if (!pages) {
         pages = await getPagesForComic(comic.id)
       }
