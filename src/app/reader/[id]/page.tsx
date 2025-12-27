@@ -283,6 +283,19 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     }
   }, [comic, currentPage])
 
+  // Handler to show controls when mouse is near top edge in fullscreen
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isFullscreen) return
+
+    // Show toolbar when mouse is in top 60px
+    if (e.clientY <= 60) {
+      setControlsVisible(true)
+    } else if (controlsVisible && e.clientY > 120) {
+      // Hide when mouse moves away from top area
+      setControlsVisible(false)
+    }
+  }, [isFullscreen, controlsVisible])
+
   const isCurrentPageBookmarked = bookmarks.some((b) => b.pageNumber === currentPage)
 
   if (isLoading || !comic) {
@@ -347,19 +360,6 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   }
 
   const totalPages = isRemote ? remotePageData.length : (comic.totalPages ?? 0)
-
-  // Handler to show controls when mouse is near top edge in fullscreen
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isFullscreen) return
-
-    // Show toolbar when mouse is in top 60px
-    if (e.clientY <= 60) {
-      setControlsVisible(true)
-    } else if (controlsVisible && e.clientY > 120) {
-      // Hide when mouse moves away from top area
-      setControlsVisible(false)
-    }
-  }, [isFullscreen, controlsVisible])
 
   return (
     <div
