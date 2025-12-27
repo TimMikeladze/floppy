@@ -338,13 +338,13 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 transition-opacity hover:opacity-100 md:opacity-50"
+              className="absolute left-4 top-1/2 -translate-y-1/2 h-16 w-16 rounded-full bg-black/30 text-white opacity-0 transition-opacity hover:opacity-100 hover:bg-black/50 md:opacity-70"
               onClick={(e) => {
                 e.stopPropagation()
                 handlePrevPage()
               }}
             >
-              <ChevronLeft className="h-8 w-8" />
+              <ChevronLeft className="h-10 w-10" />
               <span className="sr-only">Previous page</span>
             </Button>
           )}
@@ -352,13 +352,13 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 transition-opacity hover:opacity-100 md:opacity-50"
+              className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-16 rounded-full bg-black/30 text-white opacity-0 transition-opacity hover:opacity-100 hover:bg-black/50 md:opacity-70"
               onClick={(e) => {
                 e.stopPropagation()
                 handleNextPage()
               }}
             >
-              <ChevronRight className="h-8 w-8" />
+              <ChevronRight className="h-10 w-10" />
               <span className="sr-only">Next page</span>
             </Button>
           )}
