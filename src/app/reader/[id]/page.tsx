@@ -15,9 +15,11 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Upload, Settings2 } from "lucide-react"
 import { AttachFileDialog } from "@/components/library/attach-file-dialog"
+import { useReading } from "@/lib/reading-context"
 
 export default function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const { settings } = useReading()
   const [comic, setComic] = useState<Comic | null>(null)
   const [pageUrls, setPageUrls] = useState<string[]>([])
   const [remotePageData, setRemotePageData] = useState<RemotePage[]>([])
@@ -399,7 +401,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       <PageIndicator
         currentPage={currentPage}
         totalPages={totalPages}
-        isVisible={!controlsVisible && !menuOpen && !isFullscreen}
+        isVisible={!controlsVisible && !menuOpen && !isFullscreen && (settings.showPageNumbers ?? false)}
       />
 
       <ReaderMenu

@@ -39,6 +39,8 @@ export interface ReadingSettings {
   fitMode: "fit-width" | "fit-height" | "original"
   brightness: number
   layoutMode?: "paged" | "scrolling"
+  showPageNumbers?: boolean
+  toolbarPosition?: "left" | "right" | "bottom" | "top"
 }
 
 export interface Bookmark {
