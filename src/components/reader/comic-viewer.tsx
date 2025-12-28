@@ -232,50 +232,6 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
     }
   }
 
-  // Double tap to zoom toward tap location
-  const lastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 })
-  const handleDoubleTap = (e: React.TouchEvent) => {
-    if (settings.layoutMode === "scrolling") return
-
-    const touch = e.touches[0]
-    if (!touch) return
-
-    const now = Date.now()
-    const tapX = touch.clientX
-    const tapY = touch.clientY
-
-    // Check if this is a double tap (same area within 300ms)
-    const timeDiff = now - lastTapRef.current.time
-    const distDiff = Math.hypot(tapX - lastTapRef.current.x, tapY - lastTapRef.current.y)
-
-    if (timeDiff < 300 && distDiff < 50) {
-      const rect = getContainerRect()
-      if (!rect) return
-
-      if (scale === 1) {
-        // Zoom in to 2.5x centered on tap location
-        const newScale = 2.5
-        const containerCenterX = rect.left + rect.width / 2
-        const containerCenterY = rect.top + rect.height / 2
-        const offsetX = tapX - containerCenterX
-        const offsetY = tapY - containerCenterY
-
-        // Move position so tap point stays under finger
-        const newPosition = {
-          x: -offsetX * (newScale - 1),
-          y: -offsetY * (newScale - 1),
-        }
-        setScale(newScale)
-        setPosition(clampPosition(newPosition, newScale))
-      } else {
-        // Zoom out
-        setScale(1)
-        setPosition({ x: 0, y: 0 })
-      }
-    }
-
-    lastTapRef.current = { time: now, x: tapX, y: tapY }
-  }
 
   // Wheel zoom
   const handleWheel = (e: React.WheelEvent) => {
@@ -383,7 +339,6 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
                 opacity: settings.pageTransition === "fade" ? (scale === 1 ? 1 : 0.95) : 1,
               }}
               draggable={false}
-              onTouchStart={handleDoubleTap}
             />
             <img
               src={(settings.readingDirection === "rtl" ? currentPageUrl : nextPageUrl) || "/placeholder.svg"}
@@ -401,7 +356,6 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
                 opacity: settings.pageTransition === "fade" ? (scale === 1 ? 1 : 0.95) : 1,
               }}
               draggable={false}
-              onTouchStart={handleDoubleTap}
             />
           </div>
         ) : (
@@ -418,7 +372,6 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
               opacity: settings.pageTransition === "fade" ? (scale === 1 ? 1 : 0.95) : 1,
             }}
             draggable={false}
-            onTouchStart={handleDoubleTap}
           />
         )}
       </div>
