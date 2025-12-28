@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { useReading } from "@/lib/reading-context"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -15,6 +16,7 @@ interface ComicViewerProps {
 
 export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerProps) {
   const { settings } = useReading()
+  const isMobile = useIsMobile()
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -28,6 +30,10 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
     scale: 1,
     position: { x: 0, y: 0 }
   })
+  const panStartRef = useRef({ touchX: 0, touchY: 0, posX: 0, posY: 0 })
+
+  // Pan sensitivity multiplier for mobile - makes panning more responsive when zoomed in
+  const PAN_SENSITIVITY = isMobile ? 1.8 : 1
 
   // Reset zoom and position when page changes or layout mode changes
   useEffect(() => {
@@ -134,9 +140,10 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
     const rect = getContainerRect()
     if (!rect || currentScale <= 1) return { x: 0, y: 0 }
 
-    // Allow panning up to half the container size beyond edges
-    const maxX = (rect.width * (currentScale - 1)) / 2
-    const maxY = (rect.height * (currentScale - 1)) / 2
+    // Allow more generous panning boundaries - more freedom on mobile for better UX
+    const boundaryMultiplier = isMobile ? 0.6 : 0.5
+    const maxX = (rect.width * (currentScale - 1)) / 2 + rect.width * boundaryMultiplier
+    const maxY = (rect.height * (currentScale - 1)) / 2 + rect.height * boundaryMultiplier
 
     return {
       x: Math.max(-maxX, Math.min(maxX, pos.x)),
@@ -159,8 +166,14 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
         position: { ...position }
       }
     } else if (e.touches.length === 1 && (scale > 1 || settings.layoutMode === "scrolling")) {
-      // Pan start
+      // Pan start - store initial touch position and current position
       setIsDragging(true)
+      panStartRef.current = {
+        touchX: e.touches[0].clientX,
+        touchY: e.touches[0].clientY,
+        posX: position.x,
+        posY: position.y,
+      }
       setDragStart({
         x: e.touches[0].clientX - position.x,
         y: e.touches[0].clientY - position.y,
@@ -202,14 +215,21 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
       setScale(newScale)
       setPosition(clampPosition(newPosition, newScale))
     } else if (e.touches.length === 1 && isDragging && (scale > 1 || settings.layoutMode === "scrolling")) {
-      // Pan with boundaries
+      // Pan with boundaries and sensitivity multiplier for responsive mobile panning
       if (scale > 1 || settings.layoutMode === "scrolling") {
         e.preventDefault()
       }
+
+      // Calculate the delta movement from initial touch position
+      const deltaX = (e.touches[0].clientX - panStartRef.current.touchX) * PAN_SENSITIVITY
+      const deltaY = (e.touches[0].clientY - panStartRef.current.touchY) * PAN_SENSITIVITY
+
+      // Apply pan sensitivity multiplier for more responsive panning
       const newPos = {
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y,
+        x: panStartRef.current.posX + deltaX,
+        y: panStartRef.current.posY + deltaY,
       }
+
       setPosition(scale > 1 ? clampPosition(newPos, scale) : newPos)
     }
   }
@@ -223,8 +243,14 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
         setPosition({ x: 0, y: 0 })
       }
     } else if (e.touches.length === 1 && scale > 1) {
-      // Transitioning from pinch to pan - update drag start
+      // Transitioning from pinch to pan - update drag start and pan start
       setIsDragging(true)
+      panStartRef.current = {
+        touchX: e.touches[0].clientX,
+        touchY: e.touches[0].clientY,
+        posX: position.x,
+        posY: position.y,
+      }
       setDragStart({
         x: e.touches[0].clientX - position.x,
         y: e.touches[0].clientY - position.y,
