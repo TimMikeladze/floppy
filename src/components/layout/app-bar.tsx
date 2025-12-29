@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles } from "lucide-react"
+import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -25,6 +25,8 @@ import { useTheme } from "next-themes"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useIsPwa } from "@/hooks/use-is-pwa"
+import { AboutDialog } from "./about-dialog"
 
 type ViewMode = "grid" | "table"
 
@@ -63,7 +65,9 @@ export function AppBar({
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
+  const [aboutDialogOpen, setAboutDialogOpen] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
+  const isPwa = useIsPwa()
 
   const handleImportClick = () => {
     importInputRef.current?.click()
@@ -306,6 +310,15 @@ export function AppBar({
                       </DropdownMenuItem>
                     </>
                   )}
+                  {isPwa && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setAboutDialogOpen(true)}>
+                        <Info className="mr-2 h-4 w-4" />
+                        About
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -345,6 +358,9 @@ export function AppBar({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* About dialog (PWA only) */}
+      <AboutDialog open={aboutDialogOpen} onOpenChange={setAboutDialogOpen} />
     </header>
   )
 }

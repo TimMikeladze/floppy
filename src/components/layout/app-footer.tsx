@@ -4,13 +4,15 @@ import { useState } from "react"
 import { usePathname } from "next/navigation"
 import { Github, Heart } from "lucide-react"
 import { SupportDialog } from "./support-dialog"
+import { useIsPwa } from "@/hooks/use-is-pwa"
 
 export function AppFooter() {
   const pathname = usePathname()
   const [supportOpen, setSupportOpen] = useState(false)
+  const isPwa = useIsPwa()
 
-  // Hide footer on reader pages
-  if (pathname?.startsWith('/reader')) {
+  // Hide footer on reader pages or in PWA mode
+  if (pathname?.startsWith('/reader') || isPwa) {
     return null
   }
 
