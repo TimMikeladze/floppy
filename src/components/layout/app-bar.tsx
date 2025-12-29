@@ -105,21 +105,21 @@ export function AppBar({
           <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             <Link
               href="/"
-              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+              className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
                 pathname === '/' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
               }`}
             >
               <Library className="h-4 w-4" />
-              Library
+              <span className="hidden sm:inline">Library</span>
             </Link>
             <Link
               href="/releases"
-              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+              className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
                 pathname === '/releases' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
               }`}
             >
               <Sparkles className="h-4 w-4" />
-              Releases
+              <span className="hidden sm:inline">Releases</span>
             </Link>
           </div>
         )}
