@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Button } from "@/components/ui/button"
@@ -32,6 +32,7 @@ import {
 } from "@/lib/mock-releases"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns"
 import { usePullList } from "@/hooks/use-pull-list"
+import { getStoredReleasesPreferences, saveReleasesPreferences } from "@/hooks/use-releases-preferences"
 
 const viewTypes = ["new", "upcoming", "calendar", "pull-list"] as const
 type ViewType = (typeof viewTypes)[number]
@@ -40,6 +41,34 @@ export function ReleasesContent() {
   const [searchQuery, setSearchQuery] = useQueryState("q", parseAsString.withDefault(""))
   const [activeView, setActiveView] = useQueryState("view", parseAsStringLiteral(viewTypes).withDefault("new"))
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+
+  // Track if we've initialized from localStorage
+  const hasInitializedFromStorage = useRef(false)
+
+  // Initialize from localStorage if no URL params are present
+  useEffect(() => {
+    if (hasInitializedFromStorage.current) return
+    hasInitializedFromStorage.current = true
+
+    // Check if URL has the view param
+    const urlParams = new URLSearchParams(window.location.search)
+    const hasViewParam = urlParams.has("view")
+
+    // If no URL param, load from localStorage
+    if (!hasViewParam) {
+      const stored = getStoredReleasesPreferences()
+      if (stored.view !== "new") setActiveView(stored.view)
+    }
+  }, [setActiveView])
+
+  // Persist preferences to localStorage when they change
+  useEffect(() => {
+    if (!hasInitializedFromStorage.current) return
+
+    saveReleasesPreferences({
+      view: activeView as "new" | "upcoming" | "calendar" | "pull-list",
+    })
+  }, [activeView])
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedRelease, setSelectedRelease] = useState<Release | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
