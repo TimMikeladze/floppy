@@ -33,6 +33,7 @@ import {
 import type { Comic } from "@/lib/types"
 import { useRouter } from "next/navigation"
 import { AddToListDialog } from "./add-to-list-dialog"
+import { naturalCollator } from "@/lib/sort-utils"
 
 interface ComicTableProps {
   comics: Comic[]
@@ -65,13 +66,13 @@ export function ComicTable({
 
       switch (sortKey) {
         case "title":
-          comparison = a.title.localeCompare(b.title)
+          comparison = naturalCollator.compare(a.title, b.title)
           break
         case "series":
-          comparison = (a.series || "").localeCompare(b.series || "")
+          comparison = naturalCollator.compare(a.series || "", b.series || "")
           break
         case "author":
-          comparison = (a.author || "").localeCompare(b.author || "")
+          comparison = naturalCollator.compare(a.author || "", b.author || "")
           break
         case "progress":
           const aProgress = a.totalPages ? a.currentPage / a.totalPages : 0
