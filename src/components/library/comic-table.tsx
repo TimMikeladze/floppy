@@ -26,7 +26,6 @@ import {
   MoreHorizontal,
   Trash2,
   BookOpen,
-  FileText,
   ListPlus,
   X,
 } from "lucide-react"
@@ -264,7 +263,11 @@ export function ComicTable({
                   key={comic.id}
                   data-state={isSelected ? "selected" : undefined}
                   className="cursor-pointer"
-                  onClick={() => onSelect?.(comic)}
+                  onClick={() => {
+                    if (comic.hasFile) {
+                      router.push(`/reader/${comic.id}`)
+                    }
+                  }}
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
@@ -348,10 +351,6 @@ export function ComicTable({
                             Read
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem onClick={() => onSelect?.(comic)}>
-                          <FileText className="mr-2 h-4 w-4" />
-                          Details
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setAddToListComic(comic)}>
                           <ListPlus className="mr-2 h-4 w-4" />
                           Add to List

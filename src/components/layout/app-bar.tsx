@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database } from "lucide-react"
+import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -23,10 +23,12 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useTheme } from "next-themes"
 import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 type ViewMode = "grid" | "table"
 
-interface LibraryHeaderProps {
+interface AppBarProps {
   onUpload: () => void
   onAddComic: () => void
   searchQuery: string
@@ -42,7 +44,7 @@ interface LibraryHeaderProps {
   onClearData?: () => void
 }
 
-export function LibraryHeader({
+export function AppBar({
   onUpload,
   onAddComic,
   searchQuery,
@@ -56,7 +58,7 @@ export function LibraryHeader({
   onImport,
   onImportDataSource,
   onClearData,
-}: LibraryHeaderProps) {
+}: AppBarProps) {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -92,6 +94,8 @@ export function LibraryHeader({
     return resolvedTheme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />
   }
 
+  const pathname = usePathname()
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 safe-top safe-x" style={{
       background: 'oklch(from var(--background) l c h / 0.85)',
@@ -99,10 +103,29 @@ export function LibraryHeader({
       WebkitBackdropFilter: 'blur(24px) saturate(1.2)',
       boxShadow: '0 1px 0 var(--border), 0 4px 20px oklch(0 0 0 / 0.1)'
     }}>
-      <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-3">
+      <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-3 mx-auto w-full max-w-screen-2xl">
         {/* Logo / Title - hidden when search is expanded on mobile */}
         {!searchExpanded && (
-          <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text">Library</h1>
+          <div className="flex items-center gap-1">
+            <Link
+              href="/"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                pathname === '/' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+              }`}
+            >
+              <Library className="h-4 w-4" />
+              Library
+            </Link>
+            <Link
+              href="/releases"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                pathname === '/releases' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+              }`}
+            >
+              <Sparkles className="h-4 w-4" />
+              Releases
+            </Link>
+          </div>
         )}
 
         {/* Search - expandable on mobile */}
@@ -199,11 +222,34 @@ export function LibraryHeader({
                 </Button>
               </div>
 
+              {/* Add Comic button */}
+              <Button
+                onClick={onAddComic}
+                variant="outline"
+                size="default"
+                className="gap-2 ml-1 bg-transparent h-9"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Add</span>
+              </Button>
+
+              {/* Upload button */}
+              <Button
+                onClick={onUpload}
+                variant="outline"
+                size="default"
+                className="gap-2 bg-transparent h-9"
+              >
+                <Upload className="h-4 w-4" />
+                <span className="hidden sm:inline">Upload</span>
+              </Button>
+
               {/* Settings menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9">
-                    <Settings className="h-5 w-5" />
+                  <Button variant="outline" size="default" className="gap-2 h-9 bg-transparent">
+                    <Settings className="h-4 w-4" />
+                    <span className="hidden sm:inline">Settings</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -266,27 +312,6 @@ export function LibraryHeader({
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Add Comic button */}
-              <Button
-                onClick={onAddComic}
-                variant="outline"
-                size="default"
-                className="gap-2 ml-1 bg-transparent h-9"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Add</span>
-              </Button>
-
-              {/* Primary action - Upload */}
-              <Button
-                onClick={onUpload}
-                size="default"
-                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 h-9"
-              >
-                <Upload className="h-4 w-4" />
-                <span className="hidden sm:inline">Upload</span>
-              </Button>
             </div>
           )}
         </div>

@@ -184,9 +184,9 @@ export function ReaderMenu({
                 {/* Page Thumbnails Strip */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium">Pages</h3>
-                  <ScrollArea className="w-full">
-                    <div className="flex gap-2 pb-2">
-                      {pages.slice(0, 20).map((pageUrl, index) => (
+                  <ScrollArea className="w-full h-[400px]">
+                    <div className="flex flex-col gap-2 pr-2">
+                      {pages.map((pageUrl, index) => (
                         <button
                           key={index}
                           onClick={() => {
@@ -215,13 +215,8 @@ export function ReaderMenu({
                           </div>
                         </button>
                       ))}
-                      {pages.length > 20 && (
-                        <div className="shrink-0 h-20 w-14 flex items-center justify-center text-muted-foreground text-sm">
-                          +{pages.length - 20}
-                        </div>
-                      )}
                     </div>
-                    <ScrollBar orientation="horizontal" />
+                    <ScrollBar orientation="vertical" />
                   </ScrollArea>
                 </div>
               </TabsContent>

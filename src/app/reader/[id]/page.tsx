@@ -42,6 +42,23 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     loadComic()
   }, [id])
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle shortcuts on desktop (screen width >= 768px)
+      if (window.innerWidth < 768) return
+
+      // Toggle menu with 'M' or '?' key
+      if (e.key === 'm' || e.key === 'M' || e.key === '?') {
+        e.preventDefault()
+        setMenuOpen(prev => !prev)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   useEffect(() => {
     if (!comic) return
     loadPages()
@@ -147,11 +164,11 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         // Toggle menu with M key
         setMenuOpen(prev => !prev)
       } else if (e.key === "Escape") {
-        // Close menu if open, otherwise toggle controls
+        // Close menu if open, otherwise exit reader
         if (menuOpen) {
           setMenuOpen(false)
         } else {
-          setControlsVisible(prev => !prev)
+          router.push("/")
         }
       } else if (e.key === " ") {
         // Space bar toggles controls (prevent scroll)
@@ -454,14 +471,14 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         size="icon"
         className="fixed z-50 hidden h-12 w-12 rounded-full shadow-lg md:flex opacity-70 hover:opacity-100 transition-opacity"
         style={{
-          bottom: 'calc(1.5rem + var(--safe-area-bottom))',
+          top: 'calc(1.5rem + var(--safe-area-top))',
           right: 'calc(1.5rem + var(--safe-area-right))'
         }}
         onClick={() => setMenuOpen(true)}
-        title="Open menu (M)"
+        title="Settings (M or ?)"
       >
         <Settings2 className="h-5 w-5" />
-        <span className="sr-only">Open menu</span>
+        <span className="sr-only">Settings</span>
       </Button>
 
       {/* Next issue overlay - shown when on last page */}
