@@ -1,16 +1,23 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { Geist } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ReadingProvider } from "@/lib/reading-context"
+import { AppFooter } from "@/components/layout/app-footer"
+import { CommandPalette } from "@/components/command-palette"
 import { Toaster } from "sonner"
 import "./globals.css"
 
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
+})
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
 })
 
 export const metadata: Metadata = {
@@ -64,11 +71,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={geist.variable} suppressHydrationWarning>
-      <body className="font-sans antialiased overscroll-none">
+    <html lang="en" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased overscroll-none min-h-screen flex flex-col pb-16">
         <NuqsAdapter>
           <ThemeProvider>
-            <ReadingProvider>{children}</ReadingProvider>
+            <ReadingProvider>
+              <div className="flex-1 flex flex-col min-h-0">
+                {children}
+              </div>
+              <AppFooter />
+            </ReadingProvider>
           </ThemeProvider>
           <Toaster
             position="top-center"
@@ -76,6 +88,7 @@ export default function RootLayout({
               className: "!bg-card !text-card-foreground !border-border",
             }}
           />
+          <CommandPalette />
         </NuqsAdapter>
         <Analytics />
         <script

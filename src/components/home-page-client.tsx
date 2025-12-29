@@ -10,6 +10,8 @@ import type { Comic, ComicList } from "@/lib/types"
 import { ImportDataSourceDialog } from "@/components/library/import-data-source-dialog"
 import { toast } from "sonner"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { Library, BookOpen, CheckCircle2, Heart } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
 const filterTypes = ["all", "reading", "completed", "want"] as const
 type FilterType = (typeof filterTypes)[number]
@@ -172,11 +174,11 @@ export function HomePageClient({ csvImportEnabled }: HomePageClientProps) {
 
   const filterCounts = getFilterCounts()
 
-  const filters: { key: FilterType; label: string; count: number }[] = [
-    { key: "all", label: "All", count: filterCounts.all },
-    { key: "reading", label: "Reading", count: filterCounts.reading },
-    { key: "want", label: "Want to Read", count: filterCounts.want },
-    { key: "completed", label: "Completed", count: filterCounts.completed },
+  const filters: { key: FilterType; label: string; count: number; icon: LucideIcon }[] = [
+    { key: "all", label: "All", count: filterCounts.all, icon: Library },
+    { key: "reading", label: "Reading", count: filterCounts.reading, icon: BookOpen },
+    { key: "want", label: "Want to Read", count: filterCounts.want, icon: Heart },
+    { key: "completed", label: "Completed", count: filterCounts.completed, icon: CheckCircle2 },
   ]
 
   async function handleDataChange() {
@@ -197,19 +199,23 @@ export function HomePageClient({ csvImportEnabled }: HomePageClientProps) {
       filterPills={
         <ScrollArea className="w-full">
           <div className="flex gap-2 px-3 py-3 sm:px-4 md:px-6 mx-auto w-full max-w-screen-2xl">
-            {filters.map((filter) => (
-              <button
-                key={filter.key}
-                onClick={() => {
-                  setActiveFilter(filter.key)
-                  setSelectedListId(null)
-                }}
-                className={`filter-pill haptic-press ${activeFilter === filter.key && !selectedListId ? "active" : ""}`}
-              >
-                {filter.label}
-                <span className="count">{filter.count}</span>
-              </button>
-            ))}
+            {filters.map((filter) => {
+              const Icon = filter.icon
+              return (
+                <button
+                  key={filter.key}
+                  onClick={() => {
+                    setActiveFilter(filter.key)
+                    setSelectedListId(null)
+                  }}
+                  className={`filter-pill haptic-press ${activeFilter === filter.key && !selectedListId ? "active" : ""}`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {filter.label}
+                  <span className="count">{filter.count}</span>
+                </button>
+              )
+            })}
 
             {/* List filters */}
             {lists.map((list) => {
