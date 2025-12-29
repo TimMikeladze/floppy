@@ -1,7 +1,18 @@
 "use client"
 
 import { formatDistanceToNow } from "date-fns"
-import { MoreHorizontal, Trash2, FolderPlus, Upload, BookOpen, Globe } from "lucide-react"
+import {
+  MoreHorizontal,
+  Trash2,
+  FolderPlus,
+  Upload,
+  BookOpen,
+  Globe,
+  Pencil,
+  CheckCircle2,
+  RotateCcw,
+  ExternalLink,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -15,7 +26,11 @@ import Link from "next/link"
 import { AddToListDialog } from "./add-to-list-dialog"
 import { useState, useEffect } from "react"
 import { AttachFileDialog } from "./attach-file-dialog"
+import { EditComicDialog } from "./edit-comic-dialog"
 import { loadRemoteImage, revokeRemoteImage } from "@/lib/remote-loader"
+import { saveComic } from "@/lib/storage"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 interface ComicCardProps {
   comic: Comic
@@ -48,8 +63,68 @@ function ProgressDots({ current, total }: { current: number; total: number }) {
   )
 }
 
-function CardContextMenu({ comic, onDelete, onAttach }: { comic: Comic; onDelete: () => void; onAttach: () => void }) {
+interface CardContextMenuProps {
+  comic: Comic
+  onDelete: () => void
+  onAttach: () => void
+  onEdit: () => void
+  onUpdate: () => void
+}
+
+function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate }: CardContextMenuProps) {
+  const router = useRouter()
   const isRemote = comic.sourceType === 'remote'
+  const canRead = comic.hasFile || isRemote
+  const hasProgress = comic.currentPage > 0
+  const isComplete = comic.totalPages && comic.currentPage >= comic.totalPages
+
+  const handleMarkAsRead = async () => {
+    if (!comic.totalPages) {
+      toast.error("Cannot mark as read: page count unknown")
+      return
+    }
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: comic.totalPages,
+        lastRead: new Date(),
+      })
+      toast.success("Marked as read")
+      onUpdate()
+    } catch (error) {
+      console.error("Failed to mark as read:", error)
+      toast.error("Failed to mark as read")
+    }
+  }
+
+  const handleMarkAsUnread = async () => {
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: 0,
+        lastRead: undefined,
+      })
+      toast.success("Marked as unread")
+      onUpdate()
+    } catch (error) {
+      console.error("Failed to mark as unread:", error)
+      toast.error("Failed to mark as unread")
+    }
+  }
+
+  const handleResetProgress = async () => {
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: 0,
+      })
+      toast.success("Progress reset")
+      onUpdate()
+    } catch (error) {
+      console.error("Failed to reset progress:", error)
+      toast.error("Failed to reset progress")
+    }
+  }
 
   return (
     <div
@@ -74,16 +149,49 @@ function CardContextMenu({ comic, onDelete, onAttach }: { comic: Comic; onDelete
             <span className="sr-only">Options</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          {!comic.hasFile && !isRemote && (
+        <DropdownMenuContent align="end" className="w-48">
+          {/* Open in reader */}
+          {canRead && (
             <>
-              <DropdownMenuItem onClick={onAttach}>
-                <Upload className="mr-2 h-4 w-4" />
-                Attach File
+              <DropdownMenuItem onClick={() => router.push(`/reader/${comic.id}`)}>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </>
           )}
+
+          {/* Edit details */}
+          <DropdownMenuItem onClick={onEdit}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit Details
+          </DropdownMenuItem>
+
+          {/* Reading progress actions */}
+          {comic.totalPages && !isComplete && (
+            <DropdownMenuItem onClick={handleMarkAsRead}>
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Mark as Read
+            </DropdownMenuItem>
+          )}
+          {hasProgress && (
+            <DropdownMenuItem onClick={handleMarkAsUnread}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Mark as Unread
+            </DropdownMenuItem>
+          )}
+
+          <DropdownMenuSeparator />
+
+          {/* File attachment for local comics without files */}
+          {!comic.hasFile && !isRemote && (
+            <DropdownMenuItem onClick={onAttach}>
+              <Upload className="mr-2 h-4 w-4" />
+              Attach File
+            </DropdownMenuItem>
+          )}
+
+          {/* Add to list */}
           <AddToListDialog
             comicId={comic.id}
             comicTitle={comic.title}
@@ -94,7 +202,10 @@ function CardContextMenu({ comic, onDelete, onAttach }: { comic: Comic; onDelete
               </DropdownMenuItem>
             }
           />
+
           <DropdownMenuSeparator />
+
+          {/* Delete */}
           <DropdownMenuItem
             onClick={(e) => {
               e.preventDefault()
@@ -113,6 +224,7 @@ function CardContextMenu({ comic, onDelete, onAttach }: { comic: Comic; onDelete
 
 export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProps) {
   const [attachDialogOpen, setAttachDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [remoteCoverUrl, setRemoteCoverUrl] = useState<string | null>(null)
   const [coverLoading, setCoverLoading] = useState(false)
   const hasProgress = comic.currentPage > 0 && comic.totalPages
@@ -232,6 +344,8 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
           comic={comic}
           onDelete={() => onDelete(comic.id)}
           onAttach={() => setAttachDialogOpen(true)}
+          onEdit={() => setEditDialogOpen(true)}
+          onUpdate={() => onUpdate?.()}
         />
 
         {/* Clickable area - local comics with files OR remote comics can be read */}
@@ -271,6 +385,15 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
         open={attachDialogOpen}
         onOpenChange={setAttachDialogOpen}
         onFileAttached={() => {
+          onUpdate?.()
+        }}
+      />
+
+      <EditComicDialog
+        comic={comic}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSave={() => {
           onUpdate?.()
         }}
       />
