@@ -159,7 +159,7 @@ export function LibraryHeader({
               {/* Sort dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="touch-target">
+                  <Button variant="ghost" size="icon" className="h-9">
                     <SortAsc className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -182,7 +182,7 @@ export function LibraryHeader({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-8 w-8 rounded-r-none ${viewMode === "grid" ? "bg-accent" : ""}`}
+                  className={`h-9 w-9 rounded-r-none ${viewMode === "grid" ? "bg-accent" : ""}`}
                   onClick={() => onViewModeChange("grid")}
                 >
                   <LayoutGrid className="h-4 w-4" />
@@ -191,7 +191,7 @@ export function LibraryHeader({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-8 w-8 rounded-l-none ${viewMode === "table" ? "bg-accent" : ""}`}
+                  className={`h-9 w-9 rounded-l-none ${viewMode === "table" ? "bg-accent" : ""}`}
                   onClick={() => onViewModeChange("table")}
                 >
                   <TableProperties className="h-4 w-4" />
@@ -202,7 +202,7 @@ export function LibraryHeader({
               {/* Settings menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="touch-target">
+                  <Button variant="ghost" size="icon" className="h-9">
                     <Settings className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -271,8 +271,8 @@ export function LibraryHeader({
               <Button
                 onClick={onAddComic}
                 variant="outline"
-                size="sm"
-                className="gap-2 ml-1 bg-transparent"
+                size="default"
+                className="gap-2 ml-1 bg-transparent h-9"
               >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Add</span>
@@ -281,8 +281,8 @@ export function LibraryHeader({
               {/* Primary action - Upload */}
               <Button
                 onClick={onUpload}
-                size="sm"
-                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+                size="default"
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 h-9"
               >
                 <Upload className="h-4 w-4" />
                 <span className="hidden sm:inline">Upload</span>
