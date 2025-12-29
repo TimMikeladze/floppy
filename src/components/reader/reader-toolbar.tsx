@@ -27,12 +27,10 @@ export function ReaderToolbar({
 }: ReaderToolbarProps) {
   return (
     <div
-      className={`fixed left-0 right-0 top-0 z-40 transition-all duration-300 ${
+      className={`fixed left-0 right-0 top-0 z-40 transition-all duration-300 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${
         isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
       }`}
     >
-      {/* Gradient fade for better readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none" />
 
       <div className="relative flex items-center gap-1 px-2 py-3 safe-top safe-x">
         <Button

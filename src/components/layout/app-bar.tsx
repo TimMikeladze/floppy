@@ -97,12 +97,7 @@ export function AppBar({
   const pathname = usePathname()
 
   return (
-    <header className="sticky top-0 z-40 safe-top safe-x" style={{
-      background: 'oklch(from var(--background) l c h / 0.85)',
-      backdropFilter: 'blur(24px) saturate(1.2)',
-      WebkitBackdropFilter: 'blur(24px) saturate(1.2)',
-      boxShadow: '0 1px 0 var(--border), 0 4px 20px oklch(0 0 0 / 0.1)'
-    }}>
+    <header className="sticky top-0 z-40 safe-top safe-x border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-3 mx-auto w-full max-w-screen-2xl">
         {/* Logo / Title - hidden when search is expanded on mobile */}
         {!searchExpanded && (
