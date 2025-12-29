@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info } from "lucide-react"
+import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info, HardDrive } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -298,9 +298,15 @@ export function AppBar({
                     System
                     {mounted && theme === "system" && <span className="ml-auto text-xs">✓</span>}
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <Link href="/settings">
+                    <DropdownMenuItem>
+                      <HardDrive className="mr-2 h-4 w-4" />
+                      Manage Storage
+                    </DropdownMenuItem>
+                  </Link>
                   {onClearData && (
                     <>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => setClearDialogOpen(true)}
                         className="text-destructive focus:text-destructive"

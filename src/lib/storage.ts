@@ -732,3 +732,182 @@ export async function deleteRemotePages(comicId: string): Promise<void> {
     request.onerror = () => reject(request.error)
   })
 }
+
+// ============ STORAGE MANAGEMENT ============
+
+export interface StorageStats {
+  totalSize: number
+  comicsCount: number
+  pagesSize: number
+  bookmarksCount: number
+  notesCount: number
+  listsCount: number
+  sourcesCount: number
+  remotePagesCount: number
+}
+
+export interface ComicStorageInfo {
+  id: string
+  title: string
+  coverSize: number
+  pagesSize: number
+  totalSize: number
+  hasValidHandle: boolean
+  sourceType: "local" | "remote"
+}
+
+/**
+ * Estimate the size of a value in bytes (rough approximation for IndexedDB storage)
+ */
+function estimateSize(value: unknown): number {
+  if (value === null || value === undefined) return 0
+  if (value instanceof Blob) return value.size
+  if (typeof value === "string") return value.length * 2 // UTF-16
+  if (typeof value === "number") return 8
+  if (typeof value === "boolean") return 4
+  if (Array.isArray(value)) {
+    return value.reduce((acc, item) => acc + estimateSize(item), 0)
+  }
+  if (typeof value === "object") {
+    return Object.entries(value).reduce(
+      (acc, [key, val]) => acc + key.length * 2 + estimateSize(val),
+      0
+    )
+  }
+  return 0
+}
+
+/**
+ * Get storage statistics for all IndexedDB data
+ */
+export async function getStorageStats(): Promise<StorageStats> {
+  const comics = await getAllComics()
+  const bookmarks = await getAllBookmarks()
+  const notes = await getAllNotes()
+  const lists = await getAllLists()
+  const sources = await getAllSources()
+
+  // Calculate pages size
+  let pagesSize = 0
+  for (const comic of comics) {
+    const pages = await getPagesForComic(comic.id)
+    if (pages) {
+      pagesSize += pages.reduce((acc, blob) => acc + blob.size, 0)
+    }
+  }
+
+  // Estimate total size
+  const comicsSize = comics.reduce((acc, comic) => {
+    // Cover images are base64 encoded, estimate their size
+    const coverSize = comic.coverImage ? comic.coverImage.length : 0
+    return acc + coverSize + estimateSize(comic)
+  }, 0)
+
+  return {
+    totalSize: comicsSize + pagesSize,
+    comicsCount: comics.length,
+    pagesSize,
+    bookmarksCount: bookmarks.length,
+    notesCount: notes.length,
+    listsCount: lists.length,
+    sourcesCount: sources.length,
+    remotePagesCount: comics.filter(c => c.sourceType === "remote").length,
+  }
+}
+
+/**
+ * Get storage info for each comic
+ */
+export async function getComicStorageInfo(): Promise<ComicStorageInfo[]> {
+  const comics = await getAllComics()
+  const results: ComicStorageInfo[] = []
+
+  for (const comic of comics) {
+    const coverSize = comic.coverImage ? comic.coverImage.length : 0
+    let pagesSize = 0
+
+    const pages = await getPagesForComic(comic.id)
+    if (pages) {
+      pagesSize = pages.reduce((acc, blob) => acc + blob.size, 0)
+    }
+
+    // Check if file handle is valid (for local comics)
+    let hasValidHandle = false
+    if (comic.sourceType === "local" && comic.fileHandle) {
+      try {
+        const permission = await comic.fileHandle.queryPermission({ mode: "read" })
+        hasValidHandle = permission === "granted"
+      } catch {
+        hasValidHandle = false
+      }
+    }
+
+    results.push({
+      id: comic.id,
+      title: comic.title,
+      coverSize,
+      pagesSize,
+      totalSize: coverSize + pagesSize,
+      hasValidHandle,
+      sourceType: comic.sourceType,
+    })
+  }
+
+  return results.sort((a, b) => b.totalSize - a.totalSize)
+}
+
+/**
+ * Re-validate all file handles and return status for each comic
+ */
+export async function revalidateFileHandles(): Promise<{
+  valid: string[]
+  invalid: string[]
+  remote: string[]
+}> {
+  const comics = await getAllComics()
+  const valid: string[] = []
+  const invalid: string[] = []
+  const remote: string[] = []
+
+  for (const comic of comics) {
+    if (comic.sourceType === "remote") {
+      remote.push(comic.id)
+      continue
+    }
+
+    if (!comic.fileHandle) {
+      invalid.push(comic.id)
+      continue
+    }
+
+    try {
+      const permission = await comic.fileHandle.queryPermission({ mode: "read" })
+      if (permission === "granted") {
+        valid.push(comic.id)
+      } else {
+        // Try to request permission
+        const newPermission = await comic.fileHandle.requestPermission({ mode: "read" })
+        if (newPermission === "granted") {
+          valid.push(comic.id)
+        } else {
+          invalid.push(comic.id)
+        }
+      }
+    } catch {
+      invalid.push(comic.id)
+    }
+  }
+
+  return { valid, invalid, remote }
+}
+
+/**
+ * Format bytes to human readable string
+ */
+export function formatBytes(bytes: number): string {
+  if (bytes === 0) return "0 B"
+  const k = 1024
+  const sizes = ["B", "KB", "MB", "GB"]
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
+}
