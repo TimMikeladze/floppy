@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, HardDrive, RefreshCw, Trash2, CheckCircle2, XCircle, Cloud, FileWarning } from "lucide-react"
+import { ArrowLeft, HardDrive, RefreshCw, Trash2, CheckCircle2, XCircle, Cloud, FileWarning, Eraser } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   AlertDialog,
@@ -26,6 +25,7 @@ import {
   formatBytes,
   deleteComic,
   deletePagesForComic,
+  clearAllCachedPages,
   type StorageStats,
   type ComicStorageInfo,
 } from "@/lib/storage"
@@ -36,12 +36,14 @@ export default function SettingsPage() {
   const [comicStorage, setComicStorage] = useState<ComicStorageInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
+  const [clearingCache, setClearingCache] = useState(false)
   const [syncResults, setSyncResults] = useState<{
     valid: string[]
     invalid: string[]
     remote: string[]
   } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ComicStorageInfo | null>(null)
+  const [showClearCacheDialog, setShowClearCacheDialog] = useState(false)
 
   const loadData = async () => {
     setLoading(true)
@@ -70,7 +72,7 @@ export default function SettingsPage() {
     try {
       const results = await revalidateFileHandles()
       setSyncResults(results)
-      await loadData() // Refresh data after sync
+      await loadData()
 
       if (results.invalid.length === 0) {
         toast.success("All local comics have valid file access")
@@ -82,6 +84,21 @@ export default function SettingsPage() {
       toast.error("Failed to resync file handles")
     } finally {
       setSyncing(false)
+    }
+  }
+
+  const handleClearAllCache = async () => {
+    setClearingCache(true)
+    try {
+      const count = await clearAllCachedPages()
+      toast.success(`Cleared cache for ${count} comic(s)`)
+      await loadData()
+    } catch (error) {
+      console.error("Failed to clear cache:", error)
+      toast.error("Failed to clear cache")
+    } finally {
+      setClearingCache(false)
+      setShowClearCacheDialog(false)
     }
   }
 
@@ -100,7 +117,7 @@ export default function SettingsPage() {
   const handleClearPages = async (comic: ComicStorageInfo) => {
     try {
       await deletePagesForComic(comic.id)
-      toast.success(`Cleared cached pages for "${comic.title}"`)
+      toast.success(`Cleared cache for "${comic.title}"`)
       await loadData()
     } catch (error) {
       console.error("Failed to clear pages:", error)
@@ -108,13 +125,11 @@ export default function SettingsPage() {
     }
   }
 
-  // Estimate quota (browsers typically allow ~50% of free disk space, cap display at 500MB for reference)
-  const estimatedQuota = 500 * 1024 * 1024 // 500MB reference
+  const estimatedQuota = 500 * 1024 * 1024
   const usagePercent = stats ? Math.min((stats.totalSize / estimatedQuota) * 100, 100) : 0
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="safe-top safe-x bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" />
         <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-3 mx-auto w-full max-w-screen-2xl safe-x">
@@ -127,17 +142,14 @@ export default function SettingsPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-screen-md px-3 sm:px-4 md:px-6 py-6 space-y-6 safe-x pb-24">
+      <main className="mx-auto w-full max-w-screen-md px-3 sm:px-4 md:px-6 py-4 space-y-4 pb-24">
         {/* Storage Overview */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <HardDrive className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <HardDrive className="h-4 w-4" />
               Storage
             </CardTitle>
-            <CardDescription>
-              Manage storage used by your comic library
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {loading ? (
@@ -152,32 +164,36 @@ export default function SettingsPage() {
                   <span className="text-sm text-muted-foreground">used</span>
                 </div>
                 <Progress value={usagePercent} className="h-2" />
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Comics:</span>
-                    <span className="ml-2 font-medium">{stats.comicsCount}</span>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Comics</span>
+                    <span>{stats.comicsCount}</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">Cached pages:</span>
-                    <span className="ml-2 font-medium">{formatBytes(stats.pagesSize)}</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Cached</span>
+                    <span>{formatBytes(stats.pagesSize)}</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">Bookmarks:</span>
-                    <span className="ml-2 font-medium">{stats.bookmarksCount}</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Bookmarks</span>
+                    <span>{stats.bookmarksCount}</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">Notes:</span>
-                    <span className="ml-2 font-medium">{stats.notesCount}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Lists:</span>
-                    <span className="ml-2 font-medium">{stats.listsCount}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Data sources:</span>
-                    <span className="ml-2 font-medium">{stats.sourcesCount}</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Notes</span>
+                    <span>{stats.notesCount}</span>
                   </div>
                 </div>
+                {stats.pagesSize > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowClearCacheDialog(true)}
+                    disabled={clearingCache}
+                    className="w-full"
+                  >
+                    <Eraser className="h-4 w-4 mr-2" />
+                    Clear All Cached Pages
+                  </Button>
+                )}
               </>
             ) : (
               <p className="text-muted-foreground">Unable to load storage stats</p>
@@ -187,20 +203,21 @@ export default function SettingsPage() {
 
         {/* Resync Section */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <RefreshCw className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <RefreshCw className="h-4 w-4" />
               File Access
             </CardTitle>
-            <CardDescription>
-              Re-validate file permissions for local comics. Comics may lose access if files are moved or deleted.
+            <CardDescription className="text-xs">
+              Re-validate permissions for local comics
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <Button
               onClick={handleResync}
               disabled={syncing || loading}
-              className="w-full sm:w-auto"
+              size="sm"
+              className="w-full"
             >
               {syncing ? (
                 <>
@@ -210,26 +227,26 @@ export default function SettingsPage() {
               ) : (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Resync File Access
+                  Resync
                 </>
               )}
             </Button>
 
             {syncResults && (
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span>{syncResults.valid.length} local comics with valid access</span>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3 w-3 text-green-500" />
+                  <span>{syncResults.valid.length} valid</span>
                 </div>
                 {syncResults.invalid.length > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-destructive">
-                    <XCircle className="h-4 w-4" />
-                    <span>{syncResults.invalid.length} comics lost file access</span>
+                  <div className="flex items-center gap-2 text-destructive">
+                    <XCircle className="h-3 w-3" />
+                    <span>{syncResults.invalid.length} lost access</span>
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Cloud className="h-4 w-4" />
-                  <span>{syncResults.remote.length} remote comics (no file needed)</span>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Cloud className="h-3 w-3" />
+                  <span>{syncResults.remote.length} remote</span>
                 </div>
               </div>
             )}
@@ -238,73 +255,57 @@ export default function SettingsPage() {
 
         {/* Comics Storage List */}
         <Card>
-          <CardHeader>
-            <CardTitle>Comics by Storage</CardTitle>
-            <CardDescription>
-              View and manage storage used by each comic
-            </CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Comics by Storage</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {loading ? (
-              <div className="space-y-3">
+              <div className="space-y-2 p-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 bg-muted animate-pulse rounded" />
+                  <div key={i} className="h-8 bg-muted animate-pulse rounded" />
                 ))}
               </div>
             ) : comicStorage.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No comics in library</p>
+              <p className="text-muted-foreground text-center py-6 text-sm">No comics in library</p>
             ) : (
-              <ScrollArea className="h-[400px] -mx-6">
-                <div className="px-6 space-y-1">
+              <ScrollArea className="h-[300px]">
+                <div className="divide-y divide-border">
                   {comicStorage.map((comic) => (
                     <div
                       key={comic.id}
-                      className="flex items-center justify-between py-3 px-3 -mx-3 rounded-lg hover:bg-muted/50 transition-colors"
+                      className="flex items-center gap-2 py-2 px-4 hover:bg-muted/50 transition-colors"
                     >
-                      <div className="flex-1 min-w-0 mr-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium truncate">{comic.title}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm truncate">{comic.title}</span>
                           {comic.sourceType === "remote" ? (
-                            <Badge variant="secondary" className="shrink-0">
-                              <Cloud className="h-3 w-3 mr-1" />
-                              Remote
-                            </Badge>
+                            <Cloud className="h-3 w-3 text-muted-foreground shrink-0" />
                           ) : !comic.hasValidHandle ? (
-                            <Badge variant="destructive" className="shrink-0">
-                              <FileWarning className="h-3 w-3 mr-1" />
-                              No access
-                            </Badge>
+                            <FileWarning className="h-3 w-3 text-destructive shrink-0" />
                           ) : null}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {formatBytes(comic.totalSize)}
-                          {comic.pagesSize > 0 && (
-                            <span className="ml-2">
-                              ({formatBytes(comic.pagesSize)} cached)
-                            </span>
-                          )}
-                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        {comic.pagesSize > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleClearPages(comic)}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            Clear cache
-                          </Button>
-                        )}
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {formatBytes(comic.totalSize)}
+                      </span>
+                      {comic.pagesSize > 0 && (
                         <Button
                           variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteTarget(comic)}
-                          className="text-muted-foreground hover:text-destructive h-8 w-8"
+                          size="sm"
+                          onClick={() => handleClearPages(comic)}
+                          className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          Clear
                         </Button>
-                      </div>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteTarget(comic)}
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -316,11 +317,11 @@ export default function SettingsPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)]">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete comic?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{deleteTarget?.title}" and all associated bookmarks, notes, and cached pages. This action cannot be undone.
+              This will permanently delete "{deleteTarget?.title}" and all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -330,6 +331,27 @@ export default function SettingsPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear Cache Confirmation Dialog */}
+      <AlertDialog open={showClearCacheDialog} onOpenChange={setShowClearCacheDialog}>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all cached pages?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will free up {stats ? formatBytes(stats.pagesSize) : "0 B"} of storage. Comics will need to reload pages from their source files.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearAllCache}
+              disabled={clearingCache}
+            >
+              {clearingCache ? "Clearing..." : "Clear Cache"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

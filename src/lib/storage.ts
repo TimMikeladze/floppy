@@ -305,6 +305,25 @@ export async function deletePagesForComic(comicId: string): Promise<void> {
   })
 }
 
+/**
+ * Clear all cached pages from IndexedDB (frees storage without deleting comics).
+ */
+export async function clearAllCachedPages(): Promise<number> {
+  const database = await initDB()
+  const comics = await getAllComics()
+  let clearedCount = 0
+
+  for (const comic of comics) {
+    const pages = await getPagesForComic(comic.id)
+    if (pages && pages.length > 0) {
+      await deletePagesForComic(comic.id)
+      clearedCount++
+    }
+  }
+
+  return clearedCount
+}
+
 export async function saveBookmark(bookmark: Bookmark): Promise<void> {
   const database = await initDB()
   return new Promise((resolve, reject) => {
