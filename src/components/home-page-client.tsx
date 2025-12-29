@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs"
 import { AppLayout } from "@/components/layout/app-layout"
 import { ComicGrid } from "@/components/library/comic-grid"
@@ -12,6 +12,7 @@ import { toast } from "sonner"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Library, BookOpen, CheckCircle2, Heart } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import { getStoredLibraryPreferences, saveLibraryPreferences } from "@/hooks/use-library-preferences"
 
 const filterTypes = ["all", "reading", "completed", "want"] as const
 type FilterType = (typeof filterTypes)[number]
@@ -34,6 +35,9 @@ export function HomePageClient({ csvImportEnabled }: HomePageClientProps) {
   const [activeFilter, setActiveFilter] = useQueryState("filter", parseAsStringLiteral(filterTypes).withDefault("all"))
   const [selectedListId, setSelectedListId] = useQueryState("list", parseAsString)
 
+  // Track if we've initialized from localStorage
+  const hasInitializedFromStorage = useRef(false)
+
   // Local state
   const [comics, setComics] = useState<Comic[]>([])
   const [filteredComics, setFilteredComics] = useState<Comic[]>([])
@@ -45,6 +49,42 @@ export function HomePageClient({ csvImportEnabled }: HomePageClientProps) {
     loadComics()
     loadLists()
   }, [])
+
+  // Initialize from localStorage if no URL params are present
+  useEffect(() => {
+    if (hasInitializedFromStorage.current) return
+    hasInitializedFromStorage.current = true
+
+    // Check if URL has any of our params
+    const urlParams = new URLSearchParams(window.location.search)
+    const hasUrlParams =
+      urlParams.has("sort") ||
+      urlParams.has("view") ||
+      urlParams.has("filter") ||
+      urlParams.has("list")
+
+    // If no URL params, load from localStorage
+    if (!hasUrlParams) {
+      const stored = getStoredLibraryPreferences()
+      if (stored.sortBy !== "recent") setSortBy(stored.sortBy)
+      if (stored.viewMode !== "grid") setViewMode(stored.viewMode)
+      if (stored.filter !== "all") setActiveFilter(stored.filter)
+      if (stored.selectedListId) setSelectedListId(stored.selectedListId)
+    }
+  }, [setSortBy, setViewMode, setActiveFilter, setSelectedListId])
+
+  // Persist preferences to localStorage when they change
+  useEffect(() => {
+    // Skip persistence on initial mount before localStorage initialization
+    if (!hasInitializedFromStorage.current) return
+
+    saveLibraryPreferences({
+      sortBy: sortBy as "title" | "recent" | "progress",
+      viewMode: viewMode as "grid" | "table",
+      filter: activeFilter as "all" | "reading" | "completed" | "want",
+      selectedListId: selectedListId ?? null,
+    })
+  }, [sortBy, viewMode, activeFilter, selectedListId])
 
   useEffect(() => {
     filterAndSortComics()
