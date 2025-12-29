@@ -17,7 +17,7 @@ import { Upload, Settings2 } from "lucide-react"
 import { AttachFileDialog } from "@/components/library/attach-file-dialog"
 import { NextIssueOverlay } from "@/components/reader/next-issue-overlay"
 import { useReading } from "@/lib/reading-context"
-import { findNextIssue } from "@/lib/series-utils"
+import { findNextComic } from "@/lib/series-utils"
 
 export default function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -66,16 +66,16 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     loadNextIssue()
   }, [comic])
 
-  // Load the next issue in the series
+  // Load the next comic (series-based or alphabetical fallback)
   async function loadNextIssue() {
     if (!comic) return
     try {
       const allComics = await getAllComics()
-      const next = findNextIssue(comic, allComics)
+      const next = findNextComic(comic, allComics)
       setNextIssue(next)
       setNextIssueDismissed(false) // Reset dismissal when comic changes
     } catch (error) {
-      console.error("[reader] Error finding next issue:", error)
+      console.error("[reader] Error finding next comic:", error)
     }
   }
 
@@ -484,6 +484,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       {/* Next issue overlay - shown when on last page */}
       {nextIssue && (
         <NextIssueOverlay
+          currentComic={comic}
           nextIssue={nextIssue}
           isVisible={currentPage === totalPages - 1 && !nextIssueDismissed && !menuOpen}
           onDismiss={() => setNextIssueDismissed(true)}

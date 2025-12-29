@@ -4,16 +4,17 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronRight, X } from "lucide-react"
 import type { Comic } from "@/lib/types"
-import { getSeriesName, getIssueNumber } from "@/lib/series-utils"
+import { getSeriesName, getIssueNumber, isSameSeries } from "@/lib/series-utils"
 import Link from "next/link"
 
 interface NextIssueOverlayProps {
+  currentComic: Comic
   nextIssue: Comic
   isVisible: boolean
   onDismiss: () => void
 }
 
-export function NextIssueOverlay({ nextIssue, isVisible, onDismiss }: NextIssueOverlayProps) {
+export function NextIssueOverlay({ currentComic, nextIssue, isVisible, onDismiss }: NextIssueOverlayProps) {
   const [show, setShow] = useState(false)
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export function NextIssueOverlay({ nextIssue, isVisible, onDismiss }: NextIssueO
 
   if (!isVisible) return null
 
+  const isNextInSeries = isSameSeries(currentComic, nextIssue)
   const seriesName = getSeriesName(nextIssue)
   const issueNum = getIssueNumber(nextIssue)
 
@@ -52,11 +54,17 @@ export function NextIssueOverlay({ nextIssue, isVisible, onDismiss }: NextIssueO
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">
-                Continue reading
+                {isNextInSeries ? "Continue reading" : "Up next"}
               </p>
               <h3 className="font-semibold text-foreground truncate">
-                {seriesName}
-                {issueNum !== null && <span className="text-muted-foreground"> #{issueNum}</span>}
+                {isNextInSeries ? (
+                  <>
+                    {seriesName}
+                    {issueNum !== null && <span className="text-muted-foreground"> #{issueNum}</span>}
+                  </>
+                ) : (
+                  nextIssue.title
+                )}
               </h3>
             </div>
             <div className="flex items-center gap-2">
@@ -71,7 +79,7 @@ export function NextIssueOverlay({ nextIssue, isVisible, onDismiss }: NextIssueO
               </Button>
               <Button asChild className="gap-2 h-11 px-5">
                 <Link href={`/reader/${nextIssue.id}`}>
-                  Next Issue
+                  {isNextInSeries ? "Next Issue" : "Read Next"}
                   <ChevronRight className="h-4 w-4" />
                 </Link>
               </Button>

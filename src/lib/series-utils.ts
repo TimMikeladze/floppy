@@ -174,6 +174,43 @@ export function findNextIssue(currentComic: Comic, allComics: Comic[]): Comic | 
 }
 
 /**
+ * Find the next comic by alphabetical name sort order.
+ * This is a fallback when series-based matching doesn't find a result.
+ * Returns null if this is the last comic alphabetically.
+ */
+export function findNextComicByName(currentComic: Comic, allComics: Comic[]): Comic | null {
+  // Sort all comics alphabetically by title (case-insensitive)
+  const sortedComics = [...allComics].sort((a, b) =>
+    a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+  )
+
+  // Find current comic's position
+  const currentIndex = sortedComics.findIndex((c) => c.id === currentComic.id)
+  if (currentIndex === -1) return null
+
+  // Return next comic if it exists
+  if (currentIndex < sortedComics.length - 1) {
+    return sortedComics[currentIndex + 1]
+  }
+
+  return null
+}
+
+/**
+ * Find the next comic to read after the current one.
+ * First tries to find the next issue in the same series.
+ * Falls back to the next comic alphabetically if no series match is found.
+ */
+export function findNextComic(currentComic: Comic, allComics: Comic[]): Comic | null {
+  // First, try to find the next issue in the series
+  const nextInSeries = findNextIssue(currentComic, allComics)
+  if (nextInSeries) return nextInSeries
+
+  // Fall back to alphabetical order
+  return findNextComicByName(currentComic, allComics)
+}
+
+/**
  * Find the previous issue in the series for a given comic.
  * Returns null if no previous issue is found.
  */
