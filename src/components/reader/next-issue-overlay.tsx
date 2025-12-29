@@ -52,6 +52,23 @@ export function NextIssueOverlay({ currentComic, nextIssue, isVisible, onDismiss
       }}>
         <div className="p-4">
           <div className="flex items-center justify-between gap-4">
+            {/* Cover Image */}
+            {nextIssue.coverImage && (
+              <div className="shrink-0">
+                <div
+                  className="w-12 h-16 rounded-lg overflow-hidden bg-muted"
+                  style={{
+                    boxShadow: "0 2px 8px oklch(0 0 0 / 0.2)",
+                  }}
+                >
+                  <img
+                    src={nextIssue.coverImage}
+                    alt={nextIssue.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">
                 {isNextInSeries ? "Continue reading" : "Up next"}
