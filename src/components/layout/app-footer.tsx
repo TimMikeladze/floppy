@@ -16,7 +16,7 @@ export function AppFooter() {
 
   return (
     <>
-      <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <footer className="fixed bottom-0 left-0 right-0 z-40 safe-bottom safe-x border-t border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto w-full max-w-screen-2xl px-3 sm:px-4 md:px-6 py-2.5">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             {/* Left side - Logo and branding */}

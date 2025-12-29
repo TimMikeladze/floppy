@@ -97,28 +97,29 @@ export function AppBar({
   const pathname = usePathname()
 
   return (
-    <header className="sticky top-0 z-40 safe-top safe-x border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-3 mx-auto w-full max-w-screen-2xl">
+    <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="safe-top safe-x bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" />
+      <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-2 sm:gap-3 mx-auto w-full max-w-screen-2xl safe-x">
         {/* Logo / Title - hidden when search is expanded on mobile */}
         {!searchExpanded && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             <Link
               href="/"
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+              className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
                 pathname === '/' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
               }`}
             >
               <Library className="h-4 w-4" />
-              Library
+              <span className="hidden sm:inline">Library</span>
             </Link>
             <Link
               href="/releases"
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+              className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
                 pathname === '/releases' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
               }`}
             >
               <Sparkles className="h-4 w-4" />
-              Releases
+              <span className="hidden sm:inline">Releases</span>
             </Link>
           </div>
         )}
@@ -221,30 +222,30 @@ export function AppBar({
               <Button
                 onClick={onAddComic}
                 variant="outline"
-                size="default"
-                className="gap-2 ml-1 bg-transparent h-9"
+                size="icon"
+                className="h-9 w-9 sm:w-auto sm:px-3 bg-transparent"
               >
                 <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Add</span>
+                <span className="hidden sm:inline sm:ml-2">Add</span>
               </Button>
 
               {/* Upload button */}
               <Button
                 onClick={onUpload}
                 variant="outline"
-                size="default"
-                className="gap-2 bg-transparent h-9"
+                size="icon"
+                className="h-9 w-9 sm:w-auto sm:px-3 bg-transparent"
               >
                 <Upload className="h-4 w-4" />
-                <span className="hidden sm:inline">Upload</span>
+                <span className="hidden sm:inline sm:ml-2">Upload</span>
               </Button>
 
               {/* Settings menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="default" className="gap-2 h-9 bg-transparent">
+                  <Button variant="outline" size="icon" className="h-9 w-9 sm:w-auto sm:px-3 bg-transparent">
                     <Settings className="h-4 w-4" />
-                    <span className="hidden sm:inline">Settings</span>
+                    <span className="hidden sm:inline sm:ml-2">Settings</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
