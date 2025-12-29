@@ -74,7 +74,7 @@ export function ComicDetailSheet({ comic, open, onOpenChange, onDelete, onUpdate
                     <img
                       src={comic.coverImage || "/placeholder.svg"}
                       alt=""
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 </div>

@@ -439,6 +439,23 @@ export function ReaderMenu({
                         </Button>
                       </div>
                     </div>
+
+                    {/* Swipe Navigation */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="swipe-navigation" className="text-sm font-medium">
+                          Swipe to Turn Pages
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Swipe horizontally to navigate between pages
+                        </p>
+                      </div>
+                      <Switch
+                        id="swipe-navigation"
+                        checked={settings.swipeToTurnPages ?? true}
+                        onCheckedChange={(checked) => updateSettings({ swipeToTurnPages: checked })}
+                      />
+                    </div>
                   </>
                 )}
               </TabsContent>

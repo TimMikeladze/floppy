@@ -12,6 +12,7 @@ const defaultSettings: Omit<ReadingSettings, "theme"> = {
   layoutMode: "paged",
   showPageNumbers: false,
   toolbarPosition: "right",
+  swipeToTurnPages: true,
 }
 
 type ReadingSettingsWithoutTheme = Omit<ReadingSettings, "theme">

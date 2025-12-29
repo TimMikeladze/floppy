@@ -31,6 +31,7 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
     position: { x: 0, y: 0 }
   })
   const panStartRef = useRef({ touchX: 0, touchY: 0, posX: 0, posY: 0 })
+  const swipeStartRef = useRef({ x: 0, y: 0, time: 0 })
 
   // Pan sensitivity multiplier for mobile - makes panning more responsive when zoomed in
   const PAN_SENSITIVITY = isMobile ? 1.8 : 1
@@ -178,6 +179,13 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
         x: e.touches[0].clientX - position.x,
         y: e.touches[0].clientY - position.y,
       })
+    } else if (e.touches.length === 1 && scale === 1 && settings.swipeToTurnPages && settings.layoutMode !== "scrolling") {
+      // Swipe start - store initial position and time for swipe detection
+      swipeStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      }
     }
   }
 
@@ -236,6 +244,44 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (e.touches.length === 0) {
+      // Check for swipe gesture when scale is 1
+      if (scale === 1 && settings.swipeToTurnPages && settings.layoutMode !== "scrolling" && swipeStartRef.current.time > 0) {
+        const touch = e.changedTouches[0]
+        const deltaX = touch.clientX - swipeStartRef.current.x
+        const deltaY = touch.clientY - swipeStartRef.current.y
+        const deltaTime = Date.now() - swipeStartRef.current.time
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+        const velocity = distance / deltaTime
+
+        // Swipe thresholds
+        const MIN_SWIPE_DISTANCE = 50
+        const MIN_SWIPE_VELOCITY = 0.3
+
+        // Check if it's a valid horizontal swipe
+        const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY)
+        if (distance >= MIN_SWIPE_DISTANCE && velocity >= MIN_SWIPE_VELOCITY && isHorizontal) {
+          // Determine direction based on reading direction setting
+          if (settings.readingDirection === "ltr") {
+            // LTR: swipe left = next, swipe right = prev
+            if (deltaX < 0) {
+              handleNextPage()
+            } else {
+              handlePrevPage()
+            }
+          } else {
+            // RTL: swipe right = next, swipe left = prev
+            if (deltaX > 0) {
+              handleNextPage()
+            } else {
+              handlePrevPage()
+            }
+          }
+        }
+
+        // Reset swipe tracking
+        swipeStartRef.current = { x: 0, y: 0, time: 0 }
+      }
+
       setIsDragging(false)
       // Snap back to no zoom if scale is very close to 1
       if (scale < 1.1) {

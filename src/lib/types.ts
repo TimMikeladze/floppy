@@ -41,6 +41,7 @@ export interface ReadingSettings {
   layoutMode?: "paged" | "scrolling"
   showPageNumbers?: boolean
   toolbarPosition?: "left" | "right" | "bottom" | "top"
+  swipeToTurnPages?: boolean
 }
 
 export interface Bookmark {
