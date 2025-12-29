@@ -150,6 +150,18 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* iOS PWA Safe Area Support */
+  @supports (padding: max(0px)) {
+    body {
+      padding-top: max(0px, env(safe-area-inset-top));
+      padding-left: max(0px, env(safe-area-inset-left));
+      padding-right: max(0px, env(safe-area-inset-right));
+      /* Note: pb-16 (4rem) is applied via Tailwind for footer */
+      /* Combine fixed footer padding with safe-area-inset-bottom */
+      padding-bottom: max(4rem, env(safe-area-inset-bottom));
+    }
+  }
 }
 
 /* Filter pill styles */
