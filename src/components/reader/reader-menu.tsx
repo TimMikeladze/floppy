@@ -68,7 +68,7 @@ export function ReaderMenu({
   const { settings, updateSettings } = useReading()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const [activeTab, setActiveTab] = useState("navigate")
+  const [activeTab, setActiveTab] = useState("display")
   const [isDesktop, setIsDesktop] = useState(false)
 
   useEffect(() => {
@@ -157,13 +157,7 @@ export function ReaderMenu({
 
         {/* Settings Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <TabsList className="w-full justify-start rounded-none border-b bg-transparent px-4 h-auto py-0">
-            <TabsTrigger
-              value="navigate"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3"
-            >
-              Navigate
-            </TabsTrigger>
+          <TabsList className="w-full justify-start rounded-none bg-transparent px-4 h-auto py-0">
             <TabsTrigger
               value="display"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-3"
@@ -180,47 +174,6 @@ export function ReaderMenu({
 
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-4">
-              <TabsContent value="navigate" className="mt-0 space-y-4">
-                {/* Page Thumbnails Strip */}
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Pages</h3>
-                  <ScrollArea className="w-full h-[400px]">
-                    <div className="flex flex-col gap-2 pr-2">
-                      {pages.map((pageUrl, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            onPageChange(index)
-                            onOpenChange(false)
-                          }}
-                          className={`relative shrink-0 rounded-md overflow-hidden border-2 transition-all ${
-                            currentPage === index
-                              ? "border-primary ring-2 ring-primary/30"
-                              : "border-transparent hover:border-muted-foreground/30"
-                          }`}
-                        >
-                          {pageUrl ? (
-                            <img
-                              src={pageUrl}
-                              alt={`Page ${index + 1}`}
-                              className="h-20 w-14 object-cover"
-                            />
-                          ) : (
-                            <div className="h-20 w-14 bg-muted flex items-center justify-center">
-                              <span className="text-xs text-muted-foreground">{index + 1}</span>
-                            </div>
-                          )}
-                          <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-xs py-0.5 text-center">
-                            {index + 1}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                    <ScrollBar orientation="vertical" />
-                  </ScrollArea>
-                </div>
-              </TabsContent>
-
               <TabsContent value="display" className="mt-0 space-y-4">
                 {/* Theme */}
                 <div className="space-y-2">
