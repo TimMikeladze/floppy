@@ -13,6 +13,7 @@ const defaultSettings: Omit<ReadingSettings, "theme"> = {
   showPageNumbers: false,
   toolbarPosition: "right",
   swipeToTurnPages: true,
+  hideNavigationArrows: true,
 }
 
 type ReadingSettingsWithoutTheme = Omit<ReadingSettings, "theme">

@@ -404,6 +404,23 @@ export function ReaderMenu({
                         onCheckedChange={(checked) => updateSettings({ swipeToTurnPages: checked })}
                       />
                     </div>
+
+                    {/* Hide Navigation Arrows */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="hide-nav-arrows" className="text-sm font-medium">
+                          Hide Navigation Arrows
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Hide the left/right arrows on screen
+                        </p>
+                      </div>
+                      <Switch
+                        id="hide-nav-arrows"
+                        checked={settings.hideNavigationArrows ?? true}
+                        onCheckedChange={(checked) => updateSettings({ hideNavigationArrows: checked })}
+                      />
+                    </div>
                   </>
                 )}
               </TabsContent>

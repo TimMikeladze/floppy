@@ -448,8 +448,8 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
         )}
       </div>
 
-      {/* Navigation hints - only show when not zoomed and in paged mode */}
-      {scale === 1 && (
+      {/* Navigation arrows - only show when not zoomed, in paged mode, and not hidden */}
+      {scale === 1 && !settings.hideNavigationArrows && (
         <>
           {currentPage > 0 && (
             <Button
