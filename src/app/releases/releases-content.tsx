@@ -37,7 +37,11 @@ import { getStoredReleasesPreferences, saveReleasesPreferences } from "@/hooks/u
 const viewTypes = ["new", "upcoming", "calendar", "pull-list"] as const
 type ViewType = (typeof viewTypes)[number]
 
-export function ReleasesContent() {
+interface ReleasesContentProps {
+  releasesEnabled: boolean
+}
+
+export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
   const [searchQuery, setSearchQuery] = useQueryState("q", parseAsString.withDefault(""))
   const [activeView, setActiveView] = useQueryState("view", parseAsStringLiteral(viewTypes).withDefault("new"))
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -144,6 +148,7 @@ export function ReleasesContent() {
       onSortChange={() => {}}
       viewMode="grid"
       onViewModeChange={() => {}}
+      releasesEnabled={releasesEnabled}
       filterPills={
         <ScrollArea className="w-full">
           <div className="flex gap-2 px-3 py-3 sm:px-4 md:px-6 mx-auto w-full max-w-screen-2xl">

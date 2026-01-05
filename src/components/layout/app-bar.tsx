@@ -44,6 +44,7 @@ interface AppBarProps {
   onImport?: (file: File) => void
   onImportDataSource?: () => void
   onClearData?: () => void
+  releasesEnabled?: boolean
 }
 
 export function AppBar({
@@ -60,6 +61,7 @@ export function AppBar({
   onImport,
   onImportDataSource,
   onClearData,
+  releasesEnabled = false,
 }: AppBarProps) {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [searchExpanded, setSearchExpanded] = useState(false)
@@ -116,15 +118,17 @@ export function AppBar({
               <Library className="h-4 w-4" />
               <span className="hidden sm:inline">Library</span>
             </Link>
-            <Link
-              href="/releases"
-              className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
-                pathname === '/releases' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-              }`}
-            >
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">Releases</span>
-            </Link>
+            {releasesEnabled && (
+              <Link
+                href="/releases"
+                className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                  pathname === '/releases' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                }`}
+              >
+                <Sparkles className="h-4 w-4" />
+                <span className="hidden sm:inline">Releases</span>
+              </Link>
+            )}
           </div>
         )}
 

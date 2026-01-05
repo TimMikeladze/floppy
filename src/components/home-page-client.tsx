@@ -25,9 +25,10 @@ type ViewMode = (typeof viewModes)[number]
 
 interface HomePageClientProps {
   csvImportEnabled: boolean
+  releasesEnabled: boolean
 }
 
-export function HomePageClient({ csvImportEnabled }: HomePageClientProps) {
+export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageClientProps) {
   // URL state with nuqs
   const [searchQuery, setSearchQuery] = useQueryState("q", parseAsString.withDefault(""))
   const [sortBy, setSortBy] = useQueryState("sort", parseAsStringLiteral(sortTypes).withDefault("recent"))
@@ -236,6 +237,7 @@ export function HomePageClient({ csvImportEnabled }: HomePageClientProps) {
       onViewModeChange={setViewMode}
       onDataChange={handleDataChange}
       onListsChange={loadLists}
+      releasesEnabled={releasesEnabled}
       filterPills={
         <ScrollArea className="w-full">
           <div className="flex gap-2 px-3 py-3 sm:px-4 md:px-6 mx-auto w-full max-w-screen-2xl">

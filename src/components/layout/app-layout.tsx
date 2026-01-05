@@ -22,6 +22,9 @@ interface AppLayoutProps {
   onDataChange?: () => Promise<void>
   onListsChange?: () => Promise<void>
 
+  // Feature flags
+  releasesEnabled?: boolean
+
   // Layout slots
   filterPills?: ReactNode
   children: ReactNode
@@ -36,6 +39,7 @@ export function AppLayout({
   onViewModeChange,
   onDataChange,
   onListsChange,
+  releasesEnabled,
   filterPills,
   children,
 }: AppLayoutProps) {
@@ -69,6 +73,7 @@ export function AppLayout({
           onExport={handleExport}
           onImport={handleImport}
           onClearData={handleClearData}
+          releasesEnabled={releasesEnabled}
         />
 
         {/* Filter Pills Section */}
