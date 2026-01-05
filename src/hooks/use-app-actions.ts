@@ -31,12 +31,18 @@ export function useAppActions(onDataChange?: () => Promise<void>) {
       return
     }
 
-    const toastId = toast.loading(`Importing ${validFiles.length} comic${validFiles.length > 1 ? "s" : ""}...`)
-
+    const total = validFiles.length
+    let completed = 0
     let successCount = 0
     let failCount = 0
 
-    for (const { file, handle } of validFiles) {
+    const toastId = toast.loading(`Importing comics: 0/${total} complete`)
+
+    const updateProgress = () => {
+      toast.loading(`Importing comics: ${completed}/${total} complete`, { id: toastId })
+    }
+
+    async function processFile({ file, handle }: FileWithHandle): Promise<boolean> {
       try {
         const { pages, metadata } = await parseComicFile(file)
         const coverImage = await generateCoverImage(pages[0])
@@ -63,12 +69,37 @@ export function useAppActions(onDataChange?: () => Promise<void>) {
           await savePagesForComic(comicId, pages)
         }
 
-        successCount++
+        return true
       } catch (error) {
         console.error(`Error uploading ${file.name}:`, error)
-        failCount++
+        return false
       }
     }
+
+    // Process files concurrently with controlled concurrency
+    const CONCURRENCY_LIMIT = 3
+    const queue = [...validFiles]
+    const workers: Promise<void>[] = []
+
+    for (let i = 0; i < Math.min(CONCURRENCY_LIMIT, queue.length); i++) {
+      workers.push((async () => {
+        while (queue.length > 0) {
+          const fileWithHandle = queue.shift()
+          if (!fileWithHandle) break
+
+          const success = await processFile(fileWithHandle)
+          if (success) {
+            successCount++
+          } else {
+            failCount++
+          }
+          completed++
+          updateProgress()
+        }
+      })())
+    }
+
+    await Promise.all(workers)
 
     await onDataChange?.()
 
