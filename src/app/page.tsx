@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { csvImportFlag } from "@/flags"
+import { csvImportFlag, releasesFlag } from "@/flags"
 import { HomePageClient } from "@/components/home-page-client"
 
 function HomePageLoading() {
@@ -25,10 +25,11 @@ function HomePageLoading() {
 
 export default async function HomePage() {
   const csvImportEnabled = await csvImportFlag()
+  const releasesEnabled = await releasesFlag()
 
   return (
     <Suspense fallback={<HomePageLoading />}>
-      <HomePageClient csvImportEnabled={csvImportEnabled} />
+      <HomePageClient csvImportEnabled={csvImportEnabled} releasesEnabled={releasesEnabled} />
     </Suspense>
   )
 }

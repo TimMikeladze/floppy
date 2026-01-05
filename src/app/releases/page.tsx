@@ -1,4 +1,6 @@
 import { Suspense } from "react"
+import { redirect } from "next/navigation"
+import { releasesFlag } from "@/flags"
 import { ReleasesContent } from "./releases-content"
 import { Sparkles } from "lucide-react"
 
@@ -28,10 +30,16 @@ function ReleasesLoadingFallback() {
   )
 }
 
-export default function ReleasesPage() {
+export default async function ReleasesPage() {
+  const releasesEnabled = await releasesFlag()
+
+  if (!releasesEnabled) {
+    redirect("/")
+  }
+
   return (
     <Suspense fallback={<ReleasesLoadingFallback />}>
-      <ReleasesContent />
+      <ReleasesContent releasesEnabled={releasesEnabled} />
     </Suspense>
   )
 }
