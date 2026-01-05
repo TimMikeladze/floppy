@@ -5,8 +5,6 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useReading } from "@/lib/reading-context"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
 interface ComicViewerProps {
   pages: string[]
@@ -447,40 +445,6 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
           />
         )}
       </div>
-
-      {/* Navigation hints - only show when not zoomed and in paged mode */}
-      {scale === 1 && (
-        <>
-          {currentPage > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute left-4 top-1/2 -translate-y-1/2 h-16 w-16 rounded-full bg-black/30 text-white opacity-0 transition-opacity hover:opacity-100 hover:bg-black/50 md:opacity-70"
-              onClick={(e) => {
-                e.stopPropagation()
-                handlePrevPage()
-              }}
-            >
-              <ChevronLeft className="h-10 w-10" />
-              <span className="sr-only">Previous page</span>
-            </Button>
-          )}
-          {currentPage < pages.length - 1 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-16 rounded-full bg-black/30 text-white opacity-0 transition-opacity hover:opacity-100 hover:bg-black/50 md:opacity-70"
-              onClick={(e) => {
-                e.stopPropagation()
-                handleNextPage()
-              }}
-            >
-              <ChevronRight className="h-10 w-10" />
-              <span className="sr-only">Next page</span>
-            </Button>
-          )}
-        </>
-      )}
     </div>
   )
 }
