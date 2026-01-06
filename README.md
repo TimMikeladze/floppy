@@ -40,13 +40,21 @@
 
 ## Running Locally
 
+### Prerequisites
+
+Install [Bun](https://bun.sh/) if you don't have it:
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
 ### Development
 
 ```bash
 git clone https://github.com/TimMikeladze/floppy.git
 cd floppy
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
@@ -54,8 +62,8 @@ Open [http://localhost:3000](http://localhost:3000)
 ### Production Build
 
 ```bash
-npm run build
-npm start
+bun run build
+bun start
 ```
 
 ---
@@ -88,8 +96,7 @@ docker run -p 3000:3000 floppy
 Or deploy via CLI:
 
 ```bash
-npm i -g vercel
-vercel
+bunx vercel
 ```
 
 ### Docker (Any Platform)
@@ -103,11 +110,20 @@ Deploy the Docker image to any container platform:
 
 ### Self-Hosted
 
-Any platform that supports Node.js:
+Any platform that supports Node.js, Bun, or Docker.
+
+#### Using Bun/Node.js:
 
 ```bash
-npm run build
-npm start
+bun run build
+bun start
+```
+
+#### Using Docker:
+
+```bash
+docker build -t floppy .
+docker run -p 3000:3000 floppy
 ```
 
 ---
