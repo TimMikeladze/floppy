@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { usePathname } from "next/navigation"
 import { Github, Heart } from "lucide-react"
-import { SupportDialog } from "./support-dialog"
+import { usePathname } from "next/navigation"
+import { useState } from "react"
 import { useIsPwa } from "@/hooks/use-is-pwa"
+import { SupportDialog } from "./support-dialog"
 
 export function AppFooter() {
   const pathname = usePathname()
@@ -28,14 +28,14 @@ export function AppFooter() {
               </div>
               <div className="flex flex-col">
                 <span className="font-medium text-foreground">floppy.sh</span>
-                <span className="text-[10px] text-muted-foreground/80">open-source comic book reader</span>
+                <span className="text-[10px] text-muted-foreground/80">the open-source comic-book app.</span>
               </div>
             </div>
 
             {/* Right side - Icon actions */}
             <div className="flex items-center gap-3">
               <a
-                href="https://github.com"
+                href="https://github.com/TimMikeladze/floppy"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-foreground transition-colors"
