@@ -260,3 +260,315 @@
     transition: transform 0.1s ease;
   }
 }
+
+/* ============================================
+   MOBILE ACTION BAR STYLES
+   ============================================ */
+
+.mobile-action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 48px;
+  padding: 0.5rem;
+  color: var(--muted-foreground);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-action-item:active {
+  transform: scale(0.92);
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+/* FAB Button Styles */
+.fab-button {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%);
+  color: var(--primary-foreground);
+  border: none;
+  box-shadow:
+    0 4px 16px oklch(from var(--primary) l c h / 0.4),
+    0 2px 8px oklch(0 0 0 / 0.2),
+    inset 0 1px 0 oklch(1 0 0 / 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-button:hover {
+  transform: scale(1.05);
+  box-shadow:
+    0 6px 24px oklch(from var(--primary) l c h / 0.5),
+    0 4px 12px oklch(0 0 0 / 0.25);
+}
+
+.fab-button:active {
+  transform: scale(0.95);
+}
+
+/* Mobile bottom padding for content when action bar is visible */
+@media (max-width: 639px) {
+  .mobile-content-padding {
+    padding-bottom: 5rem;
+  }
+}
+
+/* ============================================
+   ENHANCED COMIC CARD STYLES
+   ============================================ */
+
+.comic-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.comic-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.1);
+}
+
+@media (hover: none) {
+  .comic-card:active {
+    transform: scale(0.98);
+    border-color: var(--primary);
+  }
+}
+
+/* Progress dots */
+.progress-dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.progress-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: all 0.2s ease;
+}
+
+.progress-dot.filled {
+  background: var(--primary);
+}
+
+.progress-dot.partial {
+  background: linear-gradient(
+    90deg,
+    var(--primary) var(--fill-percent, 50%),
+    var(--muted) var(--fill-percent, 50%)
+  );
+}
+
+/* Glass effect for overlay buttons */
+:root {
+  --glass-bg: oklch(1 0 0 / 0.8);
+  --glass-border: oklch(0 0 0 / 0.1);
+  --glass-shadow: oklch(0 0 0 / 0.1);
+}
+
+.dark {
+  --glass-bg: oklch(0.2 0 0 / 0.8);
+  --glass-border: oklch(1 0 0 / 0.1);
+  --glass-shadow: oklch(0 0 0 / 0.3);
+}
+
+/* ============================================
+   ENHANCED FILTER PILLS FOR MOBILE
+   ============================================ */
+
+@media (max-width: 639px) {
+  .filter-pill {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    min-height: 36px;
+  }
+
+  .filter-pill .count {
+    font-size: 0.6875rem;
+    padding: 0.125rem 0.4rem;
+  }
+}
+
+/* Filter scroll fade indicators */
+.filter-scroll-container {
+  position: relative;
+}
+
+.filter-scroll-container::before,
+.filter-scroll-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.filter-scroll-container::before {
+  left: 0;
+  background: linear-gradient(to right, var(--background), transparent);
+}
+
+.filter-scroll-container::after {
+  right: 0;
+  background: linear-gradient(to left, var(--background), transparent);
+}
+
+.filter-scroll-container.has-scroll-left::before,
+.filter-scroll-container.has-scroll-right::after {
+  opacity: 1;
+}
+
+/* ============================================
+   PULL TO REFRESH STYLES
+   ============================================ */
+
+.pull-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 0;
+  overflow: hidden;
+  transition: height 0.2s ease;
+}
+
+.pull-indicator.pulling {
+  height: 60px;
+}
+
+.pull-indicator-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--muted);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+}
+
+.pull-indicator-spinner.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   MOBILE EMPTY STATE
+   ============================================ */
+
+@media (max-width: 639px) {
+  .empty-state-container {
+    min-height: 50vh;
+    padding: 2rem 1.5rem 6rem;
+  }
+
+  .empty-state-icon {
+    width: 5rem;
+    height: 5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .empty-state-title {
+    font-size: 1.5rem;
+  }
+
+  .empty-state-description {
+    font-size: 0.9375rem;
+  }
+}
+
+/* ============================================
+   SKELETON LOADING
+   ============================================ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    var(--secondary) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================
+   SWIPE ACTION STYLES
+   ============================================ */
+
+.swipe-action-container {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+}
+
+.swipe-action-content {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.swipe-action-background {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.swipe-action-background.left {
+  justify-content: flex-start;
+  background: var(--primary);
+}
+
+.swipe-action-background.right {
+  justify-content: flex-end;
+  background: var(--destructive);
+}
+
+/* ============================================
+   LONG PRESS FEEDBACK
+   ============================================ */
+
+@media (hover: none) {
+  .long-press-target {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .long-press-target::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--primary);
+    opacity: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .long-press-target.pressing::after {
+    opacity: 0.1;
+  }
+}

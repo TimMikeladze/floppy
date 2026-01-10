@@ -1,13 +1,16 @@
 "use client"
 
 import { AppBar } from "./app-bar"
+import { MobileActionBar } from "./mobile-action-bar"
 import { UploadDialog } from "@/components/library/upload-dialog"
 import { AddComicDialogControlled } from "@/components/library/add-comic-dialog"
 import { ListManager } from "@/components/library/list-manager"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAppActions } from "@/hooks/use-app-actions"
+import { useIsMobile } from "@/hooks/use-mobile"
 import type { ReactNode } from "react"
+import { useState } from "react"
 
 interface AppLayoutProps {
   // AppBar props
@@ -43,6 +46,8 @@ export function AppLayout({
   filterPills,
   children,
 }: AppLayoutProps) {
+  const isMobile = useIsMobile()
+  const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false)
   const {
     uploadDialogOpen,
     setUploadDialogOpen,
@@ -57,9 +62,17 @@ export function AppLayout({
     handleClearData,
   } = useAppActions(onDataChange)
 
+  // Handle mobile search click
+  const handleMobileSearchClick = () => {
+    setMobileSearchExpanded(true)
+    // Focus search in app bar will be handled by expanding
+    const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement
+    searchInput?.focus()
+  }
+
   return (
     <>
-      <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+      <div className="min-h-screen pb-20 sm:pb-0" style={{ background: 'var(--background)' }}>
         <AppBar
           onUpload={handleUploadClick}
           onAddComic={() => setAddComicDialogOpen(true)}
@@ -92,6 +105,15 @@ export function AppLayout({
           {children}
         </main>
       </div>
+
+      {/* Mobile Action Bar */}
+      <MobileActionBar
+        onUpload={handleUploadClick}
+        onAddComic={() => setAddComicDialogOpen(true)}
+        onSearchClick={handleMobileSearchClick}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
+      />
 
       {/* Shared Dialogs */}
       <UploadDialog

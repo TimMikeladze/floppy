@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs"
 import { AppLayout } from "@/components/layout/app-layout"
 import { ComicGrid } from "@/components/library/comic-grid"
@@ -10,9 +10,11 @@ import type { Comic, ComicList } from "@/lib/types"
 import { ImportDataSourceDialog } from "@/components/library/import-data-source-dialog"
 import { toast } from "sonner"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { Library, BookOpen, CheckCircle2, Heart } from "lucide-react"
+import { Library, BookOpen, CheckCircle2, Heart, RefreshCw } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { getStoredLibraryPreferences, saveLibraryPreferences } from "@/hooks/use-library-preferences"
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 const filterTypes = ["all", "reading", "completed", "want"] as const
 type FilterType = (typeof filterTypes)[number]
@@ -45,6 +47,24 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
   const [lists, setLists] = useState<ComicList[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [importDataSourceDialogOpen, setImportDataSourceDialogOpen] = useState(false)
+  const isMobile = useIsMobile()
+
+  // Pull to refresh
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([loadComics(), loadLists()])
+    toast.success("Library refreshed")
+  }, [])
+
+  const {
+    isPulling,
+    isRefreshing,
+    pullProgress,
+    containerRef,
+    indicatorStyle,
+  } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    threshold: 80,
+  })
 
   useEffect(() => {
     loadComics()
@@ -252,8 +272,9 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
                   }}
                   className={`filter-pill haptic-press ${activeFilter === filter.key && !selectedListId ? "active" : ""}`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
-                  {filter.label}
+                  <Icon className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
+                  <span className="hidden xs:inline sm:inline">{filter.label}</span>
+                  <span className="xs:hidden">{filter.label.split(' ')[0]}</span>
                   <span className="count">{filter.count}</span>
                 </button>
               )
@@ -272,7 +293,7 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
                   className={`filter-pill haptic-press ${selectedListId === list.id ? "active" : ""}`}
                 >
                   <span
-                    className="w-2 h-2 rounded-full shrink-0"
+                    className="w-2.5 h-2.5 sm:w-2 sm:h-2 rounded-full shrink-0"
                     style={{ backgroundColor: list.color }}
                   />
                   {list.name}
@@ -285,35 +306,54 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
         </ScrollArea>
       }
     >
-      {isLoading && comics.length === 0 ? (
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="text-center">
+      {/* Pull to refresh container */}
+      <div ref={containerRef}>
+        {/* Pull indicator - mobile only */}
+        {isMobile && (isPulling || isRefreshing) && (
+          <div
+            className="flex items-center justify-center overflow-hidden"
+            style={indicatorStyle}
+          >
             <div
-              className="mx-auto p-6 rounded-3xl mb-4 inline-block"
+              className={`w-6 h-6 rounded-full border-2 border-muted border-t-primary ${isRefreshing ? 'animate-spin' : ''}`}
               style={{
-                background: 'linear-gradient(135deg, var(--card) 0%, var(--secondary) 100%)',
-                boxShadow: '0 8px 32px oklch(0 0 0 / 0.2), 0 0 0 1px var(--border)'
+                transform: `rotate(${pullProgress * 360}deg)`,
+                opacity: pullProgress,
               }}
-            >
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            </div>
-            <p className="text-sm text-muted-foreground font-medium">Loading library...</p>
+            />
           </div>
-        </div>
-      ) : viewMode === "grid" ? (
-        <ComicGrid
-          comics={filteredComics}
-          onDelete={handleDelete}
-          onUpdate={loadComics}
-        />
-      ) : (
-        <ComicTable
-          comics={filteredComics}
-          onDelete={handleDelete}
-          onBulkDelete={handleBulkDelete}
-          onUpdate={loadComics}
-        />
-      )}
+        )}
+
+        {isLoading && comics.length === 0 ? (
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="text-center">
+              <div
+                className="mx-auto p-6 rounded-3xl mb-4 inline-block"
+                style={{
+                  background: 'linear-gradient(135deg, var(--card) 0%, var(--secondary) 100%)',
+                  boxShadow: '0 8px 32px oklch(0 0 0 / 0.2), 0 0 0 1px var(--border)'
+                }}
+              >
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+              <p className="text-sm text-muted-foreground font-medium">Loading library...</p>
+            </div>
+          </div>
+        ) : viewMode === "grid" ? (
+          <ComicGrid
+            comics={filteredComics}
+            onDelete={handleDelete}
+            onUpdate={loadComics}
+          />
+        ) : (
+          <ComicTable
+            comics={filteredComics}
+            onDelete={handleDelete}
+            onBulkDelete={handleBulkDelete}
+            onUpdate={loadComics}
+          />
+        )}
+      </div>
 
       {/* Import Data Source Dialog (Library-specific) */}
       {csvImportEnabled && (

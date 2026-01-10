@@ -24,13 +24,20 @@ import {
 import type { Comic } from "@/lib/types"
 import Link from "next/link"
 import { AddToListDialog } from "./add-to-list-dialog"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { AttachFileDialog } from "./attach-file-dialog"
 import { EditComicDialog } from "./edit-comic-dialog"
 import { loadRemoteImage, revokeRemoteImage } from "@/lib/remote-loader"
 import { saveComic } from "@/lib/storage"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { useIsMobile } from "@/hooks/use-mobile"
+import {
+  MobileActionSheet,
+  ActionSheetItem,
+  ActionSheetSeparator,
+  ActionSheetLabel,
+} from "@/components/ui/mobile-action-sheet"
 
 interface ComicCardProps {
   comic: Comic
@@ -223,12 +230,59 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate }: CardCo
 }
 
 export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProps) {
+  const router = useRouter()
+  const isMobile = useIsMobile()
   const [attachDialogOpen, setAttachDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [mobileActionSheetOpen, setMobileActionSheetOpen] = useState(false)
+  const [addToListDialogOpen, setAddToListDialogOpen] = useState(false)
   const [remoteCoverUrl, setRemoteCoverUrl] = useState<string | null>(null)
   const [coverLoading, setCoverLoading] = useState(false)
+  const [isPressed, setIsPressed] = useState(false)
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null)
   const hasProgress = comic.currentPage > 0 && comic.totalPages
   const isRemote = comic.sourceType === 'remote'
+  const canRead = comic.hasFile || isRemote
+  const isComplete = comic.totalPages && comic.currentPage >= comic.totalPages
+
+  // Long press handling for mobile
+  const handleTouchStart = useCallback(() => {
+    if (!isMobile) return
+    setIsPressed(true)
+    longPressTimerRef.current = setTimeout(() => {
+      setMobileActionSheetOpen(true)
+      setIsPressed(false)
+      // Haptic feedback if available
+      if (navigator.vibrate) {
+        navigator.vibrate(10)
+      }
+    }, 500)
+  }, [isMobile])
+
+  const handleTouchEnd = useCallback(() => {
+    setIsPressed(false)
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }, [])
+
+  const handleTouchMove = useCallback(() => {
+    setIsPressed(false)
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }, [])
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current)
+      }
+    }
+  }, [])
 
   // Load remote cover on demand
   useEffect(() => {
@@ -263,6 +317,43 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
     if (onSelect) {
       onSelect(comic)
     }
+  }
+
+  // Mobile action handlers
+  const handleMarkAsRead = async () => {
+    if (!comic.totalPages) {
+      toast.error("Cannot mark as read: page count unknown")
+      return
+    }
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: comic.totalPages,
+        lastRead: new Date(),
+      })
+      toast.success("Marked as read")
+      onUpdate?.()
+    } catch (error) {
+      console.error("Failed to mark as read:", error)
+      toast.error("Failed to mark as read")
+    }
+    setMobileActionSheetOpen(false)
+  }
+
+  const handleMarkAsUnread = async () => {
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: 0,
+        lastRead: undefined,
+      })
+      toast.success("Marked as unread")
+      onUpdate?.()
+    } catch (error) {
+      console.error("Failed to mark as unread:", error)
+      toast.error("Failed to mark as unread")
+    }
+    setMobileActionSheetOpen(false)
   }
 
   // Determine the cover image to display
@@ -338,15 +429,28 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
 
   return (
     <>
-      <div className="comic-card group relative rounded-2xl overflow-hidden">
-        {/* Context menu - outside of any interactive wrapper */}
-        <CardContextMenu
-          comic={comic}
-          onDelete={() => onDelete(comic.id)}
-          onAttach={() => setAttachDialogOpen(true)}
-          onEdit={() => setEditDialogOpen(true)}
-          onUpdate={() => onUpdate?.()}
-        />
+      <div
+        className={`comic-card group relative rounded-2xl overflow-hidden ${isPressed ? 'pressing' : ''}`}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchMove}
+        onContextMenu={(e) => {
+          if (isMobile) {
+            e.preventDefault()
+            setMobileActionSheetOpen(true)
+          }
+        }}
+      >
+        {/* Context menu - desktop only, hidden on mobile */}
+        {!isMobile && (
+          <CardContextMenu
+            comic={comic}
+            onDelete={() => onDelete(comic.id)}
+            onAttach={() => setAttachDialogOpen(true)}
+            onEdit={() => setEditDialogOpen(true)}
+            onUpdate={() => onUpdate?.()}
+          />
+        )}
 
         {/* Clickable area - local comics with files OR remote comics can be read */}
         {(comic.hasFile || isRemote) ? (
@@ -379,6 +483,126 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
           </div>
         )}
       </div>
+
+      {/* Mobile Action Sheet */}
+      <MobileActionSheet
+        open={mobileActionSheetOpen}
+        onOpenChange={setMobileActionSheetOpen}
+        title={comic.title}
+      >
+        {/* Cover preview */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50">
+          <div className="w-12 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+            <img
+              src={displayCover}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate">{comic.title}</p>
+            {comic.series && (
+              <p className="text-xs text-muted-foreground truncate">
+                {comic.series}{comic.issue && ` #${comic.issue}`}
+              </p>
+            )}
+            {comic.totalPages && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {comic.currentPage} / {comic.totalPages} pages
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Actions */}
+        {canRead && (
+          <>
+            <ActionSheetItem
+              icon={<ExternalLink className="w-5 h-5" />}
+              onClick={() => {
+                setMobileActionSheetOpen(false)
+                router.push(`/reader/${comic.id}`)
+              }}
+            >
+              Open
+            </ActionSheetItem>
+            <ActionSheetSeparator />
+          </>
+        )}
+
+        <ActionSheetItem
+          icon={<Pencil className="w-5 h-5" />}
+          onClick={() => {
+            setMobileActionSheetOpen(false)
+            setEditDialogOpen(true)
+          }}
+        >
+          Edit Details
+        </ActionSheetItem>
+
+        {comic.totalPages && !isComplete && (
+          <ActionSheetItem
+            icon={<CheckCircle2 className="w-5 h-5" />}
+            onClick={handleMarkAsRead}
+          >
+            Mark as Read
+          </ActionSheetItem>
+        )}
+
+        {hasProgress && (
+          <ActionSheetItem
+            icon={<RotateCcw className="w-5 h-5" />}
+            onClick={handleMarkAsUnread}
+          >
+            Mark as Unread
+          </ActionSheetItem>
+        )}
+
+        <ActionSheetSeparator />
+
+        {!comic.hasFile && !isRemote && (
+          <ActionSheetItem
+            icon={<Upload className="w-5 h-5" />}
+            onClick={() => {
+              setMobileActionSheetOpen(false)
+              setAttachDialogOpen(true)
+            }}
+          >
+            Attach File
+          </ActionSheetItem>
+        )}
+
+        <ActionSheetItem
+          icon={<FolderPlus className="w-5 h-5" />}
+          onClick={() => {
+            setMobileActionSheetOpen(false)
+            setAddToListDialogOpen(true)
+          }}
+        >
+          Add to List
+        </ActionSheetItem>
+
+        <ActionSheetSeparator />
+
+        <ActionSheetItem
+          icon={<Trash2 className="w-5 h-5" />}
+          variant="destructive"
+          onClick={() => {
+            setMobileActionSheetOpen(false)
+            onDelete(comic.id)
+          }}
+        >
+          Delete
+        </ActionSheetItem>
+      </MobileActionSheet>
+
+      {/* Add to List Dialog */}
+      <AddToListDialog
+        comicId={comic.id}
+        comicTitle={comic.title}
+        open={addToListDialogOpen}
+        onOpenChange={setAddToListDialogOpen}
+      />
 
       <AttachFileDialog
         comicId={comic.id}
