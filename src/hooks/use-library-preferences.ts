@@ -4,7 +4,7 @@ import { useEffect, useCallback, useRef } from "react"
 
 export interface LibraryPreferences {
   sortBy: "title" | "recent" | "progress"
-  viewMode: "grid" | "table"
+  viewMode: "grid" | "table" | "series"
   filter: "all" | "reading" | "completed" | "want"
   selectedListId: string | null
 }

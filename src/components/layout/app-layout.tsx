@@ -1,13 +1,15 @@
 "use client"
 
 import { AppBar } from "./app-bar"
-import { UploadDialog } from "@/components/library/upload-dialog"
+import { UploadDialog, type FileWithHandle } from "@/components/library/upload-dialog"
 import { AddComicDialogControlled } from "@/components/library/add-comic-dialog"
 import { ListManager } from "@/components/library/list-manager"
+import { BatchUploadManager } from "@/components/library/batch-upload-manager"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAppActions } from "@/hooks/use-app-actions"
 import type { ReactNode } from "react"
+import { useState } from "react"
 
 interface AppLayoutProps {
   // AppBar props
@@ -15,8 +17,8 @@ interface AppLayoutProps {
   onSearchChange: (query: string) => void
   sortBy: "title" | "recent" | "progress"
   onSortChange: (sort: "title" | "recent" | "progress") => void
-  viewMode: "grid" | "table"
-  onViewModeChange: (mode: "grid" | "table") => void
+  viewMode: "grid" | "table" | "series"
+  onViewModeChange: (mode: "grid" | "table" | "series") => void
 
   // Callbacks
   onDataChange?: () => Promise<void>
@@ -27,7 +29,8 @@ interface AppLayoutProps {
 
   // Layout slots
   filterPills?: ReactNode
-  children: ReactNode
+  renderContent?: (props: { onUpload: () => void }) => ReactNode
+  children?: ReactNode
 }
 
 export function AppLayout({
@@ -41,8 +44,12 @@ export function AppLayout({
   onListsChange,
   releasesEnabled,
   filterPills,
+  renderContent,
   children,
 }: AppLayoutProps) {
+  const [batchUploadFiles, setBatchUploadFiles] = useState<FileWithHandle[]>([])
+  const [batchUploadOpen, setBatchUploadOpen] = useState(false)
+
   const {
     uploadDialogOpen,
     setUploadDialogOpen,
@@ -56,6 +63,22 @@ export function AppLayout({
     handleImport,
     handleClearData,
   } = useAppActions(onDataChange)
+
+  const handleFilesSelectedWithBatch = (files: FileWithHandle[]) => {
+    if (files.length > 3) {
+      // Use batch manager for multiple files
+      setBatchUploadFiles(files)
+      setBatchUploadOpen(true)
+    } else {
+      // Use existing toast-based flow for small batches
+      handleFilesSelected(files)
+    }
+  }
+
+  const handleBatchComplete = async () => {
+    await onDataChange?.()
+    setBatchUploadFiles([])
+  }
 
   return (
     <>
@@ -89,7 +112,7 @@ export function AppLayout({
 
         {/* Main Content */}
         <main className="px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8 mx-auto w-full max-w-screen-2xl">
-          {children}
+          {renderContent ? renderContent({ onUpload: handleUploadClick }) : children}
         </main>
       </div>
 
@@ -97,8 +120,17 @@ export function AppLayout({
       <UploadDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
-        onFilesSelected={handleFilesSelected}
+        onFilesSelected={handleFilesSelectedWithBatch}
       />
+
+      {batchUploadFiles.length > 0 && (
+        <BatchUploadManager
+          files={batchUploadFiles}
+          open={batchUploadOpen}
+          onOpenChange={setBatchUploadOpen}
+          onComplete={handleBatchComplete}
+        />
+      )}
 
       <AddComicDialogControlled
         open={addComicDialogOpen}

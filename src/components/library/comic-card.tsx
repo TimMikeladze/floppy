@@ -12,6 +12,10 @@ import {
   CheckCircle2,
   RotateCcw,
   ExternalLink,
+  ChevronRight,
+  Check,
+  Plus,
+  Image,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,6 +31,7 @@ import { AddToListDialog } from "./add-to-list-dialog"
 import { useState, useEffect } from "react"
 import { AttachFileDialog } from "./attach-file-dialog"
 import { EditComicDialog } from "./edit-comic-dialog"
+import { CoverManager, MissingCoverIndicator } from "./cover-manager"
 import { loadRemoteImage, revokeRemoteImage } from "@/lib/remote-loader"
 import { saveComic } from "@/lib/storage"
 import { toast } from "sonner"
@@ -63,15 +68,108 @@ function ProgressDots({ current, total }: { current: number; total: number }) {
   )
 }
 
+interface QuickActionsProps {
+  comic: Comic
+  onUpdate: () => void
+  onOpenAddToList: () => void
+}
+
+function QuickActions({ comic, onUpdate, onOpenAddToList }: QuickActionsProps) {
+  const router = useRouter()
+  const isComplete = comic.totalPages && comic.currentPage >= comic.totalPages
+  const canRead = comic.hasFile || comic.sourceType === 'remote'
+
+  const handleMarkAsRead = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!comic.totalPages) {
+      toast.error("Cannot mark as read: page count unknown")
+      return
+    }
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: comic.totalPages,
+        lastRead: new Date(),
+      })
+      toast.success("Marked as read")
+      onUpdate()
+    } catch (error) {
+      console.error("Failed to mark as read:", error)
+      toast.error("Failed to mark as read")
+    }
+  }
+
+  const handleAddToList = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onOpenAddToList()
+  }
+
+  const handleContinue = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    router.push(`/reader/${comic.id}`)
+  }
+
+  return (
+    <div
+      className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0"
+      style={{
+        background: 'linear-gradient(to top, oklch(0 0 0 / 0.7) 0%, transparent 100%)',
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Mark as read button */}
+      {comic.totalPages && !isComplete && (
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-8 w-8 rounded-full bg-white/90 hover:bg-white text-black shadow-lg"
+          onClick={handleMarkAsRead}
+          title="Mark as read"
+        >
+          <Check className="h-4 w-4" />
+        </Button>
+      )}
+
+      {/* Add to list button */}
+      <Button
+        variant="secondary"
+        size="icon"
+        className="h-8 w-8 rounded-full bg-white/90 hover:bg-white text-black shadow-lg"
+        onClick={handleAddToList}
+        title="Add to list"
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+
+      {/* Continue reading button */}
+      {canRead && (
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-8 w-8 rounded-full bg-white/90 hover:bg-white text-black shadow-lg"
+          onClick={handleContinue}
+          title="Continue reading"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  )
+}
+
 interface CardContextMenuProps {
   comic: Comic
   onDelete: () => void
   onAttach: () => void
   onEdit: () => void
   onUpdate: () => void
+  onManageCover: () => void
 }
 
-function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate }: CardContextMenuProps) {
+function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManageCover }: CardContextMenuProps) {
   const router = useRouter()
   const isRemote = comic.sourceType === 'remote'
   const canRead = comic.hasFile || isRemote
@@ -167,6 +265,12 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate }: CardCo
             Edit Details
           </DropdownMenuItem>
 
+          {/* Manage cover */}
+          <DropdownMenuItem onClick={onManageCover}>
+            <Image className="mr-2 h-4 w-4" />
+            Manage Cover
+          </DropdownMenuItem>
+
           {/* Reading progress actions */}
           {comic.totalPages && !isComplete && (
             <DropdownMenuItem onClick={handleMarkAsRead}>
@@ -225,10 +329,13 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate }: CardCo
 export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProps) {
   const [attachDialogOpen, setAttachDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [addToListDialogOpen, setAddToListDialogOpen] = useState(false)
+  const [coverManagerOpen, setCoverManagerOpen] = useState(false)
   const [remoteCoverUrl, setRemoteCoverUrl] = useState<string | null>(null)
   const [coverLoading, setCoverLoading] = useState(false)
   const hasProgress = comic.currentPage > 0 && comic.totalPages
   const isRemote = comic.sourceType === 'remote'
+  const hasCover = !!comic.coverImage || !!remoteCoverUrl
 
   // Load remote cover on demand
   useEffect(() => {
@@ -292,6 +399,11 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
           </div>
         )}
 
+        {/* Missing cover indicator */}
+        {!hasCover && !coverLoading && !isRemote && (
+          <MissingCoverIndicator onClick={() => setCoverManagerOpen(true)} />
+        )}
+
         {/* No file overlay - only for local comics without files */}
         {!comic.hasFile && !isRemote && (
           <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
@@ -301,6 +413,13 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
             </div>
           </div>
         )}
+
+        {/* Quick Actions */}
+        <QuickActions
+          comic={comic}
+          onUpdate={() => onUpdate?.()}
+          onOpenAddToList={() => setAddToListDialogOpen(true)}
+        />
       </div>
 
       {/* Metadata */}
@@ -346,6 +465,7 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
           onAttach={() => setAttachDialogOpen(true)}
           onEdit={() => setEditDialogOpen(true)}
           onUpdate={() => onUpdate?.()}
+          onManageCover={() => setCoverManagerOpen(true)}
         />
 
         {/* Clickable area - local comics with files OR remote comics can be read */}
@@ -396,6 +516,20 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
         onSave={() => {
           onUpdate?.()
         }}
+      />
+
+      <AddToListDialog
+        comicId={comic.id}
+        comicTitle={comic.title}
+        open={addToListDialogOpen}
+        onOpenChange={setAddToListDialogOpen}
+      />
+
+      <CoverManager
+        comic={comic}
+        open={coverManagerOpen}
+        onOpenChange={setCoverManagerOpen}
+        onCoverChange={() => onUpdate?.()}
       />
     </>
   )

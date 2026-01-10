@@ -3,20 +3,39 @@
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Command } from "cmdk"
-import { Search, BookOpen, Library, Sparkles, Settings, Upload, Plus } from "lucide-react"
-import { getAllComics } from "@/lib/storage"
+import {
+  Search,
+  BookOpen,
+  Library,
+  Sparkles,
+  CheckCircle2,
+  FolderPlus,
+  Layers,
+  BarChart3,
+  Moon,
+  Sun,
+  Upload,
+  Settings,
+} from "lucide-react"
+import { getAllComics, saveComic } from "@/lib/storage"
+import { getSeriesName, normalizeSeriesName } from "@/lib/series-utils"
 import type { Comic } from "@/lib/types"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { toast } from "sonner"
+import { useTheme } from "next-themes"
 
 interface CommandPaletteProps {
   onOpenChange?: (open: boolean) => void
+  onUpload?: () => void
+  onOpenStats?: () => void
 }
 
-export function CommandPalette({ onOpenChange }: CommandPaletteProps) {
+export function CommandPalette({ onOpenChange, onUpload, onOpenStats }: CommandPaletteProps) {
   const [open, setOpen] = useState(false)
   const [comics, setComics] = useState<Comic[]>([])
   const [search, setSearch] = useState("")
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
 
   // Load comics when palette opens
   useEffect(() => {
@@ -31,6 +50,46 @@ export function CommandPalette({ onOpenChange }: CommandPaletteProps) {
       setComics(allComics)
     } catch (error) {
       console.error("Failed to load comics:", error)
+    }
+  }
+
+  // Get unique series
+  const uniqueSeries = [...new Set(
+    comics.map(c => normalizeSeriesName(getSeriesName(c)))
+  )].map(normalized => {
+    const comic = comics.find(c => normalizeSeriesName(getSeriesName(c)) === normalized)
+    return {
+      normalized,
+      display: comic ? getSeriesName(comic) : normalized,
+      count: comics.filter(c => normalizeSeriesName(getSeriesName(c)) === normalized).length,
+    }
+  }).sort((a, b) => b.count - a.count)
+
+  // In-progress comics for quick continue
+  const inProgressComics = comics
+    .filter(c => c.totalPages && c.currentPage > 0 && c.currentPage < c.totalPages)
+    .sort((a, b) => {
+      const aTime = a.lastRead ? new Date(a.lastRead).getTime() : 0
+      const bTime = b.lastRead ? new Date(b.lastRead).getTime() : 0
+      return bTime - aTime
+    })
+    .slice(0, 5)
+
+  const handleMarkAsRead = async (comic: Comic) => {
+    if (!comic.totalPages) {
+      toast.error("Cannot mark as read: page count unknown")
+      return
+    }
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: comic.totalPages,
+        lastRead: new Date(),
+      })
+      toast.success(`Marked "${comic.title}" as read`)
+      loadComics()
+    } catch (error) {
+      toast.error("Failed to mark as read")
     }
   }
 
@@ -94,7 +153,72 @@ export function CommandPalette({ onOpenChange }: CommandPaletteProps) {
               No results found.
             </Command.Empty>
 
-            {/* Navigation Commands */}
+            {/* Quick Actions */}
+            {!search && (
+              <Command.Group heading="Quick Actions">
+                {onUpload && (
+                  <Command.Item
+                    onSelect={() => handleSelect(onUpload)}
+                    className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span>Upload Comics</span>
+                    <kbd className="ml-auto text-xs text-muted-foreground">⌘U</kbd>
+                  </Command.Item>
+                )}
+                {onOpenStats && (
+                  <Command.Item
+                    onSelect={() => handleSelect(onOpenStats)}
+                    className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    <span>Library Statistics</span>
+                  </Command.Item>
+                )}
+                <Command.Item
+                  onSelect={() => handleSelect(() => setTheme(theme === 'dark' ? 'light' : 'dark'))}
+                  className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                >
+                  {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  <span>Toggle Theme</span>
+                </Command.Item>
+              </Command.Group>
+            )}
+
+            {/* Continue Reading */}
+            {!search && inProgressComics.length > 0 && (
+              <Command.Group heading="Continue Reading">
+                {inProgressComics.map((comic) => (
+                  <Command.Item
+                    key={`continue-${comic.id}`}
+                    value={`continue-${comic.id}`}
+                    onSelect={() => handleSelect(() => router.push(`/reader/${comic.id}`))}
+                    className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                  >
+                    <div className="flex-shrink-0">
+                      {comic.coverImage ? (
+                        <img src={comic.coverImage} alt="" className="h-10 w-7 object-cover rounded-sm" />
+                      ) : (
+                        <div className="h-10 w-7 rounded-sm bg-muted flex items-center justify-center">
+                          <BookOpen className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{comic.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Page {comic.currentPage} of {comic.totalPages}
+                      </div>
+                    </div>
+                    <div className="text-xs text-primary font-medium">
+                      {Math.round((comic.currentPage / comic.totalPages!) * 100)}%
+                    </div>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {/* Navigation */}
             {!search && (
               <Command.Group heading="Navigation">
                 <Command.Item
@@ -111,6 +235,38 @@ export function CommandPalette({ onOpenChange }: CommandPaletteProps) {
                   <Sparkles className="h-4 w-4" />
                   <span>Releases</span>
                 </Command.Item>
+                <Command.Item
+                  onSelect={() => handleSelect(() => router.push("/settings"))}
+                  className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Settings</span>
+                </Command.Item>
+              </Command.Group>
+            )}
+
+            {/* Series - when searching */}
+            {search && uniqueSeries.filter(s =>
+              s.display.toLowerCase().includes(search.toLowerCase())
+            ).length > 0 && (
+              <Command.Group heading="Series">
+                {uniqueSeries
+                  .filter(s => s.display.toLowerCase().includes(search.toLowerCase()))
+                  .slice(0, 5)
+                  .map((series) => (
+                    <Command.Item
+                      key={`series-${series.normalized}`}
+                      value={`series-${series.normalized}`}
+                      onSelect={() => handleSelect(() => router.push(`/?q=${encodeURIComponent(series.display)}&view=series`))}
+                      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                    >
+                      <Layers className="h-4 w-4" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{series.display}</div>
+                        <div className="text-xs text-muted-foreground">{series.count} issues</div>
+                      </div>
+                    </Command.Item>
+                  ))}
               </Command.Group>
             )}
 

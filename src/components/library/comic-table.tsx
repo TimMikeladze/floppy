@@ -32,6 +32,7 @@ import {
 import type { Comic } from "@/lib/types"
 import { useRouter } from "next/navigation"
 import { AddToListDialog } from "./add-to-list-dialog"
+import { LibraryEmptyState } from "./library-empty-state"
 import { naturalCollator } from "@/lib/sort-utils"
 
 interface ComicTableProps {
@@ -40,6 +41,7 @@ interface ComicTableProps {
   onBulkDelete: (ids: string[]) => void
   onUpdate?: () => void
   onSelect?: (comic: Comic) => void
+  onUpload?: () => void
 }
 
 type SortKey = "title" | "series" | "author" | "progress" | "lastRead"
@@ -51,6 +53,7 @@ export function ComicTable({
   onBulkDelete,
   onUpdate,
   onSelect,
+  onUpload,
 }: ComicTableProps) {
   const router = useRouter()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -176,14 +179,7 @@ export function ComicTable({
   }
 
   if (comics.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-6">
-        <p className="text-muted-foreground mb-2">No comics to display</p>
-        <p className="text-muted-foreground/70 text-sm max-w-sm leading-relaxed">
-          All comic books are stored offline. Upload them to your device or sync via iCloud, Google Drive, or other cloud storage.
-        </p>
-      </div>
-    )
+    return <LibraryEmptyState onUpload={onUpload} />
   }
 
   return (

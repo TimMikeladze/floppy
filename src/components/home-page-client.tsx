@@ -5,6 +5,7 @@ import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs"
 import { AppLayout } from "@/components/layout/app-layout"
 import { ComicGrid } from "@/components/library/comic-grid"
 import { ComicTable } from "@/components/library/comic-table"
+import { SeriesView } from "@/components/library/series-view"
 import { getAllComics, deleteComic, getAllLists } from "@/lib/storage"
 import type { Comic, ComicList } from "@/lib/types"
 import { ImportDataSourceDialog } from "@/components/library/import-data-source-dialog"
@@ -20,7 +21,7 @@ type FilterType = (typeof filterTypes)[number]
 const sortTypes = ["title", "recent", "progress"] as const
 type SortType = (typeof sortTypes)[number]
 
-const viewModes = ["grid", "table"] as const
+const viewModes = ["grid", "table", "series"] as const
 type ViewMode = (typeof viewModes)[number]
 
 interface HomePageClientProps {
@@ -228,6 +229,7 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
   }
 
   return (
+    <>
     <AppLayout
       searchQuery={searchQuery}
       onSearchChange={setSearchQuery}
@@ -284,36 +286,47 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
           <ScrollBar orientation="horizontal" className="invisible" />
         </ScrollArea>
       }
-    >
-      {isLoading && comics.length === 0 ? (
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="text-center">
-            <div
-              className="mx-auto p-6 rounded-3xl mb-4 inline-block"
-              style={{
-                background: 'linear-gradient(135deg, var(--card) 0%, var(--secondary) 100%)',
-                boxShadow: '0 8px 32px oklch(0 0 0 / 0.2), 0 0 0 1px var(--border)'
-              }}
-            >
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      renderContent={({ onUpload }) => (
+        isLoading && comics.length === 0 ? (
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="text-center">
+              <div
+                className="mx-auto p-6 rounded-3xl mb-4 inline-block"
+                style={{
+                  background: 'linear-gradient(135deg, var(--card) 0%, var(--secondary) 100%)',
+                  boxShadow: '0 8px 32px oklch(0 0 0 / 0.2), 0 0 0 1px var(--border)'
+                }}
+              >
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+              <p className="text-sm text-muted-foreground font-medium">Loading library...</p>
             </div>
-            <p className="text-sm text-muted-foreground font-medium">Loading library...</p>
           </div>
-        </div>
-      ) : viewMode === "grid" ? (
-        <ComicGrid
-          comics={filteredComics}
-          onDelete={handleDelete}
-          onUpdate={loadComics}
-        />
-      ) : (
-        <ComicTable
-          comics={filteredComics}
-          onDelete={handleDelete}
-          onBulkDelete={handleBulkDelete}
-          onUpdate={loadComics}
-        />
+        ) : viewMode === "grid" ? (
+          <ComicGrid
+            comics={filteredComics}
+            onDelete={handleDelete}
+            onUpdate={loadComics}
+            onUpload={onUpload}
+          />
+        ) : viewMode === "series" ? (
+          <SeriesView
+            comics={filteredComics}
+            onDelete={handleDelete}
+            onUpdate={loadComics}
+            onUpload={onUpload}
+          />
+        ) : (
+          <ComicTable
+            comics={filteredComics}
+            onDelete={handleDelete}
+            onBulkDelete={handleBulkDelete}
+            onUpdate={loadComics}
+            onUpload={onUpload}
+          />
+        )
       )}
+    />
 
       {/* Import Data Source Dialog (Library-specific) */}
       {csvImportEnabled && (
@@ -323,6 +336,6 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
           onImportComplete={loadComics}
         />
       )}
-    </AppLayout>
+    </>
   )
 }

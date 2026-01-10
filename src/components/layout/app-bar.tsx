@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info, HardDrive } from "lucide-react"
+import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info, HardDrive, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -28,7 +28,7 @@ import { usePathname } from "next/navigation"
 import { useIsPwa } from "@/hooks/use-is-pwa"
 import { AboutDialog } from "./about-dialog"
 
-type ViewMode = "grid" | "table"
+type ViewMode = "grid" | "table" | "series"
 
 interface AppBarProps {
   onUpload: () => void
@@ -211,6 +211,7 @@ export function AppBar({
                   size="icon"
                   className={`h-9 w-9 rounded-r-none ${viewMode === "grid" ? "bg-accent" : ""}`}
                   onClick={() => onViewModeChange("grid")}
+                  title="Grid view"
                 >
                   <LayoutGrid className="h-4 w-4" />
                   <span className="sr-only">Grid view</span>
@@ -218,8 +219,19 @@ export function AppBar({
                 <Button
                   variant="ghost"
                   size="icon"
+                  className={`h-9 w-9 rounded-none border-x ${viewMode === "series" ? "bg-accent" : ""}`}
+                  onClick={() => onViewModeChange("series")}
+                  title="Series view"
+                >
+                  <Layers className="h-4 w-4" />
+                  <span className="sr-only">Series view</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className={`h-9 w-9 rounded-l-none ${viewMode === "table" ? "bg-accent" : ""}`}
                   onClick={() => onViewModeChange("table")}
+                  title="Table view"
                 >
                   <TableProperties className="h-4 w-4" />
                   <span className="sr-only">Table view</span>

@@ -75,6 +75,27 @@ export interface ComicList {
   color: string
   createdAt: Date
   comicIds: string[]
+  description?: string
+  icon?: string // emoji
+  order?: Record<string, number> // Custom ordering within list
+  isSmartList?: boolean
+  smartListRules?: SmartListRule[]
+}
+
+export interface SmartListRule {
+  type: 'series' | 'author' | 'publisher' | 'status' | 'progress'
+  operator: 'equals' | 'contains' | 'lessThan' | 'greaterThan'
+  value: string | number
+}
+
+export interface SeriesGroup {
+  name: string
+  normalizedName: string
+  comics: Comic[]
+  issueCount: number
+  readCount: number
+  missingIssues: number[]
+  coverImage?: string
 }
 
 export interface ComicSource {
