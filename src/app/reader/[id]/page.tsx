@@ -2,11 +2,23 @@
 
 import React, { useState, useEffect, useCallback, use, useRef } from "react"
 import { ComicViewer } from "@/components/reader/comic-viewer"
+import { PdfViewer } from "@/components/reader/pdf-viewer"
 import { ReaderToolbar } from "@/components/reader/reader-toolbar"
 import { ReaderMenu } from "@/components/reader/reader-menu"
 import { PageIndicator } from "@/components/reader/page-indicator"
 import { QuickNoteDialog } from "@/components/reader/quick-note-dialog"
-import { getComic, updateReadingProgress, saveBookmark, getBookmarks, saveNote, loadPagesFromHandle, getPagesForComic, getRemotePages, getAllComics } from "@/lib/storage"
+import {
+  getComic,
+  updateReadingProgress,
+  saveBookmark,
+  getBookmarks,
+  saveNote,
+  loadPagesFromHandle,
+  getPagesForComic,
+  getRemotePages,
+  getAllComics,
+  getFileFromHandle,
+} from "@/lib/storage"
 import { SUPPORTED_FORMATS } from "@/lib/comic-parser"
 import { loadRemoteImage, revokeAllRemoteImages } from "@/lib/remote-loader"
 import type { Comic, Bookmark, RemotePage } from "@/lib/types"
@@ -35,6 +47,9 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [nextIssue, setNextIssue] = useState<Comic | null>(null)
   const [nextIssueDismissed, setNextIssueDismissed] = useState(false)
+  // Native PDF viewing state
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
+  const [useNativePdf, setUseNativePdf] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -49,14 +64,14 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       if (window.innerWidth < 768) return
 
       // Toggle menu with 'M' or '?' key
-      if (e.key === 'm' || e.key === 'M' || e.key === '?') {
+      if (e.key === "m" || e.key === "M" || e.key === "?") {
         e.preventDefault()
-        setMenuOpen(prev => !prev)
+        setMenuOpen((prev) => !prev)
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [])
 
   useEffect(() => {
@@ -97,13 +112,11 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
 
   // Load remote pages on demand (current page + adjacent for smooth navigation)
   useEffect(() => {
-    if (!comic || comic.sourceType !== 'remote' || remotePageData.length === 0) return
+    if (!comic || comic.sourceType !== "remote" || remotePageData.length === 0) return
 
-    const pagesToLoad = [
-      currentPage - 1,
-      currentPage,
-      currentPage + 1,
-    ].filter(p => p >= 0 && p < remotePageData.length)
+    const pagesToLoad = [currentPage - 1, currentPage, currentPage + 1].filter(
+      (p) => p >= 0 && p < remotePageData.length
+    )
 
     async function loadRemotePages() {
       for (const pageIndex of pagesToLoad) {
@@ -115,7 +128,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
 
         try {
           const blobUrl = await loadRemoteImage(pageData.imageUrl)
-          setPageUrls(prev => {
+          setPageUrls((prev) => {
             const updated = [...prev]
             updated[pageIndex] = blobUrl
             return updated
@@ -132,7 +145,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   // Cleanup remote image URLs on unmount
   useEffect(() => {
     return () => {
-      if (comic?.sourceType === 'remote') {
+      if (comic?.sourceType === "remote") {
         revokeAllRemoteImages()
       }
     }
@@ -162,7 +175,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         toggleFullscreen()
       } else if (e.key === "m" || e.key === "M") {
         // Toggle menu with M key
-        setMenuOpen(prev => !prev)
+        setMenuOpen((prev) => !prev)
       } else if (e.key === "Escape") {
         // Close menu if open, otherwise exit reader
         if (menuOpen) {
@@ -173,7 +186,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       } else if (e.key === " ") {
         // Space bar toggles controls (prevent scroll)
         e.preventDefault()
-        setControlsVisible(prev => !prev)
+        setControlsVisible((prev) => !prev)
       }
     }
 
@@ -224,7 +237,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     if (!comic) return
 
     // Handle remote comics
-    if (comic.sourceType === 'remote') {
+    if (comic.sourceType === "remote") {
       try {
         const remotePagesRecord = await getRemotePages(comic.id)
         if (remotePagesRecord && remotePagesRecord.pages.length > 0) {
@@ -232,7 +245,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
           const sortedPages = [...remotePagesRecord.pages].sort((a, b) => a.pageNumber - b.pageNumber)
           setRemotePageData(sortedPages)
           // Initialize pageUrls with placeholders (will be loaded on demand)
-          setPageUrls(sortedPages.map(() => ''))
+          setPageUrls(sortedPages.map(() => ""))
         }
       } catch (error) {
         console.error("[reader] Error loading remote pages:", error)
@@ -252,8 +265,23 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     try {
       let pages: Blob[] | null = null
 
-      // For PDFs, always try IndexedDB first since pages are pre-rendered at import time
-      // This is faster and more reliable than re-parsing from file handle
+      // For PDFs with a file handle, try native PDF viewing first
+      // This provides better quality rendering and zoom
+      if (comic.format === "pdf" && comic.fileHandle) {
+        try {
+          const file = await getFileFromHandle(comic.fileHandle)
+          if (file) {
+            setPdfFile(file)
+            setUseNativePdf(true)
+            setIsLoading(false)
+            return
+          }
+        } catch (error) {
+          console.warn("[reader] Failed to get PDF file from handle, falling back to pre-rendered pages:", error)
+        }
+      }
+
+      // For PDFs without file handle, use pre-rendered pages from IndexedDB
       if (comic.format === "pdf") {
         pages = await getPagesForComic(comic.id)
       }
@@ -297,6 +325,16 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     setCurrentPage(page)
   }, [])
 
+  const handleTotalPagesChange = useCallback(
+    (total: number) => {
+      // Update comic total pages if needed (for native PDF viewing)
+      if (comic && comic.totalPages !== total) {
+        setComic({ ...comic, totalPages: total })
+      }
+    },
+    [comic]
+  )
+
   const handleBookmark = useCallback(async () => {
     if (!comic) return
     try {
@@ -320,38 +358,44 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     setNoteDialogOpen(true)
   }, [])
 
-  const handleSaveNote = useCallback(async (content: string) => {
-    if (!comic) return
+  const handleSaveNote = useCallback(
+    async (content: string) => {
+      if (!comic) return
 
-    try {
-      await saveNote({
-        id: crypto.randomUUID(),
-        comicId: comic.id,
-        pageNumber: currentPage,
-        content,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        color: "#e85d4d",
-      })
-      toast.success(`Note added to page ${currentPage + 1}`)
-    } catch (error) {
-      console.error("[reader] Error saving note:", error)
-      toast.error("Failed to save note")
-    }
-  }, [comic, currentPage])
+      try {
+        await saveNote({
+          id: crypto.randomUUID(),
+          comicId: comic.id,
+          pageNumber: currentPage,
+          content,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          color: "#e85d4d",
+        })
+        toast.success(`Note added to page ${currentPage + 1}`)
+      } catch (error) {
+        console.error("[reader] Error saving note:", error)
+        toast.error("Failed to save note")
+      }
+    },
+    [comic, currentPage]
+  )
 
   // Handler to show controls when mouse is near top edge in fullscreen
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isFullscreen) return
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isFullscreen) return
 
-    // Show toolbar when mouse is in top 60px
-    if (e.clientY <= 60) {
-      setControlsVisible(true)
-    } else if (controlsVisible && e.clientY > 120) {
-      // Hide when mouse moves away from top area
-      setControlsVisible(false)
-    }
-  }, [isFullscreen, controlsVisible])
+      // Show toolbar when mouse is in top 60px
+      if (e.clientY <= 60) {
+        setControlsVisible(true)
+      } else if (controlsVisible && e.clientY > 120) {
+        // Hide when mouse moves away from top area
+        setControlsVisible(false)
+      }
+    },
+    [isFullscreen, controlsVisible]
+  )
 
   const isCurrentPageBookmarked = bookmarks.some((b) => b.pageNumber === currentPage)
 
@@ -367,8 +411,12 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   }
 
   // Remote comics have pages loaded from URLs, not files
-  const isRemote = comic.sourceType === 'remote'
-  const hasContent = isRemote ? remotePageData.length > 0 : (comic.hasFile && comic.totalPages)
+  const isRemote = comic.sourceType === "remote"
+  const hasContent = isRemote
+    ? remotePageData.length > 0
+    : useNativePdf
+      ? pdfFile !== null
+      : comic.hasFile && comic.totalPages
 
   if (!hasContent) {
     return (
@@ -387,8 +435,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
           <p className="mt-4 text-sm text-muted-foreground">
             {isRemote
               ? "This comic's pages could not be loaded."
-              : `This comic doesn't have a file attached yet. Upload a ${SUPPORTED_FORMATS.description} file to start reading.`
-            }
+              : `This comic doesn't have a file attached yet. Upload a ${SUPPORTED_FORMATS.description} file to start reading.`}
           </p>
           <div className="mt-6 flex gap-3 justify-center">
             <Button variant="outline" onClick={() => router.push("/")}>
@@ -419,11 +466,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   const totalPages = isRemote ? remotePageData.length : (comic.totalPages ?? 0)
 
   return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 overflow-hidden bg-black"
-      onMouseMove={handleMouseMove}
-    >
+    <div ref={containerRef} className="fixed inset-0 overflow-hidden bg-black" onMouseMove={handleMouseMove}>
       <ReaderToolbar
         title={comic.title}
         isVisible={controlsVisible}
@@ -436,13 +479,28 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
       />
 
       <main className="h-full w-full" onClick={toggleControls}>
-        <ComicViewer pages={pageUrls} currentPage={currentPage} onPageChange={handlePageChange} />
+        {useNativePdf && pdfFile ? (
+          <PdfViewer
+            file={pdfFile}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            onTotalPagesChange={handleTotalPagesChange}
+          />
+        ) : (
+          <ComicViewer pages={pageUrls} currentPage={currentPage} onPageChange={handlePageChange} />
+        )}
       </main>
 
       <PageIndicator
         currentPage={currentPage}
         totalPages={totalPages}
-        isVisible={!controlsVisible && !menuOpen && !isFullscreen && (settings.showPageNumbers ?? false) && settings.layoutMode !== "scrolling"}
+        isVisible={
+          !controlsVisible &&
+          !menuOpen &&
+          !isFullscreen &&
+          (settings.showPageNumbers ?? false) &&
+          settings.layoutMode !== "scrolling"
+        }
       />
 
       <ReaderMenu
@@ -471,8 +529,8 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         size="icon"
         className="fixed z-50 hidden h-12 w-12 rounded-full shadow-lg md:flex opacity-70 hover:opacity-100 transition-opacity"
         style={{
-          top: 'calc(1.5rem + var(--safe-area-top))',
-          right: 'calc(1.5rem + var(--safe-area-right))'
+          top: "calc(1.5rem + var(--safe-area-top))",
+          right: "calc(1.5rem + var(--safe-area-right))",
         }}
         onClick={() => setMenuOpen(true)}
         title="Settings (M or ?)"
