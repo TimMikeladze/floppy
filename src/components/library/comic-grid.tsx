@@ -37,9 +37,12 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
         </div>
 
         <h2 className="text-2xl font-bold mb-3 text-foreground">No comics yet</h2>
-        <p className="text-muted-foreground text-base max-w-sm mb-8 leading-relaxed">
+        <p className="text-muted-foreground text-base max-w-sm mb-4 leading-relaxed">
           Upload your first comic to get started.<br />
           <span className="text-sm opacity-80">We support CBZ, CBR, PDF, and ZIP files.</span>
+        </p>
+        <p className="text-muted-foreground/70 text-sm max-w-sm mb-8 leading-relaxed">
+          All comic books are stored offline. Upload them to your device or sync via iCloud, Google Drive, or other cloud storage.
         </p>
 
         {onUpload && (

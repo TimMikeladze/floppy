@@ -177,8 +177,11 @@ export function ComicTable({
 
   if (comics.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] text-center">
-        <p className="text-muted-foreground">No comics to display</p>
+      <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-6">
+        <p className="text-muted-foreground mb-2">No comics to display</p>
+        <p className="text-muted-foreground/70 text-sm max-w-sm leading-relaxed">
+          All comic books are stored offline. Upload them to your device or sync via iCloud, Google Drive, or other cloud storage.
+        </p>
       </div>
     )
   }
