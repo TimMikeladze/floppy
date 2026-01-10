@@ -65,7 +65,7 @@ export function ReaderControls({
             onRefresh={onRefreshBookmarks}
           />
 
-          <NotesPanel comicId={comicId} currentPage={currentPage} onPageSelect={onPageChange} />
+          <NotesPanel comicId={comicId} pages={pages} currentPage={currentPage} onPageSelect={onPageChange} />
 
           <Button variant="ghost" size="icon" onClick={onBookmarkClick}>
             <BookmarkIcon className="h-5 w-5" />

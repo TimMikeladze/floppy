@@ -145,6 +145,7 @@ export function ReaderMenu({
 
             <NotesPanel
               comicId={comicId}
+              pages={pages}
               currentPage={currentPage}
               onPageSelect={(page) => {
                 onPageChange(page)
