@@ -59,7 +59,7 @@ export function PageNavigator({ pages, currentPage, onPageSelect, bookmarks = []
                 <img
                   src={pageUrl || "/placeholder.svg"}
                   alt={`Page ${index + 1}`}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 to-transparent px-2 py-1">
                   <span className="text-xs font-medium text-foreground">{index + 1}</span>

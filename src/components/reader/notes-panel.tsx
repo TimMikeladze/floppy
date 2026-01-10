@@ -14,12 +14,13 @@ import { Input } from "@/components/ui/input"
 
 interface NotesPanelProps {
   comicId: string
+  pages: string[]
   currentPage: number
   onPageSelect: (page: number) => void
   variant?: "icon" | "menu"
 }
 
-export function NotesPanel({ comicId, currentPage, onPageSelect, variant = "icon" }: NotesPanelProps) {
+export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant = "icon" }: NotesPanelProps) {
   const [open, setOpen] = useState(false)
   const [notes, setNotes] = useState<Note[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -177,11 +178,11 @@ export function NotesPanel({ comicId, currentPage, onPageSelect, variant = "icon
               {filteredNotes.map((note) => (
                 <div
                   key={note.id}
-                  className="group relative overflow-hidden rounded-lg border border-border bg-card p-4 transition-all hover:shadow-md"
+                  className="group relative overflow-hidden rounded-lg border border-border bg-card transition-all hover:shadow-md"
                   style={{ borderLeftWidth: "4px", borderLeftColor: note.color || "#e85d4d" }}
                 >
                   {editingId === note.id ? (
-                    <div className="space-y-3">
+                    <div className="p-4 space-y-3">
                       <Textarea
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
@@ -205,51 +206,65 @@ export function NotesPanel({ comicId, currentPage, onPageSelect, variant = "icon
                       </div>
                     </div>
                   ) : (
-                    <>
-                      <div className="mb-2 flex items-center justify-between">
-                        <button
-                          onClick={() => {
-                            onPageSelect(note.pageNumber)
-                            setOpen(false)
-                          }}
-                          className="text-sm font-medium text-primary hover:underline"
-                        >
-                          Page {note.pageNumber + 1}
-                        </button>
+                    <button
+                      onClick={() => {
+                        onPageSelect(note.pageNumber)
+                        setOpen(false)
+                      }}
+                      className="flex w-full items-start gap-3 p-3 text-left"
+                    >
+                      <div className="relative aspect-[2/3] w-20 flex-shrink-0 overflow-hidden rounded bg-muted">
+                        <img
+                          src={pages[note.pageNumber] || "/placeholder.svg"}
+                          alt={`Page ${note.pageNumber + 1}`}
+                          className="h-full w-full object-contain"
+                        />
                         {note.pageNumber === currentPage && (
-                          <Badge variant="default" className="text-xs">
-                            Current
-                          </Badge>
+                          <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
+                            <Badge variant="default" className="text-xs">
+                              Current
+                            </Badge>
+                          </div>
                         )}
                       </div>
-
-                      <p className="whitespace-pre-wrap text-sm text-foreground">{note.content}</p>
-
-                      <div className="mt-3 flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground">Page {note.pageNumber + 1}</p>
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground line-clamp-3">{note.content}</p>
+                        <p className="mt-1.5 text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
                         </p>
-
-                        <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => {
-                              setEditingId(note.id)
-                              setEditContent(note.content)
-                            }}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                            <span className="sr-only">Edit note</span>
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(note.id)}>
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete note</span>
-                          </Button>
-                        </div>
                       </div>
-                    </>
+                    </button>
+                  )}
+
+                  {editingId !== note.id && (
+                    <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingId(note.id)
+                          setEditContent(note.content)
+                        }}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                        <span className="sr-only">Edit note</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(note.id)
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete note</span>
+                      </Button>
+                    </div>
                   )}
                 </div>
               ))}

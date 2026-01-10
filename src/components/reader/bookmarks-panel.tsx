@@ -135,7 +135,7 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
                       <img
                         src={pages[bookmark.pageNumber] || "/placeholder.svg"}
                         alt={`Page ${bookmark.pageNumber + 1}`}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-contain"
                       />
                       {bookmark.pageNumber === currentPage && (
                         <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
