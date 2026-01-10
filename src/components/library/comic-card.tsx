@@ -37,6 +37,8 @@ interface ComicCardProps {
   onDelete: (id: string) => void
   onUpdate?: () => void
   onSelect?: (comic: Comic) => void
+  showName?: boolean
+  showPageNumbers?: boolean
 }
 
 function ProgressDots({ current, total }: { current: number; total: number }) {
@@ -222,7 +224,7 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate }: CardCo
   )
 }
 
-export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProps) {
+export function ComicCard({ comic, onDelete, onUpdate, onSelect, showName = true, showPageNumbers = true }: ComicCardProps) {
   const [attachDialogOpen, setAttachDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [remoteCoverUrl, setRemoteCoverUrl] = useState<string | null>(null)
@@ -271,7 +273,7 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
   const CardInner = () => (
     <>
       {/* Cover Image */}
-      <div className="relative aspect-[2/3] overflow-hidden bg-muted rounded-t-2xl">
+      <div className={`relative aspect-[2/3] overflow-hidden bg-muted ${showName || showPageNumbers ? "rounded-t-2xl" : "rounded-2xl"}`}>
         {coverLoading ? (
           <div className="h-full w-full flex items-center justify-center">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -304,35 +306,43 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
       </div>
 
       {/* Metadata */}
-      <div className="p-3.5 space-y-2">
-        <h3 className="font-semibold text-sm leading-tight line-clamp-2">
-          {comic.title}
-        </h3>
+      {(showName || showPageNumbers) && (
+        <div className="p-3.5 space-y-2">
+          {showName && (
+            <>
+              <h3 className="font-semibold text-sm leading-tight line-clamp-2">
+                {comic.title}
+              </h3>
 
-        {comic.series && (
-          <p className="text-xs text-muted-foreground truncate">
-            {comic.series}
-            {comic.issue && ` #${comic.issue}`}
-          </p>
-        )}
-
-        {/* Progress and time */}
-        <div className="flex items-center justify-between gap-2 pt-0.5">
-          {hasProgress ? (
-            <ProgressDots current={comic.currentPage} total={comic.totalPages!} />
-          ) : (
-            <span className="text-xs text-muted-foreground">
-              {comic.totalPages ? `${comic.totalPages} pages` : ""}
-            </span>
+              {comic.series && (
+                <p className="text-xs text-muted-foreground truncate">
+                  {comic.series}
+                  {comic.issue && ` #${comic.issue}`}
+                </p>
+              )}
+            </>
           )}
 
-          {comic.lastRead && (
-            <span className="text-[10px] text-muted-foreground truncate">
-              {formatDistanceToNow(new Date(comic.lastRead), { addSuffix: true })}
-            </span>
+          {/* Progress and time */}
+          {showPageNumbers && (
+            <div className="flex items-center justify-between gap-2 pt-0.5">
+              {hasProgress ? (
+                <ProgressDots current={comic.currentPage} total={comic.totalPages!} />
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  {comic.totalPages ? `${comic.totalPages} pages` : ""}
+                </span>
+              )}
+
+              {comic.lastRead && (
+                <span className="text-[10px] text-muted-foreground truncate">
+                  {formatDistanceToNow(new Date(comic.lastRead), { addSuffix: true })}
+                </span>
+              )}
+            </div>
           )}
         </div>
-      </div>
+      )}
     </>
   )
 

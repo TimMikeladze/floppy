@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info, HardDrive } from "lucide-react"
+import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info, HardDrive, SlidersHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -27,6 +27,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useIsPwa } from "@/hooks/use-is-pwa"
 import { AboutDialog } from "./about-dialog"
+import { DisplayOptionsDialog } from "./display-options-dialog"
 
 type ViewMode = "grid" | "table"
 
@@ -68,6 +69,7 @@ export function AppBar({
   const [mounted, setMounted] = useState(false)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false)
+  const [displayOptionsDialogOpen, setDisplayOptionsDialogOpen] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
   const isPwa = useIsPwa()
 
@@ -258,14 +260,16 @@ export function AppBar({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   {onManageLists && (
-                    <>
-                      <DropdownMenuItem onClick={onManageLists}>
-                        <ListFilter className="mr-2 h-4 w-4" />
-                        Manage Lists
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </>
+                    <DropdownMenuItem onClick={onManageLists}>
+                      <ListFilter className="mr-2 h-4 w-4" />
+                      Manage Lists
+                    </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem onClick={() => setDisplayOptionsDialogOpen(true)}>
+                    <SlidersHorizontal className="mr-2 h-4 w-4" />
+                    Display Options
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs text-muted-foreground">Library</DropdownMenuLabel>
                   {onExport && (
                     <DropdownMenuItem onClick={onExport}>
@@ -371,6 +375,9 @@ export function AppBar({
 
       {/* About dialog (PWA only) */}
       <AboutDialog open={aboutDialogOpen} onOpenChange={setAboutDialogOpen} />
+
+      {/* Display options dialog */}
+      <DisplayOptionsDialog open={displayOptionsDialogOpen} onOpenChange={setDisplayOptionsDialogOpen} />
     </header>
   )
 }

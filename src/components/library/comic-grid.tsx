@@ -4,6 +4,7 @@ import { ComicCard } from "./comic-card"
 import type { Comic } from "@/lib/types"
 import { BookOpen, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useDisplayPreferences, type GridDensity } from "@/hooks/use-display-preferences"
 
 interface ComicGridProps {
   comics: Comic[]
@@ -13,7 +14,16 @@ interface ComicGridProps {
   onUpload?: () => void
 }
 
+const densityToMinWidth: Record<GridDensity, string> = {
+  compact: "120px",
+  comfortable: "140px",
+  spacious: "180px",
+}
+
 export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: ComicGridProps) {
+  const { preferences } = useDisplayPreferences()
+  const minWidth = densityToMinWidth[preferences.gridDensity]
+
   if (comics.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center relative">
@@ -63,7 +73,7 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
     <div
       className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6"
       style={{
-        gridTemplateColumns: "repeat(auto-fill, minmax(min(140px, 100%), 1fr))",
+        gridTemplateColumns: `repeat(auto-fill, minmax(min(${minWidth}, 100%), 1fr))`,
       }}
     >
       {comics.map((comic) => (
@@ -73,6 +83,8 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
           onDelete={onDelete}
           onUpdate={onUpdate}
           onSelect={onSelect}
+          showName={preferences.showNames}
+          showPageNumbers={preferences.showPageNumbers}
         />
       ))}
     </div>
