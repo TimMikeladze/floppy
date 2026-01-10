@@ -76,30 +76,22 @@ export function useAppActions(onDataChange?: () => Promise<void>) {
       }
     }
 
-    // Process files concurrently with controlled concurrency
-    const CONCURRENCY_LIMIT = 3
-    const queue = [...validFiles]
-    const workers: Promise<void>[] = []
+    // Process files sequentially for reliability (prevents browser crashes)
+    for (const fileWithHandle of validFiles) {
+      const success = await processFile(fileWithHandle)
+      if (success) {
+        successCount++
+      } else {
+        failCount++
+      }
+      completed++
+      updateProgress()
 
-    for (let i = 0; i < Math.min(CONCURRENCY_LIMIT, queue.length); i++) {
-      workers.push((async () => {
-        while (queue.length > 0) {
-          const fileWithHandle = queue.shift()
-          if (!fileWithHandle) break
-
-          const success = await processFile(fileWithHandle)
-          if (success) {
-            successCount++
-          } else {
-            failCount++
-          }
-          completed++
-          updateProgress()
-        }
-      })())
+      // Small delay between files to allow browser to garbage collect
+      if (completed < total) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
     }
-
-    await Promise.all(workers)
 
     await onDataChange?.()
 
