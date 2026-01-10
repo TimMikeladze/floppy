@@ -354,9 +354,11 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
                 }}
                 id={`page-${index}`}
               />
-              <div className="absolute bottom-4 right-4 rounded-md bg-black/60 px-3 py-1.5 text-sm text-white">
-                Page {index + 1}
-              </div>
+{settings.showPageNumbers && (
+                <div className="absolute bottom-4 right-4 rounded-md bg-black/60 px-3 py-1.5 text-sm text-white">
+                  Page {index + 1}
+                </div>
+              )}
             </div>
           ))}
         </div>
