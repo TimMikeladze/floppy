@@ -23,7 +23,7 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-black text-white border-border/50">
+      <DialogContent className="sm:max-w-[600px] border-border/50">
         <DialogHeader>
           <DialogTitle className="text-xl font-normal">support</DialogTitle>
         </DialogHeader>
