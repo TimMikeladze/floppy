@@ -1,9 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Github, BookOpen, Cloud, FolderOpen, Bookmark, StickyNote, Smartphone, Monitor,  } from "lucide-react"
+import { ArrowLeft, Github, Heart, BookOpen, Cloud, FolderOpen, Bookmark, StickyNote, Smartphone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { SupportDialog } from "@/components/layout/support-dialog"
 
 const features = [
   {
@@ -39,6 +41,8 @@ const features = [
 ]
 
 export default function AboutPage() {
+  const [supportOpen, setSupportOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -84,6 +88,10 @@ export default function AboutPage() {
                 View on GitHub
               </Button>
             </a>
+            <Button variant="outline" className="gap-2" onClick={() => setSupportOpen(true)}>
+              <Heart className="w-4 h-4" />
+              Support
+            </Button>
           </div>
         </div>
 
@@ -137,6 +145,8 @@ export default function AboutPage() {
           </p>
         </div>
       </main>
+
+      <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
     </div>
   )
 }
