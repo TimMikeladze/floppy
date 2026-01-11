@@ -2,6 +2,7 @@ import JSZip from "jszip"
 import type { ComicFormat } from "./types"
 import { parseCbrFile, type CbrParseOptions } from "./cbr-parser"
 import { parsePdfFile, PdfPasswordError, PdfParseError, type PdfParseOptions } from "./pdf-parser"
+import { parseEpubFile, EpubParseError, type EpubParseOptions } from "./epub-parser"
 
 const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"]
 
@@ -46,6 +47,8 @@ export function detectFormat(file: File): ComicFormat {
       return "cbr"
     case ".pdf":
       return "pdf"
+    case ".epub":
+      return "epub"
     default:
       return "cbz"
   }
@@ -90,6 +93,12 @@ export async function parseComicFile(
           scale,
         } as PdfParseOptions)
 
+      case "epub":
+        return await parseEpubFile(file, {
+          onProgress,
+          signal,
+        } as EpubParseOptions)
+
       case "cbz":
       default:
         return await parseCbzFile(file, { onProgress, signal })
@@ -100,6 +109,9 @@ export async function parseComicFile(
       throw error
     }
     if (error instanceof PdfParseError) {
+      throw error
+    }
+    if (error instanceof EpubParseError) {
       throw error
     }
     if (error instanceof DOMException && error.name === "AbortError") {
@@ -255,17 +267,19 @@ export async function generateThumbnail(
 }
 
 export const SUPPORTED_FORMATS = {
-  extensions: [".cbz", ".zip", ".cbr", ".rar", ".pdf"],
-  accept: ".cbz,.zip,.cbr,.rar,.pdf",
+  extensions: [".cbz", ".zip", ".cbr", ".rar", ".pdf", ".epub"],
+  accept: ".cbz,.zip,.cbr,.rar,.pdf,.epub",
   mimeTypes: [
     "application/zip",
     "application/x-cbz",
     "application/x-cbr",
     "application/x-rar-compressed",
     "application/pdf",
+    "application/epub+zip",
   ],
-  description: "CBZ, CBR, PDF",
+  description: "CBZ, CBR, PDF, EPUB",
 }
 
 // Re-export error types for consumers
 export { PdfPasswordError, PdfParseError } from "./pdf-parser"
+export { EpubParseError } from "./epub-parser"

@@ -233,11 +233,11 @@ export function isFileSystemAccessSupported(): boolean {
 
 /**
  * Load comic pages directly from a file handle.
- * All formats (CBZ, CBR, PDF) are parsed to image blobs.
+ * All formats (CBZ, CBR, PDF, EPUB) are parsed to image blobs.
  */
 export async function loadPagesFromHandle(
   fileHandle: FileSystemFileHandle,
-  format: "cbz" | "cbr" | "pdf"
+  format: "cbz" | "cbr" | "pdf" | "epub"
 ): Promise<{ pages: Blob[] } | null> {
   try {
     const file = await getFileFromHandle(fileHandle)
