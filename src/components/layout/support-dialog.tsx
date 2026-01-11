@@ -3,8 +3,9 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Star, Coffee, Share2, Users, Copy, Check, Info, MessageSquare, Send } from "lucide-react"
+import { Star, Coffee, Share2, Users, Copy, Check, Info, MessageSquare, Send, Loader2 } from "lucide-react"
 import { Twitter, Linkedin, Github } from "lucide-react"
+import { submitFeedback } from "@/app/actions/feedback"
 
 interface SupportDialogProps {
   open: boolean
@@ -20,6 +21,7 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
   const [feedbackMessage, setFeedbackMessage] = useState("")
   const [feedbackError, setFeedbackError] = useState("")
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  const [feedbackLoading, setFeedbackLoading] = useState(false)
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(shareText)
@@ -32,9 +34,10 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
     return emailRegex.test(email)
   }
 
-  const handleFeedbackSubmit = () => {
+  const handleFeedbackSubmit = async () => {
     setFeedbackError("")
 
+    // Client-side validation
     if (!feedbackEmail.trim()) {
       setFeedbackError("Email is required")
       return
@@ -50,15 +53,30 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
       return
     }
 
-    // For now, just show success state
-    // In production, this would send to an API
-    setFeedbackSubmitted(true)
-    setTimeout(() => {
-      setFeedbackSubmitted(false)
-      setFeedbackEmail("")
-      setFeedbackMessage("")
-      setFeedbackExpanded(false)
-    }, 2000)
+    setFeedbackLoading(true)
+
+    try {
+      const result = await submitFeedback({
+        email: feedbackEmail.trim(),
+        message: feedbackMessage.trim(),
+      })
+
+      if (result.success) {
+        setFeedbackSubmitted(true)
+        setTimeout(() => {
+          setFeedbackSubmitted(false)
+          setFeedbackEmail("")
+          setFeedbackMessage("")
+          setFeedbackExpanded(false)
+        }, 2000)
+      } else {
+        setFeedbackError(result.error || "Failed to submit feedback")
+      }
+    } catch {
+      setFeedbackError("Failed to submit feedback. Please try again.")
+    } finally {
+      setFeedbackLoading(false)
+    }
   }
 
   return (
@@ -292,10 +310,20 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
                     )}
                     <button
                       onClick={handleFeedbackSubmit}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs font-medium"
+                      disabled={feedbackLoading}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Send className="w-3.5 h-3.5" />
-                      Send Feedback
+                      {feedbackLoading ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          Send Feedback
+                        </>
+                      )}
                     </button>
                   </>
                 )}
