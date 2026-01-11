@@ -91,6 +91,7 @@ const FORMAT_VALUES = [
   { value: 'cbz', label: 'CBZ' },
   { value: 'cbr', label: 'CBR' },
   { value: 'pdf', label: 'PDF' },
+  { value: 'epub', label: 'EPUB' },
 ]
 
 function FilterRuleRow({

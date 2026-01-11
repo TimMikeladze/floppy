@@ -1,4 +1,4 @@
-export type ComicFormat = "cbz" | "cbr" | "pdf"
+export type ComicFormat = "cbz" | "cbr" | "pdf" | "epub"
 export type ComicSourceType = "local" | "remote"
 
 export interface Comic {
