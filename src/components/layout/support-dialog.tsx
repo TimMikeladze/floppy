@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Star, Coffee, Share2, Users, Copy, Check } from "lucide-react"
+import { Star, Coffee, Share2, Users, Copy, Check, Info } from "lucide-react"
 import { Twitter, Linkedin, Github } from "lucide-react"
 
 interface SupportDialogProps {
@@ -192,6 +193,21 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
               </a>
             </div>
           </div>
+
+          {/* About */}
+          <Link
+            href="/about"
+            onClick={() => onOpenChange(false)}
+            className="block p-3 rounded-lg border border-border/50 hover:border-border transition-colors"
+          >
+            <div className="flex items-start gap-2.5">
+              <Info className="w-4 h-4 mt-0.5 text-muted-foreground" />
+              <div>
+                <div className="text-sm font-medium">about</div>
+                <div className="text-xs text-muted-foreground">learn more about floppy</div>
+              </div>
+            </div>
+          </Link>
         </div>
       </DialogContent>
     </Dialog>
