@@ -5,32 +5,33 @@ import { useReading } from "@/lib/reading-context"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import type { PDFDocumentProxy, PDFPageProxy, RenderTask } from "pdfjs-dist"
 
 // Lazy-load pdfjs
 let pdfjsLib: typeof import("pdfjs-dist") | null = null
+let workerInitialized = false
 
-async function getPdfjs() {
+async function getPdfjs(): Promise<typeof import("pdfjs-dist")> {
   if (!pdfjsLib) {
     pdfjsLib = await import("pdfjs-dist")
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
   }
+
+  if (!workerInitialized) {
+    const workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
+    pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc
+    workerInitialized = true
+  }
+
   return pdfjsLib
 }
 
 interface PdfViewerProps {
-  /** PDF file to render */
   file: File
-  /** Current page index (0-based) */
   currentPage: number
-  /** Callback when page changes */
   onPageChange: (page: number) => void
-  /** Total pages callback */
   onTotalPagesChange?: (total: number) => void
-  /** Password for protected PDFs */
   password?: string
 }
-
-type PDFDocumentProxy = Awaited<ReturnType<typeof import("pdfjs-dist")["getDocument"]>["promise"]>
 
 export function PdfViewer({
   file,
@@ -52,8 +53,8 @@ export function PdfViewer({
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const secondCanvasRef = useRef<HTMLCanvasElement>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderTaskRef = useRef<{ cancel: () => void; promise: Promise<void> } | null>(null)
+  const renderTaskRef = useRef<RenderTask | null>(null)
+  const secondRenderTaskRef = useRef<RenderTask | null>(null)
 
   const touchStartRef = useRef({
     x: 0,
@@ -70,6 +71,7 @@ export function PdfViewer({
   // Load PDF document
   useEffect(() => {
     let cancelled = false
+    let loadedPdf: PDFDocumentProxy | null = null
 
     async function loadPdf() {
       setIsLoading(true)
@@ -81,13 +83,13 @@ export function PdfViewer({
 
         if (cancelled) return
 
-        const loadedPdf = await pdfjs.getDocument({
-          data: arrayBuffer,
+        loadedPdf = await pdfjs.getDocument({
+          data: new Uint8Array(arrayBuffer),
           password,
         }).promise
 
         if (cancelled) {
-          loadedPdf.destroy()
+          await loadedPdf.destroy()
           return
         }
 
@@ -96,7 +98,8 @@ export function PdfViewer({
       } catch (err) {
         if (!cancelled) {
           console.error("[pdf-viewer] Error loading PDF:", err)
-          setError(err instanceof Error ? err.message : "Failed to load PDF")
+          const message = err instanceof Error ? err.message : "Failed to load PDF"
+          setError(message)
         }
       } finally {
         if (!cancelled) {
@@ -140,83 +143,87 @@ export function PdfViewer({
 
     async function renderPage(
       pageNum: number,
-      canvas: HTMLCanvasElement
+      canvas: HTMLCanvasElement,
+      taskRef: React.MutableRefObject<RenderTask | null>
     ): Promise<void> {
       // Cancel any ongoing render
-      if (renderTaskRef.current) {
-        renderTaskRef.current.cancel()
-        renderTaskRef.current = null
+      if (taskRef.current) {
+        taskRef.current.cancel()
+        taskRef.current = null
       }
 
-      const page = await pdf!.getPage(pageNum)
-      const container = containerRef.current
-      if (!container) return
-
-      // Calculate scale to fit container
-      const containerWidth = container.clientWidth
-      const containerHeight = container.clientHeight
-      const viewport = page.getViewport({ scale: 1 })
-
-      let renderScale: number
-      if (settings.fitMode === "fit-width") {
-        const targetWidth = settings.pageLayout === "double" ? containerWidth / 2 : containerWidth
-        renderScale = targetWidth / viewport.width
-      } else if (settings.fitMode === "fit-height") {
-        renderScale = containerHeight / viewport.height
-      } else {
-        // Fit page - use the smaller scale to fit both dimensions
-        const scaleX = (settings.pageLayout === "double" ? containerWidth / 2 : containerWidth) / viewport.width
-        const scaleY = containerHeight / viewport.height
-        renderScale = Math.min(scaleX, scaleY)
-      }
-
-      // Apply device pixel ratio for sharper rendering
-      const dpr = window.devicePixelRatio || 1
-      const scaledViewport = page.getViewport({ scale: renderScale * dpr })
-
-      canvas.width = scaledViewport.width
-      canvas.height = scaledViewport.height
-      canvas.style.width = `${scaledViewport.width / dpr}px`
-      canvas.style.height = `${scaledViewport.height / dpr}px`
-
-      const ctx = canvas.getContext("2d", { alpha: false })
-      if (!ctx) return
-
-      // White background
-      ctx.fillStyle = "#ffffff"
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      const renderTask = page.render({
-        canvasContext: ctx,
-        viewport: scaledViewport,
-        canvas: null,
-      })
-
-      renderTaskRef.current = renderTask
+      let page: PDFPageProxy | null = null
 
       try {
+        page = await pdf!.getPage(pageNum)
+        const container = containerRef.current
+        if (!container) return
+
+        const containerWidth = container.clientWidth
+        const containerHeight = container.clientHeight
+        const viewport = page.getViewport({ scale: 1 })
+
+        let renderScale: number
+        if (settings.fitMode === "fit-width") {
+          const targetWidth = settings.pageLayout === "double" ? containerWidth / 2 : containerWidth
+          renderScale = targetWidth / viewport.width
+        } else if (settings.fitMode === "fit-height") {
+          renderScale = containerHeight / viewport.height
+        } else {
+          const scaleX =
+            (settings.pageLayout === "double" ? containerWidth / 2 : containerWidth) / viewport.width
+          const scaleY = containerHeight / viewport.height
+          renderScale = Math.min(scaleX, scaleY)
+        }
+
+        // Apply device pixel ratio for sharp rendering
+        const dpr = window.devicePixelRatio || 1
+        const scaledViewport = page.getViewport({ scale: renderScale * dpr })
+
+        canvas.width = Math.floor(scaledViewport.width)
+        canvas.height = Math.floor(scaledViewport.height)
+        canvas.style.width = `${Math.floor(scaledViewport.width / dpr)}px`
+        canvas.style.height = `${Math.floor(scaledViewport.height / dpr)}px`
+
+        const ctx = canvas.getContext("2d", { alpha: false })
+        if (!ctx) return
+
+        // White background
+        ctx.fillStyle = "#ffffff"
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+        // canvas: null is required in pdfjs-dist v5 when using canvasContext
+        const renderTask = page.render({
+          canvasContext: ctx,
+          viewport: scaledViewport,
+          canvas: null,
+        })
+
+        taskRef.current = renderTask
+
         await renderTask.promise
       } catch (err) {
-        if ((err as Error).name !== "RenderingCancelledException") {
+        const error = err as Error
+        if (error.name !== "RenderingCancelledException") {
           console.error("[pdf-viewer] Render error:", err)
         }
       } finally {
-        page.cleanup()
-        renderTaskRef.current = null
+        page?.cleanup()
+        taskRef.current = null
       }
     }
 
     // Render main page
     const pageNum = currentPage + 1 // pdf.js uses 1-based page numbers
     if (pageNum >= 1 && pageNum <= pdf.numPages) {
-      renderPage(pageNum, canvasRef.current)
+      renderPage(pageNum, canvasRef.current, renderTaskRef)
     }
 
     // Render second page for double layout
     if (settings.pageLayout === "double" && secondCanvasRef.current) {
       const secondPageNum = currentPage + 2
       if (secondPageNum <= pdf.numPages) {
-        renderPage(secondPageNum, secondCanvasRef.current)
+        renderPage(secondPageNum, secondCanvasRef.current, secondRenderTaskRef)
       } else {
         // Clear second canvas if no second page
         const ctx = secondCanvasRef.current.getContext("2d")
@@ -226,26 +233,49 @@ export function PdfViewer({
         }
       }
     }
+
+    // Cleanup on effect change
+    return () => {
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel()
+        renderTaskRef.current = null
+      }
+      if (secondRenderTaskRef.current) {
+        secondRenderTaskRef.current.cancel()
+        secondRenderTaskRef.current = null
+      }
+    }
   }, [pdf, currentPage, settings.fitMode, settings.pageLayout])
 
   // Navigation handlers
   const handlePrevPage = useCallback(() => {
-    if (settings.pageLayout === "double" && currentPage >= 2) {
-      onPageChange(currentPage - 2)
-    } else if (settings.pageLayout === "single" && currentPage > 0) {
+    if (!pdf) return
+
+    if (settings.pageLayout === "double") {
+      if (currentPage >= 2) {
+        onPageChange(currentPage - 2)
+      } else if (currentPage > 0) {
+        onPageChange(0)
+      }
+    } else {
       if (settings.readingDirection === "ltr") {
-        onPageChange(currentPage - 1)
+        if (currentPage > 0) onPageChange(currentPage - 1)
       } else {
-        onPageChange(currentPage + 1)
+        if (currentPage < pdf.numPages - 1) onPageChange(currentPage + 1)
       }
     }
-  }, [currentPage, settings.pageLayout, settings.readingDirection, onPageChange])
+  }, [pdf, currentPage, settings.pageLayout, settings.readingDirection, onPageChange])
 
   const handleNextPage = useCallback(() => {
     if (!pdf) return
-    if (settings.pageLayout === "double" && currentPage < pdf.numPages - 2) {
-      onPageChange(currentPage + 2)
-    } else if (settings.pageLayout === "single") {
+
+    if (settings.pageLayout === "double") {
+      if (currentPage < pdf.numPages - 2) {
+        onPageChange(currentPage + 2)
+      } else if (currentPage < pdf.numPages - 1) {
+        onPageChange(pdf.numPages - 1)
+      }
+    } else {
       if (settings.readingDirection === "ltr") {
         if (currentPage < pdf.numPages - 1) onPageChange(currentPage + 1)
       } else {
@@ -313,19 +343,22 @@ export function PdfViewer({
   }
 
   // Clamp position
-  const clampPosition = (pos: { x: number; y: number }, currentScale: number) => {
-    const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect || currentScale <= 1) return { x: 0, y: 0 }
+  const clampPosition = useCallback(
+    (pos: { x: number; y: number }, currentScale: number) => {
+      const rect = containerRef.current?.getBoundingClientRect()
+      if (!rect || currentScale <= 1) return { x: 0, y: 0 }
 
-    const boundaryMultiplier = isMobile ? 0.6 : 0.5
-    const maxX = (rect.width * (currentScale - 1)) / 2 + rect.width * boundaryMultiplier
-    const maxY = (rect.height * (currentScale - 1)) / 2 + rect.height * boundaryMultiplier
+      const boundaryMultiplier = isMobile ? 0.6 : 0.5
+      const maxX = (rect.width * (currentScale - 1)) / 2 + rect.width * boundaryMultiplier
+      const maxY = (rect.height * (currentScale - 1)) / 2 + rect.height * boundaryMultiplier
 
-    return {
-      x: Math.max(-maxX, Math.min(maxX, pos.x)),
-      y: Math.max(-maxY, Math.min(maxY, pos.y)),
-    }
-  }
+      return {
+        x: Math.max(-maxX, Math.min(maxX, pos.x)),
+        y: Math.max(-maxY, Math.min(maxY, pos.y)),
+      }
+    },
+    [isMobile]
+  )
 
   // Touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
