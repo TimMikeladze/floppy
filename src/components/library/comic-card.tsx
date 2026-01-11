@@ -30,6 +30,12 @@ import Link from "next/link"
 import { AddToListDialog } from "./add-to-list-dialog"
 import { useState, useEffect } from "react"
 import { AttachFileDialog } from "./attach-file-dialog"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import { EditComicDialog } from "./edit-comic-dialog"
 import { CoverManager, MissingCoverIndicator } from "./cover-manager"
 import { loadRemoteImage, revokeRemoteImage } from "@/lib/remote-loader"
@@ -114,7 +120,7 @@ function QuickActions({ comic, onUpdate, onOpenAddToList }: QuickActionsProps) {
 
   return (
     <div
-      className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0"
+      className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0 hidden [@media(hover:hover)]:flex"
       style={{
         background: 'linear-gradient(to top, oklch(0 0 0 / 0.7) 0%, transparent 100%)',
       }}
@@ -326,11 +332,161 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManage
   )
 }
 
+interface MobileActionsSheetProps {
+  comic: Comic
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onDelete: () => void
+  onEdit: () => void
+  onManageCover: () => void
+  onAddToList: () => void
+  onUpdate: () => void
+}
+
+function MobileActionsSheet({
+  comic,
+  open,
+  onOpenChange,
+  onDelete,
+  onEdit,
+  onManageCover,
+  onAddToList,
+  onUpdate,
+}: MobileActionsSheetProps) {
+  const router = useRouter()
+  const isRemote = comic.sourceType === 'remote'
+  const canRead = comic.hasFile || isRemote
+  const hasProgress = comic.currentPage > 0
+  const isComplete = comic.totalPages && comic.currentPage >= comic.totalPages
+
+  const handleAction = (action: () => void) => {
+    action()
+    onOpenChange(false)
+  }
+
+  const handleMarkAsRead = async () => {
+    if (!comic.totalPages) {
+      toast.error("Cannot mark as read: page count unknown")
+      return
+    }
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: comic.totalPages,
+        lastRead: new Date(),
+      })
+      toast.success("Marked as read")
+      onUpdate()
+      onOpenChange(false)
+    } catch (error) {
+      console.error("Failed to mark as read:", error)
+      toast.error("Failed to mark as read")
+    }
+  }
+
+  const handleMarkAsUnread = async () => {
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: 0,
+        lastRead: undefined,
+      })
+      toast.success("Marked as unread")
+      onUpdate()
+      onOpenChange(false)
+    } catch (error) {
+      console.error("Failed to mark as unread:", error)
+      toast.error("Failed to mark as unread")
+    }
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="rounded-t-2xl">
+        <SheetHeader className="pb-2">
+          <SheetTitle className="text-left line-clamp-1">{comic.title}</SheetTitle>
+        </SheetHeader>
+        <div className="grid gap-1 pb-4">
+          {canRead && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start h-12 text-base"
+              onClick={() => handleAction(() => router.push(`/reader/${comic.id}`))}
+            >
+              <ChevronRight className="mr-3 h-5 w-5" />
+              Open
+            </Button>
+          )}
+
+          {comic.totalPages && !isComplete && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start h-12 text-base"
+              onClick={handleMarkAsRead}
+            >
+              <Check className="mr-3 h-5 w-5" />
+              Mark as Read
+            </Button>
+          )}
+
+          {hasProgress && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start h-12 text-base"
+              onClick={handleMarkAsUnread}
+            >
+              <RotateCcw className="mr-3 h-5 w-5" />
+              Mark as Unread
+            </Button>
+          )}
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start h-12 text-base"
+            onClick={() => handleAction(onAddToList)}
+          >
+            <Plus className="mr-3 h-5 w-5" />
+            Add to List
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start h-12 text-base"
+            onClick={() => handleAction(onEdit)}
+          >
+            <Pencil className="mr-3 h-5 w-5" />
+            Edit Details
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start h-12 text-base"
+            onClick={() => handleAction(onManageCover)}
+          >
+            <Image className="mr-3 h-5 w-5" />
+            Manage Cover
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start h-12 text-base text-destructive hover:text-destructive"
+            onClick={() => handleAction(onDelete)}
+          >
+            <Trash2 className="mr-3 h-5 w-5" />
+            Delete
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProps) {
   const [attachDialogOpen, setAttachDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [addToListDialogOpen, setAddToListDialogOpen] = useState(false)
   const [coverManagerOpen, setCoverManagerOpen] = useState(false)
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
   const [remoteCoverUrl, setRemoteCoverUrl] = useState<string | null>(null)
   const [coverLoading, setCoverLoading] = useState(false)
   const hasProgress = comic.currentPage > 0 && comic.totalPages
@@ -458,17 +614,28 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
   return (
     <>
       <div className="comic-card group relative rounded-2xl overflow-hidden">
-        {/* Context menu - outside of any interactive wrapper */}
-        <CardContextMenu
-          comic={comic}
-          onDelete={() => onDelete(comic.id)}
-          onAttach={() => setAttachDialogOpen(true)}
-          onEdit={() => setEditDialogOpen(true)}
-          onUpdate={() => onUpdate?.()}
-          onManageCover={() => setCoverManagerOpen(true)}
+        {/* Context menu - only visible on desktop (hover devices) */}
+        <div className="hidden [@media(hover:hover)]:block">
+          <CardContextMenu
+            comic={comic}
+            onDelete={() => onDelete(comic.id)}
+            onAttach={() => setAttachDialogOpen(true)}
+            onEdit={() => setEditDialogOpen(true)}
+            onUpdate={() => onUpdate?.()}
+            onManageCover={() => setCoverManagerOpen(true)}
+          />
+        </div>
+
+        {/* Mobile tap target - only visible on touch devices */}
+        <button
+          type="button"
+          onClick={() => setMobileActionsOpen(true)}
+          className="absolute inset-0 z-10 hidden [@media(hover:none)]:block"
+          aria-label={`Actions for ${comic.title}`}
         />
 
         {/* Clickable area - local comics with files OR remote comics can be read */}
+        {/* On desktop: clicking navigates to reader. On mobile: tap target above handles it */}
         {(comic.hasFile || isRemote) ? (
           onSelect ? (
             <div
@@ -481,14 +648,14 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
                   handleCardClick()
                 }
               }}
-              className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
+              className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl [@media(hover:none)]:pointer-events-none"
             >
               <CardInner />
             </div>
           ) : (
             <Link
               href={`/reader/${comic.id}`}
-              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
+              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl [@media(hover:none)]:pointer-events-none"
             >
               <CardInner />
             </Link>
@@ -530,6 +697,17 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
         open={coverManagerOpen}
         onOpenChange={setCoverManagerOpen}
         onCoverChange={() => onUpdate?.()}
+      />
+
+      <MobileActionsSheet
+        comic={comic}
+        open={mobileActionsOpen}
+        onOpenChange={setMobileActionsOpen}
+        onDelete={() => onDelete(comic.id)}
+        onEdit={() => setEditDialogOpen(true)}
+        onManageCover={() => setCoverManagerOpen(true)}
+        onAddToList={() => setAddToListDialogOpen(true)}
+        onUpdate={() => onUpdate?.()}
       />
     </>
   )
