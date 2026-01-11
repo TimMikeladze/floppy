@@ -25,8 +25,6 @@ import { useTheme } from "next-themes"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useIsPwa } from "@/hooks/use-is-pwa"
-import { AboutDialog } from "./about-dialog"
 
 type ViewMode = "grid" | "table" | "series"
 
@@ -67,9 +65,7 @@ export function AppBar({
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
-  const [aboutDialogOpen, setAboutDialogOpen] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
-  const isPwa = useIsPwa()
 
   const handleImportClick = () => {
     importInputRef.current?.click()
@@ -260,6 +256,14 @@ export function AppBar({
                 <span className="hidden sm:inline sm:ml-2">Upload</span>
               </Button>
 
+              {/* About link */}
+              <Link href="/about">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Info className="h-4 w-4" />
+                  <span className="sr-only">About</span>
+                </Button>
+              </Link>
+
               {/* Settings menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -332,15 +336,13 @@ export function AppBar({
                       </DropdownMenuItem>
                     </>
                   )}
-                  {isPwa && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setAboutDialogOpen(true)}>
-                        <Info className="mr-2 h-4 w-4" />
-                        About
-                      </DropdownMenuItem>
-                    </>
-                  )}
+                  <DropdownMenuSeparator />
+                  <Link href="/about">
+                    <DropdownMenuItem>
+                      <Info className="mr-2 h-4 w-4" />
+                      About
+                    </DropdownMenuItem>
+                  </Link>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -380,9 +382,6 @@ export function AppBar({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* About dialog (PWA only) */}
-      <AboutDialog open={aboutDialogOpen} onOpenChange={setAboutDialogOpen} />
     </header>
   )
 }
