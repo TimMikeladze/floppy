@@ -269,6 +269,7 @@ export function AppBar({
                 <DropdownMenuContent align="end" className="w-48">
                   {onManageLists && (
                     <>
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">Lists</DropdownMenuLabel>
                       <DropdownMenuItem onClick={onManageLists}>
                         <ListFilter className="mr-2 h-4 w-4" />
                         Manage Lists
@@ -313,6 +314,7 @@ export function AppBar({
                     {mounted && theme === "system" && <span className="ml-auto text-xs">✓</span>}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Storage</DropdownMenuLabel>
                   <Link href="/settings">
                     <DropdownMenuItem>
                       <HardDrive className="mr-2 h-4 w-4" />
@@ -320,17 +322,16 @@ export function AppBar({
                     </DropdownMenuItem>
                   </Link>
                   {onClearData && (
-                    <>
-                      <DropdownMenuItem
-                        onClick={() => setClearDialogOpen(true)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Clear All Data
-                      </DropdownMenuItem>
-                    </>
+                    <DropdownMenuItem
+                      onClick={() => setClearDialogOpen(true)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Clear All Data
+                    </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Info</DropdownMenuLabel>
                   <Link href="/about">
                     <DropdownMenuItem>
                       <Info className="mr-2 h-4 w-4" />
