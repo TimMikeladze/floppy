@@ -256,14 +256,6 @@ export function AppBar({
                 <span className="hidden sm:inline sm:ml-2">Upload</span>
               </Button>
 
-              {/* About link */}
-              <Link href="/about">
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Info className="h-4 w-4" />
-                  <span className="sr-only">About</span>
-                </Button>
-              </Link>
-
               {/* Settings menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -345,6 +337,14 @@ export function AppBar({
                   </Link>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* About link */}
+              <Link href="/about">
+                <Button variant="outline" size="icon" className="h-9 w-9 bg-transparent">
+                  <Info className="h-4 w-4" />
+                  <span className="sr-only">About</span>
+                </Button>
+              </Link>
             </div>
           )}
         </div>
