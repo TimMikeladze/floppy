@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info, HardDrive, Layers } from "lucide-react"
+import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info, HardDrive, Layers, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -25,6 +25,7 @@ import { useTheme } from "next-themes"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { SupportDialog } from "./support-dialog"
 
 type ViewMode = "grid" | "table" | "series"
 
@@ -65,6 +66,7 @@ export function AppBar({
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
+  const [supportDialogOpen, setSupportDialogOpen] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
 
   const handleImportClick = () => {
@@ -335,6 +337,10 @@ export function AppBar({
                       About
                     </DropdownMenuItem>
                   </Link>
+                  <DropdownMenuItem onClick={() => setSupportDialogOpen(true)}>
+                    <Heart className="mr-2 h-4 w-4" />
+                    Support
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -375,6 +381,8 @@ export function AppBar({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <SupportDialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen} />
     </header>
   )
 }
