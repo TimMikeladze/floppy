@@ -28,7 +28,7 @@ export function AppFooter() {
               </div>
               <div className="flex flex-col">
                 <span className="font-medium text-foreground">floppy.sh</span>
-                <span className="text-[10px] text-muted-foreground/80">the open-source comic-book app.</span>
+                <span className="text-[10px] text-muted-foreground/80">the comic book app.</span>
               </div>
             </div>
 
