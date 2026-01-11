@@ -72,7 +72,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
-      <body className="font-sans antialiased overscroll-none min-h-screen flex flex-col">
+      <body className="font-sans antialiased overscroll-none min-h-screen flex flex-col overflow-x-hidden max-w-[100vw]">
         <NuqsAdapter>
           <ThemeProvider>
             <ReadingProvider>

@@ -25,8 +25,6 @@ import { useTheme } from "next-themes"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useIsPwa } from "@/hooks/use-is-pwa"
-import { AboutDialog } from "./about-dialog"
 
 type ViewMode = "grid" | "table" | "series"
 
@@ -67,9 +65,7 @@ export function AppBar({
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
-  const [aboutDialogOpen, setAboutDialogOpen] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
-  const isPwa = useIsPwa()
 
   const handleImportClick = () => {
     importInputRef.current?.click()
@@ -105,7 +101,7 @@ export function AppBar({
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="safe-top safe-x bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" />
-      <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-2 sm:gap-3 mx-auto w-full max-w-screen-2xl safe-x">
+      <div className="flex items-center h-14 px-4 sm:px-6 md:px-8 gap-2 sm:gap-3 mx-auto w-full max-w-screen-2xl safe-x">
         {/* Logo / Title - hidden when search is expanded on mobile */}
         {!searchExpanded && (
           <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
@@ -332,17 +328,23 @@ export function AppBar({
                       </DropdownMenuItem>
                     </>
                   )}
-                  {isPwa && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setAboutDialogOpen(true)}>
-                        <Info className="mr-2 h-4 w-4" />
-                        About
-                      </DropdownMenuItem>
-                    </>
-                  )}
+                  <DropdownMenuSeparator />
+                  <Link href="/about">
+                    <DropdownMenuItem>
+                      <Info className="mr-2 h-4 w-4" />
+                      About
+                    </DropdownMenuItem>
+                  </Link>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* About link */}
+              <Link href="/about">
+                <Button variant="outline" size="icon" className="h-9 w-9 bg-transparent">
+                  <Info className="h-4 w-4" />
+                  <span className="sr-only">About</span>
+                </Button>
+              </Link>
             </div>
           )}
         </div>
@@ -380,9 +382,6 @@ export function AppBar({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* About dialog (PWA only) */}
-      <AboutDialog open={aboutDialogOpen} onOpenChange={setAboutDialogOpen} />
     </header>
   )
 }
