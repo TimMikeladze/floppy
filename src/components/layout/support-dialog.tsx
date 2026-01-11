@@ -50,7 +50,73 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
             </div>
           </a>
 
-          {/* 2. Share us - Expandable */}
+          {/* 2. Follow the developer */}
+          <div className="p-3 rounded-lg border border-border/50">
+            <div className="flex items-start gap-2.5 mb-3">
+              <Users className="w-4 h-4 mt-0.5 text-muted-foreground" />
+              <div>
+                <div className="text-sm font-medium">follow the developer</div>
+                <div className="text-xs text-muted-foreground">stay updated on new features</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+              <a
+                href="https://twitter.com/linesofcode"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs"
+              >
+                <Twitter className="w-3.5 h-3.5" />
+                Twitter
+              </a>
+              <a
+                href="https://bsky.app/profile/linesofcode"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs"
+              >
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 3c-2.444 0-4.5 2.056-4.5 4.5 0 1.445.682 2.73 1.745 3.55C7.945 12.07 6.5 13.89 6.5 16c0 2.444 2.056 4.5 4.5 4.5s4.5-2.056 4.5-4.5c0-2.11-1.445-3.93-2.745-5.05C13.818 10.23 14.5 8.945 14.5 7.5 14.5 5.056 12.444 3 12 3z" />
+                </svg>
+                Bluesky
+              </a>
+              <a
+                href="https://linkedin.com/in/tim-mikeladze"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs"
+              >
+                <Linkedin className="w-3.5 h-3.5" />
+                LinkedIn
+              </a>
+              <a
+                href="https://github.com/TimMikeladze"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs"
+              >
+                <Github className="w-3.5 h-3.5" />
+                GitHub
+              </a>
+            </div>
+          </div>
+
+          {/* 3. Sponsor */}
+          <a
+            href="#"
+            className="block p-3 rounded-lg border border-border/50 hover:border-border transition-colors"
+          >
+            <div className="flex items-start gap-2.5">
+              <Coffee className="w-4 h-4 mt-0.5 text-muted-foreground" />
+              <div>
+                <div className="text-sm font-medium">sponsor</div>
+                <div className="text-xs text-muted-foreground">support ongoing development</div>
+              </div>
+            </div>
+          </a>
+
+          {/* 4. Share us - Expandable */}
           <div className="rounded-lg border border-border/50">
             <button
               onClick={() => setShareExpanded(!shareExpanded)}
@@ -128,73 +194,7 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
             )}
           </div>
 
-          {/* 3. Sponsor */}
-          <a
-            href="#"
-            className="block p-3 rounded-lg border border-border/50 hover:border-border transition-colors"
-          >
-            <div className="flex items-start gap-2.5">
-              <Coffee className="w-4 h-4 mt-0.5 text-muted-foreground" />
-              <div>
-                <div className="text-sm font-medium">sponsor</div>
-                <div className="text-xs text-muted-foreground">support ongoing development</div>
-              </div>
-            </div>
-          </a>
-
-          {/* 4. Follow the developer */}
-          <div className="p-3 rounded-lg border border-border/50">
-            <div className="flex items-start gap-2.5 mb-3">
-              <Users className="w-4 h-4 mt-0.5 text-muted-foreground" />
-              <div>
-                <div className="text-sm font-medium">follow the developer</div>
-                <div className="text-xs text-muted-foreground">stay updated on new features</div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2">
-              <a
-                href="https://twitter.com/linesofcode"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs"
-              >
-                <Twitter className="w-3.5 h-3.5" />
-                Twitter
-              </a>
-              <a
-                href="https://bsky.app/profile/linesofcode"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs"
-              >
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 3c-2.444 0-4.5 2.056-4.5 4.5 0 1.445.682 2.73 1.745 3.55C7.945 12.07 6.5 13.89 6.5 16c0 2.444 2.056 4.5 4.5 4.5s4.5-2.056 4.5-4.5c0-2.11-1.445-3.93-2.745-5.05C13.818 10.23 14.5 8.945 14.5 7.5 14.5 5.056 12.444 3 12 3z" />
-                </svg>
-                Bluesky
-              </a>
-              <a
-                href="https://linkedin.com/in/tim-mikeladze"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs"
-              >
-                <Linkedin className="w-3.5 h-3.5" />
-                LinkedIn
-              </a>
-              <a
-                href="https://github.com/TimMikeladze"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs"
-              >
-                <Github className="w-3.5 h-3.5" />
-                GitHub
-              </a>
-            </div>
-          </div>
-
-          {/* 5. About - Enhanced */}
+          {/* 5. About */}
           <Link
             href="/about"
             onClick={() => onOpenChange(false)}
