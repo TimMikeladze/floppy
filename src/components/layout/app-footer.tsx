@@ -1,6 +1,6 @@
 "use client"
 
-import { Github, Heart } from "lucide-react"
+import { Heart } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { useIsPwa } from "@/hooks/use-is-pwa"
@@ -34,15 +34,6 @@ export function AppFooter() {
 
             {/* Right side - Icon actions */}
             <div className="flex items-center gap-3">
-              <a
-                href="https://github.com/TimMikeladze/floppy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors"
-                aria-label="GitHub"
-              >
-                <Github className="w-4 h-4" />
-              </a>
               <button
                 onClick={() => setSupportOpen(true)}
                 className="hover:text-foreground transition-colors"
