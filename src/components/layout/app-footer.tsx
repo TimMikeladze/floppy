@@ -36,10 +36,10 @@ export function AppFooter() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSupportOpen(true)}
-                className="hover:text-foreground transition-colors"
+                className="group relative"
                 aria-label="Support"
               >
-                <Heart className="w-4 h-4" />
+                <Heart className="w-4 h-4 text-pink-400/70 fill-pink-400/20 transition-all duration-200 group-hover:text-pink-500 group-hover:fill-pink-500/40 group-hover:scale-110" />
               </button>
             </div>
           </div>
