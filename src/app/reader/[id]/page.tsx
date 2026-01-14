@@ -25,7 +25,7 @@ import type { Comic, Bookmark, RemotePage } from "@/lib/types"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Upload, Settings2 } from "lucide-react"
+import { Upload } from "lucide-react"
 import { AttachFileDialog } from "@/components/library/attach-file-dialog"
 import { NextIssueOverlay } from "@/components/reader/next-issue-overlay"
 import { useReading } from "@/lib/reading-context"
@@ -522,22 +522,6 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         currentPage={currentPage}
         onSave={handleSaveNote}
       />
-
-      {/* Floating menu button - always visible on desktop, hidden on mobile */}
-      <Button
-        variant="secondary"
-        size="icon"
-        className="fixed z-50 hidden h-12 w-12 rounded-full shadow-lg md:flex opacity-70 hover:opacity-100 transition-opacity"
-        style={{
-          top: "calc(1.5rem + var(--safe-area-top))",
-          right: "calc(1.5rem + var(--safe-area-right))",
-        }}
-        onClick={() => setMenuOpen(true)}
-        title="Settings (M or ?)"
-      >
-        <Settings2 className="h-5 w-5" />
-        <span className="sr-only">Settings</span>
-      </Button>
 
       {/* Next issue overlay - shown when on last page */}
       {nextIssue && (
