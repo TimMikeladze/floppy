@@ -222,7 +222,7 @@ export function CommandPalette({ onOpenChange, onUpload, onOpenStats }: CommandP
             {!search && (
               <Command.Group heading="Navigation">
                 <Command.Item
-                  onSelect={() => handleSelect(() => router.push("/"))}
+                  onSelect={() => handleSelect(() => router.push("/library"))}
                   className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
                 >
                   <Library className="h-4 w-4" />
@@ -257,7 +257,7 @@ export function CommandPalette({ onOpenChange, onUpload, onOpenStats }: CommandP
                     <Command.Item
                       key={`series-${series.normalized}`}
                       value={`series-${series.normalized}`}
-                      onSelect={() => handleSelect(() => router.push(`/?q=${encodeURIComponent(series.display)}&view=series`))}
+                      onSelect={() => handleSelect(() => router.push(`/library?q=${encodeURIComponent(series.display)}&view=series`))}
                       className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
                     >
                       <Layers className="h-4 w-4" />

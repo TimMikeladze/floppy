@@ -133,7 +133,7 @@ export default function SettingsPage() {
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="safe-top safe-x bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" />
         <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-3 mx-auto w-full max-w-screen-2xl safe-x">
-          <Link href="/">
+          <Link href="/library">
             <Button variant="ghost" size="icon" className="h-9 w-9">
               <ArrowLeft className="h-5 w-5" />
             </Button>

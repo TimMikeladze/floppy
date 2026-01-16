@@ -57,7 +57,7 @@ export default function AboutPage() {
       <header className="sticky top-0 z-40 border-b-2 border-foreground/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="safe-top safe-x bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" />
         <div className="flex items-center h-14 px-4 sm:px-6 md:px-8 gap-3 mx-auto w-full max-w-screen-2xl safe-x">
-          <Link href="/">
+          <Link href="/library">
             <Button variant="ghost" size="icon" className="h-9 w-9 border border-border hover:border-foreground/30 transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </Button>

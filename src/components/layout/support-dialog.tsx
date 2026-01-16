@@ -196,7 +196,7 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
 
           {/* 5. About */}
           <Link
-            href="/about"
+            href="/"
             onClick={() => onOpenChange(false)}
             className="block p-3 rounded-lg border border-border/50 hover:border-border transition-colors"
           >

@@ -181,7 +181,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         if (menuOpen) {
           setMenuOpen(false)
         } else {
-          router.push("/")
+          router.push("/library")
         }
       } else if (e.key === " ") {
         // Space bar toggles controls (prevent scroll)
@@ -221,7 +221,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         toast.error("Comic not found", {
           description: "This comic could not be loaded",
         })
-        router.push("/")
+        router.push("/library")
         return
       }
       setComic(loadedComic)
@@ -229,7 +229,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     } catch (error) {
       console.error("[reader] Error loading comic:", error)
       toast.error("Failed to load comic")
-      router.push("/")
+      router.push("/library")
     }
   }
 
@@ -438,7 +438,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
               : `This comic doesn't have a file attached yet. Upload a ${SUPPORTED_FORMATS.description} file to start reading.`}
           </p>
           <div className="mt-6 flex gap-3 justify-center">
-            <Button variant="outline" onClick={() => router.push("/")}>
+            <Button variant="outline" onClick={() => router.push("/library")}>
               Back to Library
             </Button>
             {!isRemote && (
