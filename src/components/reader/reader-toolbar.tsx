@@ -39,7 +39,7 @@ export function ReaderToolbar({
           size="icon"
           className="shrink-0 text-white hover:bg-white/20"
         >
-          <Link href="/">
+          <Link href="/library">
             <ArrowLeft className="h-5 w-5" />
             <span className="sr-only">Back to library</span>
           </Link>

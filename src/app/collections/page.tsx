@@ -118,7 +118,7 @@ export default function CollectionsPage() {
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-4">
-            <Link href="/">
+            <Link href="/library">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
                 <span className="sr-only">Back to library</span>

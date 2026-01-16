@@ -108,9 +108,9 @@ export function AppBar({
         {!searchExpanded && (
           <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             <Link
-              href="/"
+              href="/library"
               className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
-                pathname === '/' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                pathname === '/library' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
               }`}
             >
               <Library className="h-4 w-4" />
@@ -332,7 +332,7 @@ export function AppBar({
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs text-muted-foreground">Info</DropdownMenuLabel>
-                  <Link href="/about">
+                  <Link href="/">
                     <DropdownMenuItem>
                       <Info className="mr-2 h-4 w-4" />
                       About

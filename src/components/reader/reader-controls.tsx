@@ -47,7 +47,7 @@ export function ReaderControls({
         boxShadow: '0 1px 3px var(--glass-shadow)'
       }}>
         <Button asChild variant="ghost" size="icon">
-          <Link href="/">
+          <Link href="/library">
             <ArrowLeft className="h-5 w-5" />
             <span className="sr-only">Back to library</span>
           </Link>
