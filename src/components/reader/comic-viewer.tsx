@@ -32,6 +32,7 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
   })
   const panStartRef = useRef({ touchX: 0, touchY: 0, posX: 0, posY: 0 })
   const swipeStartRef = useRef({ x: 0, y: 0, time: 0 })
+  const hasScrolledToInitialPage = useRef(false)
 
   // Pan sensitivity multiplier for mobile - makes panning more responsive when zoomed in
   const PAN_SENSITIVITY = isMobile ? 1.8 : 1
@@ -41,6 +42,28 @@ export function ComicViewer({ pages, currentPage, onPageChange }: ComicViewerPro
     setScale(1)
     setPosition({ x: 0, y: 0 })
   }, [currentPage, settings.layoutMode])
+
+  // Scroll to saved page position when entering scroll mode
+  useEffect(() => {
+    if (settings.layoutMode === "scrolling" && currentPage > 0 && !hasScrolledToInitialPage.current) {
+      // Small delay to ensure elements are rendered
+      const timer = setTimeout(() => {
+        const element = document.getElementById(`page-${currentPage}`)
+        if (element) {
+          element.scrollIntoView({ behavior: "instant", block: "start" })
+          hasScrolledToInitialPage.current = true
+        }
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [settings.layoutMode, currentPage])
+
+  // Reset scroll restoration flag when switching to paged mode
+  useEffect(() => {
+    if (settings.layoutMode !== "scrolling") {
+      hasScrolledToInitialPage.current = false
+    }
+  }, [settings.layoutMode])
 
   // Apply brightness
   useEffect(() => {
