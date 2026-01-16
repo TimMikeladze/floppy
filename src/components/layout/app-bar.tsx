@@ -332,7 +332,7 @@ export function AppBar({
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs text-muted-foreground">Info</DropdownMenuLabel>
-                  <Link href="/">
+                  <Link href="/about">
                     <DropdownMenuItem>
                       <Info className="mr-2 h-4 w-4" />
                       About
