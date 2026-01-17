@@ -62,3 +62,21 @@ export function revokeAllRemoteImages(): void {
 export function getActiveUrlCount(): number {
   return activeUrls.size
 }
+
+/**
+ * Load a remote image as a Blob (for caching to IndexedDB).
+ * Does not create an object URL - returns the raw blob.
+ */
+export async function loadRemoteImageAsBlob(imageUrl: string): Promise<Blob> {
+  const response = await fetch(imageUrl, {
+    referrerPolicy: 'no-referrer',
+    credentials: 'omit',
+    mode: 'cors',
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to load image: ${response.status}`)
+  }
+
+  return await response.blob()
+}

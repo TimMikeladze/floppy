@@ -930,3 +930,175 @@ export function formatBytes(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
 }
+
+// ============ OFFLINE SUPPORT ============
+
+export interface OfflineStatus {
+  isAvailableOffline: boolean
+  cachedPageCount: number
+  totalPageCount: number
+  percentCached: number
+}
+
+/**
+ * Check if a comic is available for offline reading.
+ * A comic is considered available offline if:
+ * - For local comics: has file handle with valid permissions OR has cached pages
+ * - For remote comics: has all pages cached in IndexedDB
+ */
+export async function getOfflineStatus(comicId: string): Promise<OfflineStatus> {
+  const comic = await getComic(comicId)
+  if (!comic) {
+    return { isAvailableOffline: false, cachedPageCount: 0, totalPageCount: 0, percentCached: 0 }
+  }
+
+  const totalPageCount = comic.totalPages || 0
+
+  // Check for cached pages
+  const cachedPages = await getPagesForComic(comicId)
+  const cachedPageCount = cachedPages?.length || 0
+
+  // For local comics with file handles
+  if (comic.sourceType === "local" && comic.fileHandle) {
+    try {
+      const permission = await comic.fileHandle.queryPermission({ mode: "read" })
+      if (permission === "granted") {
+        // File handle is valid, comic is available offline
+        return {
+          isAvailableOffline: true,
+          cachedPageCount: totalPageCount, // Assume all pages available via file handle
+          totalPageCount,
+          percentCached: 100,
+        }
+      }
+    } catch {
+      // File handle invalid, check cached pages
+    }
+  }
+
+  // For remote comics or local without valid handles, check cached pages
+  const percentCached = totalPageCount > 0 ? Math.round((cachedPageCount / totalPageCount) * 100) : 0
+  const isAvailableOffline = cachedPageCount > 0 && cachedPageCount >= totalPageCount
+
+  return {
+    isAvailableOffline,
+    cachedPageCount,
+    totalPageCount,
+    percentCached,
+  }
+}
+
+/**
+ * Check if a comic has any pages cached (partial offline support)
+ */
+export async function hasAnyCachedPages(comicId: string): Promise<boolean> {
+  const pages = await getPagesForComic(comicId)
+  return pages !== null && pages.length > 0
+}
+
+export interface SaveForOfflineProgress {
+  currentPage: number
+  totalPages: number
+  status: "loading" | "saving" | "complete" | "error"
+  error?: string
+}
+
+export type SaveForOfflineCallback = (progress: SaveForOfflineProgress) => void
+
+/**
+ * Save a comic for offline reading by caching all pages to IndexedDB.
+ * For local comics: parses the file and caches all pages.
+ * For remote comics: fetches all page images and caches them.
+ */
+export async function saveComicForOffline(
+  comicId: string,
+  onProgress?: SaveForOfflineCallback
+): Promise<boolean> {
+  const comic = await getComic(comicId)
+  if (!comic) {
+    onProgress?.({ currentPage: 0, totalPages: 0, status: "error", error: "Comic not found" })
+    return false
+  }
+
+  const totalPages = comic.totalPages || 0
+
+  try {
+    if (comic.sourceType === "local") {
+      // Local comic - parse from file handle
+      if (!comic.fileHandle) {
+        onProgress?.({ currentPage: 0, totalPages, status: "error", error: "No file attached" })
+        return false
+      }
+
+      onProgress?.({ currentPage: 0, totalPages, status: "loading" })
+
+      const result = await loadPagesFromHandle(comic.fileHandle, comic.format || "cbz")
+      if (!result || !result.pages.length) {
+        onProgress?.({ currentPage: 0, totalPages, status: "error", error: "Failed to load pages" })
+        return false
+      }
+
+      onProgress?.({ currentPage: 0, totalPages: result.pages.length, status: "saving" })
+
+      // Save all pages to IndexedDB
+      await savePagesForComic(comicId, result.pages)
+
+      onProgress?.({ currentPage: result.pages.length, totalPages: result.pages.length, status: "complete" })
+      return true
+
+    } else {
+      // Remote comic - fetch all page images
+      const remotePages = await getRemotePages(comicId)
+      if (!remotePages || !remotePages.pages.length) {
+        onProgress?.({ currentPage: 0, totalPages, status: "error", error: "No remote pages found" })
+        return false
+      }
+
+      onProgress?.({ currentPage: 0, totalPages: remotePages.pages.length, status: "loading" })
+
+      const { loadRemoteImageAsBlob } = await import("./remote-loader")
+      const pageBlobs: Blob[] = []
+
+      for (let i = 0; i < remotePages.pages.length; i++) {
+        const page = remotePages.pages[i]
+        try {
+          const blob = await loadRemoteImageAsBlob(page.imageUrl)
+          pageBlobs.push(blob)
+          onProgress?.({ currentPage: i + 1, totalPages: remotePages.pages.length, status: "loading" })
+        } catch (error) {
+          console.error(`[storage] Failed to fetch page ${i + 1}:`, error)
+          // Continue with other pages, but note the error
+        }
+      }
+
+      if (pageBlobs.length === 0) {
+        onProgress?.({ currentPage: 0, totalPages, status: "error", error: "Failed to fetch any pages" })
+        return false
+      }
+
+      onProgress?.({ currentPage: pageBlobs.length, totalPages: remotePages.pages.length, status: "saving" })
+
+      // Save all fetched pages to IndexedDB
+      await savePagesForComic(comicId, pageBlobs)
+
+      // Update comic with actual page count if it differs
+      if (comic.totalPages !== pageBlobs.length) {
+        await saveComic({ ...comic, totalPages: pageBlobs.length })
+      }
+
+      onProgress?.({ currentPage: pageBlobs.length, totalPages: pageBlobs.length, status: "complete" })
+      return true
+    }
+  } catch (error) {
+    console.error("[storage] Failed to save comic for offline:", error)
+    onProgress?.({ currentPage: 0, totalPages, status: "error", error: String(error) })
+    return false
+  }
+}
+
+/**
+ * Remove offline cached pages for a comic (keeps the comic in library)
+ */
+export async function removeOfflineCache(comicId: string): Promise<void> {
+  await deletePagesForComic(comicId)
+}

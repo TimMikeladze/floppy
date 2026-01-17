@@ -16,6 +16,8 @@ import {
   Check,
   Plus,
   Image,
+  Download,
+  CloudOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,7 +30,7 @@ import {
 import type { Comic } from "@/lib/types"
 import Link from "next/link"
 import { AddToListDialog } from "./add-to-list-dialog"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { AttachFileDialog } from "./attach-file-dialog"
 import {
   Sheet,
@@ -39,9 +41,10 @@ import {
 import { EditComicDialog } from "./edit-comic-dialog"
 import { CoverManager, MissingCoverIndicator } from "./cover-manager"
 import { loadRemoteImage, revokeRemoteImage } from "@/lib/remote-loader"
-import { saveComic } from "@/lib/storage"
+import { saveComic, getOfflineStatus, saveComicForOffline, removeOfflineCache, type OfflineStatus } from "@/lib/storage"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { OfflineIndicator } from "@/components/offline-indicator"
 
 interface ComicCardProps {
   comic: Comic
@@ -173,10 +176,13 @@ interface CardContextMenuProps {
   onEdit: () => void
   onUpdate: () => void
   onManageCover: () => void
+  offlineStatus: OfflineStatus | null
+  onOfflineStatusChange: () => void
 }
 
-function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManageCover }: CardContextMenuProps) {
+function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManageCover, offlineStatus, onOfflineStatusChange }: CardContextMenuProps) {
   const router = useRouter()
+  const [saving, setSaving] = useState(false)
   const isRemote = comic.sourceType === 'remote'
   const canRead = comic.hasFile || isRemote
   const hasProgress = comic.currentPage > 0
@@ -213,6 +219,44 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManage
     } catch (error) {
       console.error("Failed to mark as unread:", error)
       toast.error("Failed to mark as unread")
+    }
+  }
+
+  const handleSaveForOffline = async () => {
+    if (saving) return
+    setSaving(true)
+    toast.info("Saving for offline...")
+
+    try {
+      const success = await saveComicForOffline(comic.id, (prog) => {
+        if (prog.status === "complete") {
+          toast.success("Saved for offline")
+          onOfflineStatusChange()
+          setSaving(false)
+        } else if (prog.status === "error") {
+          toast.error(prog.error || "Failed to save for offline")
+          setSaving(false)
+        }
+      })
+
+      if (!success) {
+        setSaving(false)
+      }
+    } catch (error) {
+      console.error("Failed to save for offline:", error)
+      toast.error("Failed to save for offline")
+      setSaving(false)
+    }
+  }
+
+  const handleRemoveOffline = async () => {
+    try {
+      await removeOfflineCache(comic.id)
+      toast.success("Offline cache removed")
+      onOfflineStatusChange()
+    } catch (error) {
+      console.error("Failed to remove offline cache:", error)
+      toast.error("Failed to remove offline cache")
     }
   }
 
@@ -315,6 +359,24 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManage
 
           <DropdownMenuSeparator />
 
+          {/* Offline actions */}
+          {canRead && (
+            <>
+              {offlineStatus?.isAvailableOffline ? (
+                <DropdownMenuItem onClick={handleRemoveOffline}>
+                  <CloudOff className="mr-2 h-4 w-4" />
+                  Remove Offline Cache
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={handleSaveForOffline} disabled={saving}>
+                  <Download className="mr-2 h-4 w-4" />
+                  {saving ? "Saving..." : "Save for Offline"}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+            </>
+          )}
+
           {/* Delete */}
           <DropdownMenuItem
             onClick={(e) => {
@@ -341,6 +403,8 @@ interface MobileActionsSheetProps {
   onManageCover: () => void
   onAddToList: () => void
   onUpdate: () => void
+  offlineStatus: OfflineStatus | null
+  onOfflineStatusChange: () => void
 }
 
 function MobileActionsSheet({
@@ -352,8 +416,11 @@ function MobileActionsSheet({
   onManageCover,
   onAddToList,
   onUpdate,
+  offlineStatus,
+  onOfflineStatusChange,
 }: MobileActionsSheetProps) {
   const router = useRouter()
+  const [saving, setSaving] = useState(false)
   const isRemote = comic.sourceType === 'remote'
   const canRead = comic.hasFile || isRemote
   const hasProgress = comic.currentPage > 0
@@ -362,6 +429,46 @@ function MobileActionsSheet({
   const handleAction = (action: () => void) => {
     action()
     onOpenChange(false)
+  }
+
+  const handleSaveForOffline = async () => {
+    if (saving) return
+    setSaving(true)
+    toast.info("Saving for offline...")
+
+    try {
+      const success = await saveComicForOffline(comic.id, (prog) => {
+        if (prog.status === "complete") {
+          toast.success("Saved for offline")
+          onOfflineStatusChange()
+          setSaving(false)
+          onOpenChange(false)
+        } else if (prog.status === "error") {
+          toast.error(prog.error || "Failed to save for offline")
+          setSaving(false)
+        }
+      })
+
+      if (!success) {
+        setSaving(false)
+      }
+    } catch (error) {
+      console.error("Failed to save for offline:", error)
+      toast.error("Failed to save for offline")
+      setSaving(false)
+    }
+  }
+
+  const handleRemoveOffline = async () => {
+    try {
+      await removeOfflineCache(comic.id)
+      toast.success("Offline cache removed")
+      onOfflineStatusChange()
+      onOpenChange(false)
+    } catch (error) {
+      console.error("Failed to remove offline cache:", error)
+      toast.error("Failed to remove offline cache")
+    }
   }
 
   const handleMarkAsRead = async () => {
@@ -467,6 +574,30 @@ function MobileActionsSheet({
             Manage Cover
           </Button>
 
+          {/* Offline actions */}
+          {canRead && (
+            offlineStatus?.isAvailableOffline ? (
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-12 text-base"
+                onClick={handleRemoveOffline}
+              >
+                <CloudOff className="mr-3 h-5 w-5" />
+                Remove Offline Cache
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-12 text-base"
+                onClick={handleSaveForOffline}
+                disabled={saving}
+              >
+                <Download className="mr-3 h-5 w-5" />
+                {saving ? "Saving..." : "Save for Offline"}
+              </Button>
+            )
+          )}
+
           <Button
             variant="ghost"
             className="w-full justify-start h-12 text-base text-destructive hover:text-destructive"
@@ -489,9 +620,24 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
   const [remoteCoverUrl, setRemoteCoverUrl] = useState<string | null>(null)
   const [coverLoading, setCoverLoading] = useState(false)
+  const [offlineStatus, setOfflineStatus] = useState<OfflineStatus | null>(null)
   const hasProgress = comic.currentPage > 0 && comic.totalPages
   const isRemote = comic.sourceType === 'remote'
   const hasCover = !!comic.coverImage || !!remoteCoverUrl
+
+  // Check offline status
+  const refreshOfflineStatus = useCallback(async () => {
+    try {
+      const status = await getOfflineStatus(comic.id)
+      setOfflineStatus(status)
+    } catch (error) {
+      console.error("[comic-card] Failed to get offline status:", error)
+    }
+  }, [comic.id])
+
+  useEffect(() => {
+    refreshOfflineStatus()
+  }, [refreshOfflineStatus])
 
   // Load remote cover on demand
   useEffect(() => {
@@ -553,6 +699,11 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
           <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm rounded-full p-1.5">
             <Globe className="h-3 w-3 text-white" />
           </div>
+        )}
+
+        {/* Offline indicator */}
+        {offlineStatus?.isAvailableOffline && (
+          <OfflineIndicator comicId={comic.id} className="absolute top-2 right-10" />
         )}
 
         {/* Missing cover indicator */}
@@ -623,6 +774,8 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
             onEdit={() => setEditDialogOpen(true)}
             onUpdate={() => onUpdate?.()}
             onManageCover={() => setCoverManagerOpen(true)}
+            offlineStatus={offlineStatus}
+            onOfflineStatusChange={refreshOfflineStatus}
           />
         </div>
 
@@ -708,6 +861,8 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
         onManageCover={() => setCoverManagerOpen(true)}
         onAddToList={() => setAddToListDialogOpen(true)}
         onUpdate={() => onUpdate?.()}
+        offlineStatus={offlineStatus}
+        onOfflineStatusChange={refreshOfflineStatus}
       />
     </>
   )
