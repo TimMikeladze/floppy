@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { ReadingProvider } from "@/lib/reading-context"
 import { AppFooter } from "@/components/layout/app-footer"
 import { CommandPalette } from "@/components/command-palette"
+import { OfflineBanner } from "@/components/offline-banner"
 import { Toaster } from "sonner"
 import "./globals.css"
 
@@ -73,6 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased overscroll-none min-h-screen flex flex-col overflow-x-hidden max-w-[100vw]">
+        <OfflineBanner />
         <NuqsAdapter>
           <ThemeProvider>
             <ReadingProvider>
