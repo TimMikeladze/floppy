@@ -101,11 +101,7 @@ export function AppLayout({
 
         {/* Filter Pills Section */}
         {filterPills && (
-          <div className="sticky top-14 z-30 border-b border-border/50" style={{
-            background: 'oklch(from var(--background) l c h / 0.9)',
-            backdropFilter: 'blur(20px) saturate(1.1)',
-            WebkitBackdropFilter: 'blur(20px) saturate(1.1)'
-          }}>
+          <div className="sticky top-14 z-30 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             {filterPills}
           </div>
         )}
