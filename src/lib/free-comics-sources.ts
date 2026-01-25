@@ -89,6 +89,42 @@ export const FREE_COMICS_SOURCES: FreeComicSource[] = [
     description: "Public domain graphic novels (EPUB, PDF)",
     category: "public-domain",
   },
+  {
+    name: "Ko-fi Comics",
+    url: "https://ko-fi.com/explore?query=comic&type=Shop",
+    description: "Creator-direct free comics (PDF, CBZ)",
+    category: "drm-free",
+  },
+  {
+    name: "Open Library Comics",
+    url: "https://openlibrary.org/subjects/comics",
+    description: "Borrowable comics with free account (PDF, EPUB)",
+    category: "drm-free",
+  },
+  {
+    name: "HathiTrust Comics",
+    url: "https://www.hathitrust.org/search?q=comics&facet=genre:Comics",
+    description: "Academic library public domain comics (PDF)",
+    category: "public-domain",
+  },
+  {
+    name: "Gallica Comics",
+    url: "https://gallica.bnf.fr/html/und/bandes-dessinees/bandes-dessinees",
+    description: "French national library comics (PDF)",
+    category: "public-domain",
+  },
+  {
+    name: "DPLA Comics",
+    url: "https://dp.la/search?type=%22image%22&q=comics",
+    description: "Digital Public Library of America (PDF)",
+    category: "public-domain",
+  },
+  {
+    name: "Lulu Free Comics",
+    url: "https://www.lulu.com/shop/search.ep?type=Print&keyWords=comics&sitesearch=lulu.com&q=&availabilityCode=AVAILABLE_FREE",
+    description: "Self-published free comics (PDF)",
+    category: "drm-free",
+  },
 ]
 
 /**
