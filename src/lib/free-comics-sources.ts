@@ -42,12 +42,6 @@ export const FREE_COMICS_SOURCES: FreeComicSource[] = [
     category: "public-domain",
   },
   {
-    name: "GetComics",
-    url: "https://getcomics.org",
-    description: "Free comic downloads (check licensing)",
-    category: "free-legal",
-  },
-  {
     name: "Webtoon",
     url: "https://www.webtoons.com",
     description: "Free webcomics and manhwa",
