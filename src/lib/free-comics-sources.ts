@@ -48,6 +48,36 @@ export const FREE_COMICS_SOURCES: FreeComicSource[] = [
     category: "drm-free",
   },
   {
+    name: "Itch.io Comics",
+    url: "https://itch.io/comics/free",
+    description: "Free indie comics from creators (PDF, CBZ)",
+    category: "drm-free",
+  },
+  {
+    name: "Panel Syndicate",
+    url: "https://panelsyndicate.com",
+    description: "Pay-what-you-want DRM-free comics (PDF)",
+    category: "drm-free",
+  },
+  {
+    name: "Gumroad Comics",
+    url: "https://gumroad.com/discover?query=comics%20free",
+    description: "Creator-direct DRM-free comics (PDF, CBZ)",
+    category: "drm-free",
+  },
+  {
+    name: "StoryBundle",
+    url: "https://storybundle.com/comics",
+    description: "DRM-free comic bundles (PDF, EPUB, CBZ)",
+    category: "drm-free",
+  },
+  {
+    name: "Smashwords Comics",
+    url: "https://www.smashwords.com/shelves/category/13/newest/0/free/any",
+    description: "Free DRM-free graphic novels (EPUB, PDF)",
+    category: "drm-free",
+  },
+  {
     name: "Standard Ebooks Comics",
     url: "https://standardebooks.org/subjects/comics",
     description: "High-quality public domain comics (EPUB)",
