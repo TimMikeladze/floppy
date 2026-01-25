@@ -71,6 +71,72 @@ export const FREE_COMICS_SOURCES: FreeComicSource[] = [
     description: "Free titles from Top Shelf Productions",
     category: "free-legal",
   },
+  {
+    name: "Marvel Free Comics",
+    url: "https://www.marvel.com/comics/list/702/free_comics",
+    description: "Official free comics from Marvel",
+    category: "free-legal",
+  },
+  {
+    name: "DC Free Comics",
+    url: "https://www.dc.com/reader",
+    description: "Free first issues and previews from DC",
+    category: "free-legal",
+  },
+  {
+    name: "Dark Horse Free",
+    url: "https://www.darkhorse.com/Books/Browse/Free",
+    description: "Free comics from Dark Horse",
+    category: "free-legal",
+  },
+  {
+    name: "Image Comics",
+    url: "https://imagecomics.com/read/free-first-issues",
+    description: "Free first issues from Image Comics",
+    category: "free-legal",
+  },
+  {
+    name: "Manga Plus",
+    url: "https://mangaplus.shueisha.co.jp",
+    description: "Official free manga from Shueisha (One Piece, Naruto, etc.)",
+    category: "webcomics",
+  },
+  {
+    name: "VIZ Free",
+    url: "https://www.viz.com/read/free",
+    description: "Free manga chapters from VIZ Media",
+    category: "webcomics",
+  },
+  {
+    name: "Hoopla",
+    url: "https://www.hoopladigital.com/collection/comics",
+    description: "Free comics with library card",
+    category: "free-legal",
+  },
+  {
+    name: "Libby",
+    url: "https://www.overdrive.com/apps/libby",
+    description: "Borrow comics free from your library",
+    category: "free-legal",
+  },
+  {
+    name: "ComicFury",
+    url: "https://comicfury.com",
+    description: "Free webcomic hosting community",
+    category: "webcomics",
+  },
+  {
+    name: "The Duck Webcomics",
+    url: "https://www.theduckwebcomics.com",
+    description: "Community of free webcomics",
+    category: "webcomics",
+  },
+  {
+    name: "Smackjeeves",
+    url: "https://www.smackjeeves.com",
+    description: "Webcomic hosting platform",
+    category: "webcomics",
+  },
 ]
 
 /**
