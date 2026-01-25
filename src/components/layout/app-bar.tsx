@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info, HardDrive, Layers, Heart } from "lucide-react"
+import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info, HardDrive, Layers, Heart, Settings2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -26,6 +26,7 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { SupportDialog } from "./support-dialog"
+import { PreferencesDialog } from "./preferences-dialog"
 
 type ViewMode = "grid" | "table" | "series"
 
@@ -67,6 +68,7 @@ export function AppBar({
   const [mounted, setMounted] = useState(false)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
   const [supportDialogOpen, setSupportDialogOpen] = useState(false)
+  const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
 
   const handleImportClick = () => {
@@ -314,6 +316,12 @@ export function AppBar({
                     {mounted && theme === "system" && <span className="ml-auto text-xs">✓</span>}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">App</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setPreferencesDialogOpen(true)}>
+                    <Settings2 className="mr-2 h-4 w-4" />
+                    Preferences
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs text-muted-foreground">Storage</DropdownMenuLabel>
                   <Link href="/settings">
                     <DropdownMenuItem>
@@ -384,6 +392,7 @@ export function AppBar({
       </AlertDialog>
 
       <SupportDialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen} />
+      <PreferencesDialog open={preferencesDialogOpen} onOpenChange={setPreferencesDialogOpen} />
     </header>
   )
 }

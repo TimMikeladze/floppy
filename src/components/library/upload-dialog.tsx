@@ -7,6 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { SUPPORTED_FORMATS } from "@/lib/comic-parser"
 import { isFileSystemAccessSupported } from "@/lib/storage"
 import { FreeComicsSources } from "@/components/free-comics-sources"
+import { useAppSettings } from "@/hooks/use-app-settings"
 
 export interface FileWithHandle {
   file: File
@@ -27,6 +28,7 @@ export function UploadDialog({ open, onOpenChange, onFilesSelected }: UploadDial
   const [dragActive, setDragActive] = useState(false)
   const supportsFileSystem = typeof window !== "undefined" && isFileSystemAccessSupported()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { settings } = useAppSettings()
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -286,13 +288,15 @@ export function UploadDialog({ open, onOpenChange, onFilesSelected }: UploadDial
           </div>
 
           {/* Free comics sources */}
-          <div className="px-4 pb-4">
-            <div
-              className="h-px w-full mb-4"
-              style={{ background: 'var(--border)' }}
-            />
-            <FreeComicsSources variant="compact" maxSources={6} />
-          </div>
+          {settings.showComicSources && (
+            <div className="px-4 pb-4">
+              <div
+                className="h-px w-full mb-4"
+                style={{ background: 'var(--border)' }}
+              />
+              <FreeComicsSources variant="compact" maxSources={6} />
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
