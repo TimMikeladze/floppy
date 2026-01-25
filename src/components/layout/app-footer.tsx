@@ -11,8 +11,8 @@ export function AppFooter() {
   const [supportOpen, setSupportOpen] = useState(false)
   const isPwa = useIsPwa()
 
-  // Hide footer on reader pages or in PWA mode
-  if (pathname?.startsWith('/reader') || isPwa) {
+  // Hide footer on reader pages, landing page, about page, or in PWA mode
+  if (pathname?.startsWith('/reader') || pathname === '/' || pathname === '/about' || isPwa) {
     return null
   }
 
