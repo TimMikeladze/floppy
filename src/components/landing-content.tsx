@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SupportDialog } from "@/components/layout/support-dialog"
+import { FreeComicsSources } from "@/components/free-comics-sources"
 
 const features = [
   {
@@ -366,6 +367,11 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Free Comic Sources */}
+        <section className="mb-20 animate-in fade-in duration-700 delay-400">
+          <FreeComicsSources variant="full" />
         </section>
 
         {/* Tech Stack - Inline list */}
