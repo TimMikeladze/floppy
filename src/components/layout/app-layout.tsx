@@ -15,8 +15,8 @@ interface AppLayoutProps {
   // AppBar props
   searchQuery: string
   onSearchChange: (query: string) => void
-  sortBy: "title" | "recent" | "progress"
-  onSortChange: (sort: "title" | "recent" | "progress") => void
+  sortBy: "title-asc" | "title-desc" | "recent" | "progress"
+  onSortChange: (sort: "title-asc" | "title-desc" | "recent" | "progress") => void
   viewMode: "grid" | "table" | "series"
   onViewModeChange: (mode: "grid" | "table" | "series") => void
 
