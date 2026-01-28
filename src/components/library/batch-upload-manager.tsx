@@ -245,8 +245,8 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
         </div>
 
         {/* File list */}
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="px-3 sm:px-6 py-2 sm:py-3 space-y-1.5 sm:space-y-2">
+        <ScrollArea className="flex-1 min-h-0 overflow-hidden">
+          <div className="px-3 sm:px-6 py-2 sm:py-3 space-y-1.5 sm:space-y-2 pb-2">
             {fileStatuses.map((fileStatus, index) => (
               <div
                 key={index}
@@ -351,7 +351,7 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
         </ScrollArea>
 
         {/* Actions */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-background flex items-center justify-between gap-2 sm:gap-3">
+        <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t bg-background flex items-center justify-between gap-2 sm:gap-3 relative z-10">
           {!isProcessing && !allComplete && (
             <>
               <Button variant="outline" onClick={handleClose} className="text-sm sm:text-base">
