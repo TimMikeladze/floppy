@@ -1,0 +1,30 @@
+id: "amazing-spider-man-main"
+name: "The Amazing Spider-Man"
+slug: "amazing-spider-man"
+publisher: "marvel"
+startYear: 1963
+currentVolume: 6
+volumeStartYear: 2022
+status: "ongoing"
+genres:
+  - "superhero"
+  - "action"
+  - "drama"
+description: |
+  Peter Parker continues his never-ending battle to balance his life
+  as Spider-Man with his personal relationships and career.
+coverUrl: "/covers/series/amazing-spider-man.jpg"
+currentWriters:
+  - "Zeb Wells"
+currentArtists:
+  - "John Romita Jr."
+  - "Ed McGuinness"
+releaseSchedule: "biweekly"
+typicalReleaseDay: "wednesday"
+relatedSeries:
+  - "spectacular-spider-man"
+  - "spider-man-2099"
+  - "miles-morales-spider-man"
+tags:
+  - "spider-verse"
+  - "new-york"

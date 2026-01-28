@@ -1,0 +1,29 @@
+id: "batman-2026-155"
+slug: "batman-155"
+title: "Batman #155"
+series: "batman"
+issueNumber: "155"
+releaseDate: "2026-02-05"
+coverUrl: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=400&h=600&fit=crop"
+publisher: "dc-comics"
+writers:
+  - "Chip Zdarsky"
+artists:
+  - "Jorge Jiménez"
+description: |
+  The Dark Knight uncovers a conspiracy that shakes Gotham to its core.
+  With enemies closing in from all sides, Batman must rely on unlikely
+  allies to save the city he's sworn to protect.
+price: "$4.99"
+format: "single-issue"
+genres:
+  - "superhero"
+  - "crime"
+  - "thriller"
+pageCount: 28
+printRun: 1
+status: "upcoming"
+ageRating: "Teen+"
+tags:
+  - "bat-family"
+  - "gotham"

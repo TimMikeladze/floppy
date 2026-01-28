@@ -1,7 +1,8 @@
 import type { Comic, Bookmark, Note, ComicList, ComicSource, RemotePages } from "./types"
+import type { Release, ReleaseOverride, CustomRelease } from "./releases-types"
 
 const DB_NAME = "comic-reader-db"
-const DB_VERSION = 6
+const DB_VERSION = 7
 const COMICS_STORE = "comics"
 const PAGES_STORE = "pages" // For iOS/Safari - stores pages when File System Access unavailable
 const BOOKMARKS_STORE = "bookmarks"
@@ -9,6 +10,10 @@ const NOTES_STORE = "notes"
 const LISTS_STORE = "lists"
 const SOURCES_STORE = "sources" // Data sources (CSV imports)
 const REMOTE_PAGES_STORE = "remotePages" // Page URLs for remote comics
+// Release tracker stores
+const RELEASES_OVERRIDES_STORE = "releasesOverrides"
+const CUSTOM_RELEASES_STORE = "customReleases"
+const RELEASES_DELETIONS_STORE = "releasesDeletions"
 
 let db: IDBDatabase | null = null
 
@@ -67,6 +72,22 @@ async function initDB(): Promise<IDBDatabase> {
       if (!database.objectStoreNames.contains(REMOTE_PAGES_STORE)) {
         const remotePagesStore = database.createObjectStore(REMOTE_PAGES_STORE, { keyPath: "comicId" })
         remotePagesStore.createIndex("comicId", "comicId", { unique: true })
+      }
+
+      // Release tracker stores
+      if (!database.objectStoreNames.contains(RELEASES_OVERRIDES_STORE)) {
+        const overridesStore = database.createObjectStore(RELEASES_OVERRIDES_STORE, { keyPath: "releaseId" })
+        overridesStore.createIndex("releaseId", "releaseId", { unique: true })
+      }
+
+      if (!database.objectStoreNames.contains(CUSTOM_RELEASES_STORE)) {
+        const customReleasesStore = database.createObjectStore(CUSTOM_RELEASES_STORE, { keyPath: "id" })
+        customReleasesStore.createIndex("releaseDate", "releaseDate", { unique: false })
+        customReleasesStore.createIndex("series", "series", { unique: false })
+      }
+
+      if (!database.objectStoreNames.contains(RELEASES_DELETIONS_STORE)) {
+        database.createObjectStore(RELEASES_DELETIONS_STORE, { keyPath: "releaseId" })
       }
     }
   })
@@ -1101,4 +1122,221 @@ export async function saveComicForOffline(
  */
 export async function removeOfflineCache(comicId: string): Promise<void> {
   await deletePagesForComic(comicId)
+}
+
+// ============ RELEASE TRACKER ============
+
+/**
+ * Save an override for a static release
+ */
+export async function saveReleaseOverride(
+  releaseId: string,
+  overrides: Partial<Release>
+): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([RELEASES_OVERRIDES_STORE], "readwrite")
+    const store = transaction.objectStore(RELEASES_OVERRIDES_STORE)
+    const data: ReleaseOverride = {
+      releaseId,
+      overrides,
+      modifiedAt: new Date(),
+    }
+    const request = store.put(data)
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Get all release overrides
+ */
+export async function getReleaseOverrides(): Promise<ReleaseOverride[]> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([RELEASES_OVERRIDES_STORE], "readonly")
+    const store = transaction.objectStore(RELEASES_OVERRIDES_STORE)
+    const request = store.getAll()
+
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Delete an override for a release (reset to original)
+ */
+export async function deleteReleaseOverride(releaseId: string): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([RELEASES_OVERRIDES_STORE], "readwrite")
+    const store = transaction.objectStore(RELEASES_OVERRIDES_STORE)
+    const request = store.delete(releaseId)
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Save a custom user-created release
+ */
+export async function saveCustomRelease(
+  release: Omit<CustomRelease, "id" | "createdAt" | "modifiedAt">
+): Promise<string> {
+  const database = await initDB()
+  const id = `custom-${crypto.randomUUID()}`
+
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([CUSTOM_RELEASES_STORE], "readwrite")
+    const store = transaction.objectStore(CUSTOM_RELEASES_STORE)
+    const now = new Date()
+    const data: CustomRelease = {
+      ...release,
+      id,
+      isCustom: true,
+      createdAt: now,
+      modifiedAt: now,
+    }
+    const request = store.put(data)
+
+    request.onsuccess = () => resolve(id)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Get all custom releases
+ */
+export async function getCustomReleases(): Promise<CustomRelease[]> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([CUSTOM_RELEASES_STORE], "readonly")
+    const store = transaction.objectStore(CUSTOM_RELEASES_STORE)
+    const request = store.getAll()
+
+    request.onsuccess = () => {
+      // Convert date strings back to Date objects
+      const results = request.result.map((r: CustomRelease) => ({
+        ...r,
+        releaseDate: new Date(r.releaseDate),
+        createdAt: new Date(r.createdAt),
+        modifiedAt: new Date(r.modifiedAt),
+      }))
+      resolve(results)
+    }
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Update a custom release
+ */
+export async function updateCustomRelease(
+  id: string,
+  updates: Partial<Release>
+): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([CUSTOM_RELEASES_STORE], "readwrite")
+    const store = transaction.objectStore(CUSTOM_RELEASES_STORE)
+    const getRequest = store.get(id)
+
+    getRequest.onsuccess = () => {
+      const existing = getRequest.result
+      if (existing) {
+        const updated: CustomRelease = {
+          ...existing,
+          ...updates,
+          modifiedAt: new Date(),
+        }
+        store.put(updated)
+      }
+    }
+
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => reject(transaction.error)
+  })
+}
+
+/**
+ * Delete a custom release
+ */
+export async function deleteCustomRelease(id: string): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([CUSTOM_RELEASES_STORE], "readwrite")
+    const store = transaction.objectStore(CUSTOM_RELEASES_STORE)
+    const request = store.delete(id)
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Mark a static release as deleted (soft delete)
+ */
+export async function markReleaseDeleted(releaseId: string): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([RELEASES_DELETIONS_STORE], "readwrite")
+    const store = transaction.objectStore(RELEASES_DELETIONS_STORE)
+    const request = store.put({ releaseId, deletedAt: new Date() })
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Get all deleted release IDs
+ */
+export async function getDeletedReleaseIds(): Promise<string[]> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([RELEASES_DELETIONS_STORE], "readonly")
+    const store = transaction.objectStore(RELEASES_DELETIONS_STORE)
+    const request = store.getAll()
+
+    request.onsuccess = () => {
+      const results = request.result.map((r: { releaseId: string }) => r.releaseId)
+      resolve(results)
+    }
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Restore a deleted release
+ */
+export async function unmarkReleaseDeleted(releaseId: string): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([RELEASES_DELETIONS_STORE], "readwrite")
+    const store = transaction.objectStore(RELEASES_DELETIONS_STORE)
+    const request = store.delete(releaseId)
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+  })
+}
+
+/**
+ * Clear all release user data (overrides, custom releases, deletions)
+ */
+export async function clearAllReleaseUserData(): Promise<void> {
+  const database = await initDB()
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(
+      [RELEASES_OVERRIDES_STORE, CUSTOM_RELEASES_STORE, RELEASES_DELETIONS_STORE],
+      "readwrite"
+    )
+    transaction.objectStore(RELEASES_OVERRIDES_STORE).clear()
+    transaction.objectStore(CUSTOM_RELEASES_STORE).clear()
+    transaction.objectStore(RELEASES_DELETIONS_STORE).clear()
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => reject(transaction.error)
+  })
 }

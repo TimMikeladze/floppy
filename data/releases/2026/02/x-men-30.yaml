@@ -1,0 +1,30 @@
+id: "x-men-2026-30"
+slug: "x-men-30"
+title: "X-Men #30"
+series: "x-men"
+issueNumber: "30"
+releaseDate: "2026-02-05"
+coverUrl: "https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=400&h=600&fit=crop"
+publisher: "marvel"
+writers:
+  - "Gerry Duggan"
+artists:
+  - "Stefano Caselli"
+description: |
+  Cyclops returns to lead the X-Men in their darkest hour. As the
+  team faces extinction, an ancient mutant prophecy may hold the
+  key to their survival.
+price: "$4.99"
+format: "single-issue"
+genres:
+  - "superhero"
+  - "sci-fi"
+  - "action"
+pageCount: 24
+printRun: 1
+status: "upcoming"
+ageRating: "Teen+"
+tags:
+  - "mutants"
+  - "cyclops"
+  - "prophecy"

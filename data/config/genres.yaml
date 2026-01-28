@@ -1,0 +1,85 @@
+genres:
+  - id: "superhero"
+    name: "Superhero"
+    icon: "zap"
+    color: "#3B82F6"
+
+  - id: "horror"
+    name: "Horror"
+    icon: "skull"
+    color: "#EF4444"
+
+  - id: "sci-fi"
+    name: "Science Fiction"
+    icon: "rocket"
+    color: "#8B5CF6"
+
+  - id: "fantasy"
+    name: "Fantasy"
+    icon: "wand"
+    color: "#A855F7"
+
+  - id: "crime"
+    name: "Crime"
+    icon: "fingerprint"
+    color: "#6B7280"
+
+  - id: "detective"
+    name: "Detective"
+    icon: "search"
+    color: "#78716C"
+
+  - id: "action"
+    name: "Action"
+    icon: "flame"
+    color: "#F97316"
+
+  - id: "adventure"
+    name: "Adventure"
+    icon: "compass"
+    color: "#22C55E"
+
+  - id: "comedy"
+    name: "Comedy"
+    icon: "smile"
+    color: "#FACC15"
+
+  - id: "drama"
+    name: "Drama"
+    icon: "theater"
+    color: "#EC4899"
+
+  - id: "romance"
+    name: "Romance"
+    icon: "heart"
+    color: "#F43F5E"
+
+  - id: "thriller"
+    name: "Thriller"
+    icon: "alert-triangle"
+    color: "#DC2626"
+
+  - id: "western"
+    name: "Western"
+    icon: "horse"
+    color: "#92400E"
+
+  - id: "war"
+    name: "War"
+    icon: "shield"
+    color: "#4B5563"
+
+  - id: "slice-of-life"
+    name: "Slice of Life"
+    icon: "coffee"
+    color: "#84CC16"
+
+  - id: "manga"
+    name: "Manga"
+    icon: "book-open"
+    color: "#E11D48"
+
+  - id: "anthology"
+    name: "Anthology"
+    icon: "layers"
+    color: "#7C3AED"

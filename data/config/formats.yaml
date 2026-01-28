@@ -1,0 +1,16 @@
+formats:
+  - id: "single-issue"
+    name: "Single Issue"
+    abbreviation: "Issue"
+
+  - id: "trade-paperback"
+    name: "Trade Paperback"
+    abbreviation: "TPB"
+
+  - id: "hardcover"
+    name: "Hardcover"
+    abbreviation: "HC"
+
+  - id: "omnibus"
+    name: "Omnibus"
+    abbreviation: "Omni"

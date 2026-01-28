@@ -1,0 +1,27 @@
+id: "saga-main"
+name: "Saga"
+slug: "saga"
+publisher: "image"
+startYear: 2012
+status: "ongoing"
+genres:
+  - "sci-fi"
+  - "fantasy"
+  - "drama"
+  - "romance"
+description: |
+  An epic space opera about a family struggling to survive in a
+  galaxy-spanning war. Alana and Marko, soldiers from opposite
+  sides of an endless galactic conflict, raise their daughter
+  Hazel while on the run from authorities.
+coverUrl: "/covers/series/saga.jpg"
+currentWriters:
+  - "Brian K. Vaughan"
+currentArtists:
+  - "Fiona Staples"
+releaseSchedule: "monthly"
+typicalReleaseDay: "wednesday"
+tags:
+  - "space-opera"
+  - "family"
+  - "war"

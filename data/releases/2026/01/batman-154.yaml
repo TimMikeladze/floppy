@@ -1,0 +1,31 @@
+id: "batman-2026-154"
+slug: "batman-154"
+title: "Batman #154"
+series: "batman"
+issueNumber: "154"
+releaseDate: "2026-01-22"
+coverUrl: "https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=400&h=600&fit=crop"
+publisher: "dc-comics"
+writers:
+  - "Chip Zdarsky"
+artists:
+  - "Mike Hawthorne"
+  - "Adriano Di Benedetto"
+description: |
+  As the new criminal empire rises in Gotham, Batman discovers a conspiracy
+  that reaches back decades. The truth about his parents' murder may not be
+  what he always believed.
+price: "$4.99"
+format: "single-issue"
+genres:
+  - "superhero"
+  - "crime"
+  - "thriller"
+pageCount: 28
+printRun: 1
+status: "released"
+ageRating: "Teen+"
+tags:
+  - "bat-family"
+  - "gotham"
+  - "wayne-family"
