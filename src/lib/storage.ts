@@ -17,16 +17,77 @@ const RELEASES_DELETIONS_STORE = "releasesDeletions"
 
 let db: IDBDatabase | null = null
 
+/**
+ * Check if the database connection is still valid and open.
+ * IndexedDB connections can become stale after app updates or browser eviction.
+ */
+function isDbConnectionValid(): boolean {
+  if (!db) return false
+
+  // Check if the connection is still open by attempting to access its properties
+  try {
+    // Accessing objectStoreNames will throw if the connection is closed
+    // This is a lightweight check that doesn't require a transaction
+    const _names = db.objectStoreNames
+    return _names !== undefined
+  } catch {
+    // Connection is closed or invalid
+    return false
+  }
+}
+
+/**
+ * Reset the database connection. Called when the connection becomes invalid.
+ */
+function resetDbConnection(): void {
+  if (db) {
+    try {
+      db.close()
+    } catch {
+      // Ignore errors when closing an already closed connection
+    }
+  }
+  db = null
+}
+
 async function initDB(): Promise<IDBDatabase> {
-  if (db) return db
+  // Check if existing connection is still valid
+  if (db && isDbConnectionValid()) {
+    return db
+  }
+
+  // Reset stale connection if needed
+  if (db) {
+    resetDbConnection()
+  }
 
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
 
     request.onerror = () => reject(request.error)
+
     request.onsuccess = () => {
       db = request.result
+
+      // Handle connection close (browser eviction, manual close, etc.)
+      db.onclose = () => {
+        console.warn("[storage] Database connection was closed unexpectedly")
+        db = null
+      }
+
+      // Handle version change from another tab/window
+      db.onversionchange = () => {
+        console.warn("[storage] Database version changed in another context, closing connection")
+        db?.close()
+        db = null
+      }
+
       resolve(db)
+    }
+
+    // Handle blocked event (another connection is blocking version upgrade)
+    request.onblocked = () => {
+      console.warn("[storage] Database upgrade blocked by another connection")
     }
 
     request.onupgradeneeded = (event) => {
