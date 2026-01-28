@@ -44,7 +44,6 @@ import { loadRemoteImage, revokeRemoteImage } from "@/lib/remote-loader"
 import { saveComic, getOfflineStatus, saveComicForOffline, removeOfflineCache, type OfflineStatus } from "@/lib/storage"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { OfflineIndicator } from "@/components/offline-indicator"
 
 interface ComicCardProps {
   comic: Comic
@@ -701,10 +700,6 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
           </div>
         )}
 
-        {/* Offline indicator */}
-        {offlineStatus?.isAvailableOffline && (
-          <OfflineIndicator comicId={comic.id} className="absolute top-2 right-10" />
-        )}
 
         {/* Missing cover indicator */}
         {!hasCover && !coverLoading && !isRemote && (

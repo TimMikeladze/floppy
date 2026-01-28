@@ -208,10 +208,10 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg max-h-[80vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle className="flex items-center justify-between">
-            <span>
+      <DialogContent className="w-[calc(100%-2rem)] max-w-lg max-h-[85vh] sm:max-h-[80vh] flex flex-col p-0">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b">
+          <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+            <span className="text-base sm:text-lg">
               {isCheckingDuplicates
                 ? `Checking for duplicates...`
                 : allComplete
@@ -224,7 +224,7 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
               }
             </span>
             {allComplete && (
-              <span className="text-sm font-normal text-muted-foreground">
+              <span className="text-xs sm:text-sm font-normal text-muted-foreground">
                 {completedCount} succeeded
                 {errorCount > 0 && `, ${errorCount} failed`}
                 {skippedCount > 0 && `, ${skippedCount} skipped`}
@@ -234,24 +234,24 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
         </DialogHeader>
 
         {/* Progress bar */}
-        <div className="px-6 py-3 border-b bg-secondary/30">
-          <div className="flex items-center justify-between text-sm mb-2">
+        <div className="px-4 sm:px-6 py-2 sm:py-3 border-b bg-secondary/30">
+          <div className="flex items-center justify-between text-xs sm:text-sm mb-1.5 sm:mb-2">
             <span className="text-muted-foreground">
               {completedCount + errorCount} / {totalCount}
             </span>
             <span className="font-medium">{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-1.5 sm:h-2" />
         </div>
 
         {/* File list */}
         <ScrollArea className="flex-1 min-h-0">
-          <div className="px-6 py-3 space-y-2">
+          <div className="px-3 sm:px-6 py-2 sm:py-3 space-y-1.5 sm:space-y-2">
             {fileStatuses.map((fileStatus, index) => (
               <div
                 key={index}
                 className={cn(
-                  "flex items-center gap-3 p-3 rounded-lg border transition-colors",
+                  "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border transition-colors",
                   fileStatus.status === 'success' && "bg-green-500/5 border-green-500/20",
                   fileStatus.status === 'error' && "bg-red-500/5 border-red-500/20",
                   fileStatus.status === 'processing' && "bg-primary/5 border-primary/20",
@@ -263,63 +263,63 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
                 {/* Status icon */}
                 <div className="flex-shrink-0">
                   {fileStatus.status === 'success' && (
-                    <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                      <Check className="w-4 h-4 text-green-500" />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                      <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                     </div>
                   )}
                   {fileStatus.status === 'error' && (
-                    <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
-                      <AlertCircle className="w-4 h-4 text-red-500" />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-500/10 flex items-center justify-center">
+                      <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                     </div>
                   )}
                   {fileStatus.status === 'processing' && (
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 text-primary animate-spin" />
                     </div>
                   )}
                   {fileStatus.status === 'pending' && (
-                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                      <FileArchive className="w-4 h-4 text-muted-foreground" />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-secondary flex items-center justify-center">
+                      <FileArchive className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                     </div>
                   )}
                   {fileStatus.status === 'duplicate' && (
-                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
-                      <Copy className="w-4 h-4 text-amber-500" />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+                      <Copy className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500" />
                     </div>
                   )}
                   {fileStatus.status === 'skipped' && (
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <SkipForward className="w-4 h-4 text-muted-foreground" />
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-muted flex items-center justify-center">
+                      <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                     </div>
                   )}
                 </div>
 
                 {/* File info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
+                  <p className="text-xs sm:text-sm font-medium truncate">
                     {fileStatus.parsedTitle?.seriesName || fileStatus.file.name}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     {fileStatus.parsedTitle?.issueNumber && `#${fileStatus.parsedTitle.issueNumber} · `}
                     {(fileStatus.file.size / 1024 / 1024).toFixed(1)} MB
                   </p>
                   {fileStatus.error && (
-                    <p className="text-xs text-red-500 mt-1">{fileStatus.error}</p>
+                    <p className="text-[10px] sm:text-xs text-red-500 mt-0.5 sm:mt-1 line-clamp-1">{fileStatus.error}</p>
                   )}
                   {fileStatus.status === 'duplicate' && fileStatus.duplicateMatch && (
-                    <p className="text-xs text-amber-600 mt-1">
+                    <p className="text-[10px] sm:text-xs text-amber-600 mt-0.5 sm:mt-1 line-clamp-1">
                       Matches: {fileStatus.duplicateMatch.existingComic.title}
-                      {' '}({Math.round(fileStatus.duplicateMatch.confidence * 100)}% match)
+                      {' '}({Math.round(fileStatus.duplicateMatch.confidence * 100)}%)
                     </p>
                   )}
                   {fileStatus.status === 'skipped' && (
-                    <p className="text-xs text-muted-foreground mt-1">Skipped</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Skipped</p>
                   )}
                 </div>
 
                 {/* Progress for processing items */}
                 {fileStatus.status === 'processing' && fileStatus.progress !== undefined && (
-                  <div className="flex-shrink-0 w-12 text-xs text-muted-foreground text-right">
+                  <div className="flex-shrink-0 w-8 sm:w-12 text-[10px] sm:text-xs text-muted-foreground text-right">
                     {fileStatus.progress}%
                   </div>
                 )}
@@ -331,7 +331,7 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
                       variant="ghost"
                       size="sm"
                       onClick={() => skipDuplicate(index)}
-                      className="h-7 text-xs"
+                      className="h-6 sm:h-7 text-[10px] sm:text-xs px-2 sm:px-3"
                     >
                       Skip
                     </Button>
@@ -339,7 +339,7 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
                       variant="outline"
                       size="sm"
                       onClick={() => importAnyway(index)}
-                      className="h-7 text-xs"
+                      className="h-6 sm:h-7 text-[10px] sm:text-xs px-2 sm:px-3"
                     >
                       Import
                     </Button>
@@ -351,14 +351,14 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
         </ScrollArea>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t flex items-center justify-between gap-3">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t flex items-center justify-between gap-2 sm:gap-3">
           {!isProcessing && !allComplete && (
             <>
-              <Button variant="outline" onClick={handleClose}>
+              <Button variant="outline" onClick={handleClose} className="text-sm sm:text-base">
                 Cancel
               </Button>
-              <Button onClick={handleStart} className="gap-2">
-                <Play className="w-4 h-4" />
+              <Button onClick={handleStart} className="gap-1.5 sm:gap-2 text-sm sm:text-base">
+                <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Start Import
               </Button>
             </>
@@ -366,27 +366,27 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
 
           {isProcessing && !allComplete && (
             <>
-              <Button variant="outline" onClick={handlePauseResume} className="gap-2">
+              <Button variant="outline" onClick={handlePauseResume} className="gap-1.5 sm:gap-2 text-sm sm:text-base">
                 {isPaused ? (
                   <>
-                    <Play className="w-4 h-4" />
+                    <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     Resume
                   </>
                 ) : (
                   <>
-                    <Pause className="w-4 h-4" />
+                    <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     Pause
                   </>
                 )}
               </Button>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 Processing...
               </div>
             </>
           )}
 
           {allComplete && (
-            <Button onClick={handleClose} className="ml-auto">
+            <Button onClick={handleClose} className="ml-auto text-sm sm:text-base">
               Done
             </Button>
           )}
