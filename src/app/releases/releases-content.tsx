@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
+import Link from "next/link"
 import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Button } from "@/components/ui/button"
@@ -21,7 +22,6 @@ import { usePullList } from "@/hooks/use-pull-list"
 import { useReleasesCrud } from "@/hooks/use-releases-crud"
 import { getStoredReleasesPreferences, saveReleasesPreferences } from "@/hooks/use-releases-preferences"
 import type { Release } from "@/lib/releases-types"
-import { ReleaseDetailSheet } from "@/components/releases/release-detail-sheet"
 
 const viewTypes = ["new", "upcoming", "calendar", "pull-list"] as const
 
@@ -34,8 +34,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
   const [activeView, setActiveView] = useQueryState("view", parseAsStringLiteral(viewTypes).withDefault("new"))
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [selectedRelease, setSelectedRelease] = useState<Release | null>(null)
-  const [detailSheetOpen, setDetailSheetOpen] = useState(false)
 
   // Track if we've initialized from localStorage
   const hasInitializedFromStorage = useRef(false)
@@ -125,11 +123,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
     return releases.filter((r) => r.releaseDate.toDateString() === day.toDateString())
   }
 
-  const handleReleaseClick = (release: Release) => {
-    setSelectedRelease(release)
-    setDetailSheetOpen(true)
-  }
-
   // Calculate pull list items count
   const pullListReleasesCount = useMemo(() => {
     const uniqueReleaseIds = new Set(pullList.items.map((item) => item.releaseId))
@@ -145,10 +138,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
     { key: "calendar" as const, label: "Calendar", icon: CalendarIcon },
     { key: "pull-list" as const, label: "Pull List", icon: Heart, count: pullListReleasesCount },
   ]
-
-  const publisher = selectedRelease
-    ? config?.publishers.find((p) => p.id === selectedRelease.publisher || p.slug === selectedRelease.publisher)
-    : undefined
 
   if (loading) {
     return (
@@ -240,7 +229,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
               <ReleaseCard
                 key={release.id}
                 release={release}
-                onClick={() => handleReleaseClick(release)}
                 isInPullList={pullList.isInList(release.id)}
                 isSeriesSubscribed={pullList.isSubscribedToSeries(release.series)}
               />
@@ -283,7 +271,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
               <ReleaseCard
                 key={release.id}
                 release={release}
-                onClick={() => handleReleaseClick(release)}
                 isInPullList={pullList.isInList(release.id)}
                 isSeriesSubscribed={pullList.isSubscribedToSeries(release.series)}
               />
@@ -387,7 +374,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
                     <ReleaseCard
                       key={release.id}
                       release={release}
-                      onClick={() => handleReleaseClick(release)}
                       isInPullList={pullList.isInList(release.id)}
                       isSeriesSubscribed={pullList.isSubscribedToSeries(release.series)}
                     />
@@ -400,20 +386,8 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
       )}
 
       {activeView === "pull-list" && (
-        <PullListView releases={releases} pullList={pullList} onReleaseClick={handleReleaseClick} />
+        <PullListView releases={releases} pullList={pullList} />
       )}
-
-      {/* Release Detail Sheet */}
-      <ReleaseDetailSheet
-        release={selectedRelease}
-        publisher={publisher}
-        open={detailSheetOpen}
-        onOpenChange={setDetailSheetOpen}
-        isInPullList={selectedRelease ? pullList.isInList(selectedRelease.id) : false}
-        isSeriesSubscribed={selectedRelease ? pullList.isSubscribedToSeries(selectedRelease.series) : false}
-        onTogglePullList={() => selectedRelease && pullList.togglePullListItem(selectedRelease.id)}
-        onToggleSubscription={() => selectedRelease && pullList.toggleSeriesSubscription(selectedRelease.series)}
-      />
     </AppLayout>
   )
 }
@@ -421,11 +395,9 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
 function PullListView({
   releases,
   pullList,
-  onReleaseClick,
 }: {
   releases: Release[]
   pullList: ReturnType<typeof usePullList>
-  onReleaseClick: (release: Release) => void
 }) {
   const pullListReleases = useMemo(() => {
     return releases.filter((release) => pullList.isInList(release.id))
@@ -495,7 +467,6 @@ function PullListView({
               <ReleaseCard
                 key={release.id}
                 release={release}
-                onClick={() => onReleaseClick(release)}
                 isInPullList={true}
                 isSeriesSubscribed={pullList.isSubscribedToSeries(release.series)}
               />
@@ -534,7 +505,6 @@ function PullListView({
                       <ReleaseCard
                         key={release.id}
                         release={release}
-                        onClick={() => onReleaseClick(release)}
                         isInPullList={pullList.isInList(release.id)}
                         isSeriesSubscribed={true}
                       />
@@ -556,27 +526,17 @@ function PullListView({
 
 function ReleaseCard({
   release,
-  onClick,
   isInPullList = false,
   isSeriesSubscribed = false,
 }: {
   release: Release
-  onClick: () => void
   isInPullList?: boolean
   isSeriesSubscribed?: boolean
 }) {
   return (
-    <div
-      className="comic-card group relative rounded-2xl overflow-hidden cursor-pointer"
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault()
-          onClick()
-        }
-      }}
+    <Link
+      href={`/releases/${release.slug}`}
+      className="comic-card group relative rounded-2xl overflow-hidden cursor-pointer block"
     >
       {/* Cover Image */}
       <div className="relative aspect-[2/3] overflow-hidden bg-muted rounded-t-2xl">
@@ -613,6 +573,6 @@ function ReleaseCard({
           <span className="text-xs font-semibold text-foreground">{release.price}</span>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }

@@ -195,6 +195,36 @@ export async function getReleaseById(id: string): Promise<Release | undefined> {
 }
 
 /**
+ * Get a single release by slug
+ */
+export async function getReleaseBySlug(slug: string): Promise<Release | undefined> {
+  const releases = await getMergedReleases()
+  return releases.find((r) => r.slug === slug)
+}
+
+/**
+ * Get all release slugs (for static generation)
+ */
+export function getAllReleaseSlugs(): string[] {
+  return releasesData.releases.map((r) => r.slug)
+}
+
+/**
+ * Get static release by slug (without user overrides, for static generation)
+ */
+export function getStaticReleaseBySlug(slug: string): Release | undefined {
+  const yaml = releasesData.releases.find((r) => r.slug === slug)
+  return yaml ? yamlToRelease(yaml) : undefined
+}
+
+/**
+ * Get static config (without async, for static generation)
+ */
+export function getStaticConfig() {
+  return releasesData.config
+}
+
+/**
  * Search releases by query
  */
 export async function searchReleases(query: string): Promise<Release[]> {
