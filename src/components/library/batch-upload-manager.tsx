@@ -351,7 +351,7 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
         </ScrollArea>
 
         {/* Actions */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t flex items-center justify-between gap-2 sm:gap-3">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-background flex items-center justify-between gap-2 sm:gap-3">
           {!isProcessing && !allComplete && (
             <>
               <Button variant="outline" onClick={handleClose} className="text-sm sm:text-base">
