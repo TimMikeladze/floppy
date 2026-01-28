@@ -15,9 +15,6 @@ import { format } from "date-fns"
 import {
   Heart,
   Bell,
-  Pencil,
-  Trash2,
-  RotateCcw,
   Calendar,
   DollarSign,
   BookOpen,
@@ -35,9 +32,6 @@ interface ReleaseDetailSheetProps {
   isSeriesSubscribed?: boolean
   onTogglePullList?: () => void
   onToggleSubscription?: () => void
-  onEdit?: () => void
-  onDelete?: () => void
-  onReset?: () => void
 }
 
 export function ReleaseDetailSheet({
@@ -49,9 +43,6 @@ export function ReleaseDetailSheet({
   isSeriesSubscribed = false,
   onTogglePullList,
   onToggleSubscription,
-  onEdit,
-  onDelete,
-  onReset,
 }: ReleaseDetailSheetProps) {
   if (!release) return null
 
@@ -71,40 +62,10 @@ export function ReleaseDetailSheet({
 
         <ScrollArea className="h-[calc(100vh-8rem)] pr-4 mt-4">
           <div className="space-y-6">
-            {/* Status and Actions */}
-            <div className="flex items-center justify-between">
-              <Badge className={statusColors[release.status] || ""}>
-                {release.status.charAt(0).toUpperCase() + release.status.slice(1)}
-              </Badge>
-              <div className="flex gap-1">
-                {release.isModified && onReset && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onReset}
-                    title="Reset to original"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
-                )}
-                {onEdit && (
-                  <Button variant="ghost" size="icon" onClick={onEdit} title="Edit">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                )}
-                {onDelete && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onDelete}
-                    title="Delete"
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
+            {/* Status */}
+            <Badge className={statusColors[release.status] || ""}>
+              {release.status.charAt(0).toUpperCase() + release.status.slice(1)}
+            </Badge>
 
             {/* Pull List Actions */}
             <div className="flex gap-2">
@@ -143,13 +104,6 @@ export function ReleaseDetailSheet({
                   className="h-full w-full object-cover"
                 />
               </div>
-            )}
-
-            {/* Modified Indicator */}
-            {(release.isCustom || release.isModified) && (
-              <Badge variant="outline" className="w-fit">
-                {release.isCustom ? "Custom Release" : "Modified"}
-              </Badge>
             )}
 
             <Separator />

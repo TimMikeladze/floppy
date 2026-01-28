@@ -15,21 +15,15 @@ import {
   ChevronRight,
   Heart,
   Bell,
-  Plus,
-  Pencil,
 } from "lucide-react"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns"
 import { usePullList } from "@/hooks/use-pull-list"
 import { useReleasesCrud } from "@/hooks/use-releases-crud"
 import { getStoredReleasesPreferences, saveReleasesPreferences } from "@/hooks/use-releases-preferences"
 import type { Release } from "@/lib/releases-types"
-import type { ReleaseFormData } from "@/lib/releases-schemas"
-import { ReleaseDialog } from "@/components/releases/release-dialog"
 import { ReleaseDetailSheet } from "@/components/releases/release-detail-sheet"
-import { toast } from "sonner"
 
 const viewTypes = ["new", "upcoming", "calendar", "pull-list"] as const
-type ViewType = (typeof viewTypes)[number]
 
 interface ReleasesContentProps {
   releasesEnabled: boolean
@@ -42,22 +36,15 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedRelease, setSelectedRelease] = useState<Release | null>(null)
   const [detailSheetOpen, setDetailSheetOpen] = useState(false)
-  const [releaseDialogOpen, setReleaseDialogOpen] = useState(false)
-  const [editingRelease, setEditingRelease] = useState<Release | undefined>(undefined)
 
   // Track if we've initialized from localStorage
   const hasInitializedFromStorage = useRef(false)
 
-  // Use the CRUD hook for releases data
+  // Use the CRUD hook for releases data (read-only)
   const {
     releases,
-    series,
     config,
     loading,
-    createRelease,
-    updateRelease,
-    deleteRelease,
-    resetRelease,
     getNew,
     getUpcoming,
     getByDate,
@@ -143,60 +130,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
     setDetailSheetOpen(true)
   }
 
-  const handleEditRelease = () => {
-    if (selectedRelease) {
-      setEditingRelease(selectedRelease)
-      setDetailSheetOpen(false)
-      setReleaseDialogOpen(true)
-    }
-  }
-
-  const handleDeleteRelease = async () => {
-    if (selectedRelease) {
-      try {
-        await deleteRelease(selectedRelease.id)
-        setDetailSheetOpen(false)
-        setSelectedRelease(null)
-        toast.success("Release deleted")
-      } catch {
-        toast.error("Failed to delete release")
-      }
-    }
-  }
-
-  const handleResetRelease = async () => {
-    if (selectedRelease) {
-      try {
-        await resetRelease(selectedRelease.id)
-        setDetailSheetOpen(false)
-        setSelectedRelease(null)
-        toast.success("Release reset to original")
-      } catch {
-        toast.error("Failed to reset release")
-      }
-    }
-  }
-
-  const handleAddRelease = () => {
-    setEditingRelease(undefined)
-    setReleaseDialogOpen(true)
-  }
-
-  const handleReleaseFormSubmit = async (data: ReleaseFormData) => {
-    try {
-      if (editingRelease) {
-        await updateRelease(editingRelease.id, data)
-        toast.success("Release updated")
-      } else {
-        await createRelease(data as Omit<Release, "id" | "isCustom" | "isModified">)
-        toast.success("Release created")
-      }
-    } catch {
-      toast.error(editingRelease ? "Failed to update release" : "Failed to create release")
-      throw new Error("Submit failed")
-    }
-  }
-
   // Calculate pull list items count
   const pullListReleasesCount = useMemo(() => {
     const uniqueReleaseIds = new Set(pullList.items.map((item) => item.releaseId))
@@ -267,10 +200,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
                 </button>
               )
             })}
-            <button onClick={handleAddRelease} className="filter-pill haptic-press ml-auto">
-              <Plus className="h-4 w-4" />
-              Add Release
-            </button>
           </div>
           <ScrollBar orientation="horizontal" className="invisible" />
         </ScrollArea>
@@ -299,10 +228,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
             <p className="text-muted-foreground text-base max-w-sm leading-relaxed">
               {searchQuery ? "Try a different search" : "Check back soon for new comic releases"}
             </p>
-            <Button variant="outline" className="mt-6" onClick={handleAddRelease}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add a Release
-            </Button>
           </div>
         ) : (
           <div
@@ -346,10 +271,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
             <p className="text-muted-foreground text-base max-w-sm leading-relaxed">
               {searchQuery ? "Try a different search" : "Check back soon for upcoming releases"}
             </p>
-            <Button variant="outline" className="mt-6" onClick={handleAddRelease}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add a Release
-            </Button>
           </div>
         ) : (
           <div
@@ -492,21 +413,6 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
         isSeriesSubscribed={selectedRelease ? pullList.isSubscribedToSeries(selectedRelease.series) : false}
         onTogglePullList={() => selectedRelease && pullList.togglePullListItem(selectedRelease.id)}
         onToggleSubscription={() => selectedRelease && pullList.toggleSeriesSubscription(selectedRelease.series)}
-        onEdit={handleEditRelease}
-        onDelete={handleDeleteRelease}
-        onReset={selectedRelease?.isModified ? handleResetRelease : undefined}
-      />
-
-      {/* Release Dialog for Create/Edit */}
-      <ReleaseDialog
-        open={releaseDialogOpen}
-        onOpenChange={setReleaseDialogOpen}
-        release={editingRelease}
-        publishers={config?.publishers || []}
-        genres={config?.genres || []}
-        formats={config?.formats || []}
-        series={series.map((s) => ({ slug: s.slug, name: s.name }))}
-        onSubmit={handleReleaseFormSubmit}
       />
     </AppLayout>
   )
@@ -689,15 +595,6 @@ function ReleaseCard({
                 <Bell className="h-3.5 w-3.5 fill-current" />
               </div>
             )}
-          </div>
-        )}
-
-        {/* Custom/Modified badge */}
-        {(release.isCustom || release.isModified) && (
-          <div className="absolute top-2 left-2">
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
-              {release.isCustom ? "Custom" : "Modified"}
-            </Badge>
           </div>
         )}
       </div>
