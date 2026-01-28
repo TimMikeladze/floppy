@@ -1,0 +1,38 @@
+id: "batman-2026-153"
+slug: "batman-153"
+title: "Batman #153"
+series: "batman"
+issueNumber: "153"
+releaseDate: "2026-01-15"
+coverUrl: "https://images.unsplash.com/photo-1531259683007-016a7b628fc3?w=400&h=600&fit=crop"
+publisher: "dc-comics"
+writers:
+  - "Chip Zdarsky"
+artists:
+  - "Jorge Jiménez"
+  - "Tomeu Morey"
+description: |
+  Batman faces the aftermath of the Failsafe arc as Gotham's
+  criminal underworld reorganizes under new leadership. The Dark Knight
+  must confront the consequences of his choices while a new threat
+  emerges from the shadows.
+price: "$4.99"
+format: "single-issue"
+genres:
+  - "superhero"
+  - "crime"
+  - "detective"
+pageCount: 28
+printRun: 1
+variants:
+  - name: "1:25 Variant"
+    coverUrl: "https://images.unsplash.com/photo-1531259683007-016a7b628fc3?w=400&h=600&fit=crop&sat=-100"
+    artist: "Jim Lee"
+  - name: "Foil Edition"
+    coverUrl: "https://images.unsplash.com/photo-1531259683007-016a7b628fc3?w=400&h=600&fit=crop&hue=180"
+    artist: "Jorge Jiménez"
+status: "released"
+ageRating: "Teen+"
+tags:
+  - "bat-family"
+  - "gotham"

@@ -1,0 +1,29 @@
+id: "superman-2026-21"
+slug: "superman-21"
+title: "Superman #21"
+series: "superman"
+issueNumber: "21"
+releaseDate: "2026-01-15"
+coverUrl: "https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=400&h=600&fit=crop"
+publisher: "dc-comics"
+writers:
+  - "Joshua Williamson"
+artists:
+  - "Jamal Campbell"
+description: |
+  Superman confronts an alien threat that challenges everything he
+  believes about truth and justice. Meanwhile, Lois uncovers a
+  conspiracy that threatens the Daily Planet.
+price: "$4.99"
+format: "single-issue"
+genres:
+  - "superhero"
+  - "action"
+  - "sci-fi"
+pageCount: 28
+printRun: 1
+status: "released"
+ageRating: "Teen"
+tags:
+  - "superman-family"
+  - "metropolis"

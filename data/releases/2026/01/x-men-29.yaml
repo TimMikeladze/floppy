@@ -1,0 +1,30 @@
+id: "x-men-2026-29"
+slug: "x-men-29"
+title: "X-Men #29"
+series: "x-men"
+issueNumber: "29"
+releaseDate: "2026-01-08"
+coverUrl: "https://images.unsplash.com/photo-1559583109-3e7968136c99?w=400&h=600&fit=crop"
+publisher: "marvel"
+writers:
+  - "Gerry Duggan"
+artists:
+  - "Joshua Cassara"
+description: |
+  In the wake of Krakoa's fall, the X-Men must redefine what it means
+  to be mutant heroes. Storm leads the team into a new era as old
+  enemies return with devastating consequences.
+price: "$4.99"
+format: "single-issue"
+genres:
+  - "superhero"
+  - "sci-fi"
+  - "action"
+pageCount: 24
+printRun: 1
+status: "released"
+ageRating: "Teen+"
+tags:
+  - "mutants"
+  - "x-men-family"
+  - "storm"

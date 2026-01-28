@@ -1,0 +1,29 @@
+id: "amazing-spider-man-2026-44"
+slug: "amazing-spider-man-44"
+title: "The Amazing Spider-Man #44"
+series: "amazing-spider-man"
+issueNumber: "44"
+releaseDate: "2026-02-05"
+coverUrl: "https://images.unsplash.com/photo-1534809027769-b00d750a6bac?w=400&h=600&fit=crop"
+publisher: "marvel"
+writers:
+  - "Zeb Wells"
+artists:
+  - "John Romita Jr."
+description: |
+  The beginning of a new arc! A mysterious figure from the multiverse
+  arrives in Peter's world, bringing chaos and danger. Spider-Man must
+  team up with an unexpected ally to face this cosmic threat.
+price: "$4.99"
+format: "single-issue"
+genres:
+  - "superhero"
+  - "action"
+  - "sci-fi"
+pageCount: 24
+printRun: 1
+status: "upcoming"
+ageRating: "Teen"
+tags:
+  - "spider-verse"
+  - "multiverse"

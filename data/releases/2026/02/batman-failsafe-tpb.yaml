@@ -1,0 +1,30 @@
+id: "batman-failsafe-tpb-2026"
+slug: "batman-failsafe-tpb"
+title: "Batman Vol. 4: Failsafe"
+series: "batman"
+issueNumber: "TPB"
+releaseDate: "2026-02-19"
+coverUrl: "https://images.unsplash.com/photo-1618519764620-7403abdbdfe9?w=400&h=600&fit=crop"
+publisher: "dc-comics"
+writers:
+  - "Chip Zdarsky"
+artists:
+  - "Jorge Jiménez"
+  - "Belén Ortega"
+description: |
+  Collects Batman #125-130! Batman faces his most dangerous challenge yet
+  when a robotic threat he created years ago awakens. Failsafe knows all
+  of Batman's secrets, making the Dark Knight his own worst enemy.
+price: "$19.99"
+format: "trade-paperback"
+genres:
+  - "superhero"
+  - "crime"
+  - "sci-fi"
+pageCount: 168
+status: "upcoming"
+ageRating: "Teen+"
+tags:
+  - "bat-family"
+  - "failsafe"
+  - "collection"

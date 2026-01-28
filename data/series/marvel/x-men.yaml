@@ -1,0 +1,31 @@
+id: "x-men-main"
+name: "X-Men"
+slug: "x-men"
+publisher: "marvel"
+startYear: 1963
+currentVolume: 6
+volumeStartYear: 2021
+status: "ongoing"
+genres:
+  - "superhero"
+  - "sci-fi"
+  - "action"
+description: |
+  The Children of the Atom face new challenges in the wake of
+  Krakoa's fall, rebuilding their place in a world that fears
+  and hates them.
+coverUrl: "/covers/series/x-men.jpg"
+currentWriters:
+  - "Gerry Duggan"
+currentArtists:
+  - "Joshua Cassara"
+  - "Stefano Caselli"
+releaseSchedule: "monthly"
+typicalReleaseDay: "wednesday"
+relatedSeries:
+  - "uncanny-x-men"
+  - "wolverine"
+  - "immortal-x-men"
+tags:
+  - "mutants"
+  - "x-men-family"

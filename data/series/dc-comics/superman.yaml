@@ -1,0 +1,29 @@
+id: "superman-main"
+name: "Superman"
+slug: "superman"
+publisher: "dc-comics"
+startYear: 1939
+currentVolume: 5
+volumeStartYear: 2023
+status: "ongoing"
+genres:
+  - "superhero"
+  - "action"
+  - "sci-fi"
+description: |
+  The Man of Steel continues to protect Metropolis and the world
+  as Earth's greatest hero, facing cosmic threats and personal challenges.
+coverUrl: "/covers/series/superman.jpg"
+currentWriters:
+  - "Joshua Williamson"
+currentArtists:
+  - "Jamal Campbell"
+  - "Dan Mora"
+releaseSchedule: "monthly"
+typicalReleaseDay: "wednesday"
+relatedSeries:
+  - "action-comics"
+  - "superman-and-lois-lane"
+tags:
+  - "superman-family"
+  - "metropolis"
