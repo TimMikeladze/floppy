@@ -6,23 +6,16 @@ import {
   Github,
   Heart,
   BookOpen,
-  Cloud,
   FolderOpen,
   Bookmark,
-  StickyNote,
-  Smartphone,
-  Zap,
   ArrowRight,
   ArrowLeft,
-  Shield,
-  Download,
-  Moon,
-  Search,
+  Library,
+  Calendar,
   Layers,
-  FileText,
-  List,
-  Image as ImageIcon,
-  WifiOff
+  Search,
+  ListChecks,
+  Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SupportDialog } from "@/components/layout/support-dialog"
@@ -31,105 +24,40 @@ import { FreeComicsSources } from "@/components/free-comics-sources"
 const features = [
   {
     icon: BookOpen,
-    title: "Beautiful Reader",
-    description: "Smooth page navigation, zoom controls, and customizable reading modes for the perfect reading experience",
-    panel: "01",
+    title: "Reader",
+    description: "CBZ, CBR, PDF, EPUB. Single and double-page layouts with gesture controls.",
   },
   {
-    icon: FolderOpen,
-    title: "Multi-Format Support",
-    description: "Open CBZ, CBR, PDF, and EPUB files directly from your device",
-    panel: "02",
+    icon: Calendar,
+    title: "Releases",
+    description: "Browse weekly releases. See what's coming out and what you might have missed.",
   },
   {
-    icon: Cloud,
-    title: "Remote Sources",
-    description: "Add comics from URLs and external data sources for cloud-based libraries",
-    panel: "03",
+    icon: ListChecks,
+    title: "Pull List",
+    description: "Follow series and track upcoming issues. Your personal pull list, always up to date.",
   },
   {
-    icon: Bookmark,
-    title: "Bookmarks",
-    description: "Save your place, mark favorite pages, and add thumbnail captures",
-    panel: "04",
-  },
-  {
-    icon: StickyNote,
-    title: "Notes",
-    description: "Add personal notes to any page with color-coded organization",
-    panel: "05",
-  },
-  {
-    icon: Smartphone,
-    title: "PWA Support",
-    description: "Install as a native app on any device for offline access",
-    panel: "06",
-  },
-  {
-    icon: Shield,
-    title: "Privacy First",
-    description: "All data stays on your device. No cloud, no tracking, no accounts required",
-    panel: "07",
-  },
-  {
-    icon: Search,
-    title: "Smart Search",
-    description: "Quickly find comics by title, series, or issue number",
-    panel: "08",
-  },
-  {
-    icon: List,
-    title: "Custom Lists",
-    description: "Organize with Reading, Completed, Want to Read, and custom collections",
-    panel: "09",
+    icon: Library,
+    title: "Library",
+    description: "Organize your collection by series, reading status, or custom lists.",
   },
   {
     icon: Layers,
-    title: "Series Grouping",
-    description: "Automatically group comics by series for easy navigation",
-    panel: "10",
+    title: "Series Tracking",
+    description: "Auto-group issues by series. Track your progress through runs.",
   },
   {
-    icon: Moon,
-    title: "Dark Mode",
-    description: "System-aware theming with light, dark, and auto modes",
-    panel: "11",
-  },
-  {
-    icon: Download,
-    title: "Import & Export",
-    description: "Backup your library to JSON and restore anytime",
-    panel: "12",
+    icon: Bookmark,
+    title: "Bookmarks & Notes",
+    description: "Save your place. Add notes to pages. Pick up where you left off.",
   },
 ]
 
-const techStack = ["Next.js", "React", "TypeScript", "Tailwind", "IndexedDB"]
-
-// Screenshot placeholder component
-function ScreenshotPlaceholder({ label, className = "" }: { label: string; className?: string }) {
-  return (
-    <div className={`relative bg-muted/30 border-2 border-dashed border-foreground/10 rounded-lg overflow-hidden ${className}`}>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center p-4">
-          <ImageIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
-          <span className="text-xs text-muted-foreground/60 font-medium">{label}</span>
-        </div>
-      </div>
-      {/* Aspect ratio placeholder */}
-      <div className="aspect-[16/10]" />
-    </div>
-  )
-}
+const formats = ["CBZ", "CBR", "PDF", "EPUB"]
 
 interface LandingContentProps {
-  /**
-   * Whether to show the back button in the header (for about page)
-   */
   showBackButton?: boolean
-  /**
-   * Custom callback for "Get Started" / "Open App" buttons
-   * If not provided, defaults to linking to /library
-   */
   onGetStarted?: () => void
 }
 
@@ -140,36 +68,33 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
     if (onGetStarted) {
       onGetStarted()
     } else {
-      // Default: navigate to library
       window.location.href = "/library"
     }
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b-2 border-foreground/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="safe-top safe-x bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" />
-        <div className="flex items-center justify-between h-14 px-4 sm:px-6 md:px-8 gap-3 mx-auto w-full max-w-screen-2xl safe-x">
+      <header className="sticky top-0 z-40 border-b border-border/40 bg-background/80 backdrop-blur-xl">
+        <div className="safe-top safe-x bg-background/80 backdrop-blur-xl" />
+        <div className="flex items-center justify-between h-14 px-4 sm:px-6 md:px-8 mx-auto w-full max-w-screen-xl safe-x">
           <div className="flex items-center gap-3">
             {showBackButton ? (
               <>
                 <Link href="/library">
-                  <Button variant="ghost" size="icon" className="h-9 w-9 border border-border hover:border-foreground/30 transition-colors">
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
                 </Link>
-                <h1 className="text-sm font-medium tracking-widest uppercase">About</h1>
+                <span className="text-sm font-medium">About</span>
               </>
             ) : (
-              <>
-                {/* Logo mark */}
-                <div className="w-8 h-8 border-2 border-foreground flex items-center justify-center relative group">
-                  <div className="w-3 h-3 bg-foreground transition-transform group-hover:scale-110" />
-                  <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-background border border-foreground" />
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-foreground rounded-sm flex items-center justify-center">
+                  <div className="w-3 h-3 bg-background rounded-[2px]" />
                 </div>
-                <span className="text-sm font-bold tracking-tight">floppy</span>
-              </>
+                <span className="font-semibold tracking-tight">floppy</span>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -178,7 +103,7 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Button variant="ghost" size="sm" className="gap-2 text-xs">
+              <Button variant="ghost" size="sm" className="gap-2 text-sm">
                 <Github className="w-4 h-4" />
                 <span className="hidden sm:inline">GitHub</span>
               </Button>
@@ -186,256 +111,184 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
             <Button
               onClick={handleGetStarted}
               size="sm"
-              className="gap-2 text-xs font-medium"
+              className="gap-1.5"
             >
-              {showBackButton ? "Open Library" : "Open App"}
-              <ArrowRight className="w-3 h-3" />
+              {showBackButton ? "Library" : "Open App"}
+              <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-screen-lg px-4 sm:px-6 md:px-8 py-12 pb-32 relative">
-        {/* Hero Section */}
-        <section className="relative mb-16">
-          {/* Large background text */}
-          <div className="absolute -top-8 -left-4 text-[12rem] sm:text-[16rem] font-bold leading-none text-foreground/[0.02] select-none pointer-events-none tracking-tighter">
-            FL
-          </div>
-
-          <div className="relative grid lg:grid-cols-[1fr,1.2fr] gap-12 items-center">
-            {/* Left: Branding */}
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              {/* Logo mark */}
-              <div className="w-16 h-16 border-2 border-foreground flex items-center justify-center relative group">
-                <div className="w-6 h-6 bg-foreground transition-transform group-hover:scale-110" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-background border border-foreground" />
-              </div>
-
-              <div className="space-y-2">
-                <h1 className="text-5xl sm:text-6xl font-bold tracking-tighter">
-                  floppy
-                </h1>
-                <p className="text-lg text-muted-foreground font-medium tracking-wide">
-                  Open-source comic reader
-                </p>
-              </div>
-
-              <p className="text-sm text-muted-foreground max-w-md leading-relaxed border-l-2 border-foreground/20 pl-4">
-                A modern, privacy-focused comic reader that runs entirely in your browser.
-                Your comics stay on your device — no cloud, no tracking, no accounts.
-              </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-wrap gap-3 pt-2">
-                <Button
-                  onClick={handleGetStarted}
-                  className="gap-2 font-medium tracking-wide"
-                  size="lg"
-                >
-                  {showBackButton ? "Open Library" : "Get Started"}
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-                <a
-                  href="https://github.com/TimMikeladze/floppy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="gap-2 border-2 hover:bg-foreground hover:text-background transition-all font-medium tracking-wide"
-                  >
-                    <Github className="w-4 h-4" />
-                    View Source
-                  </Button>
-                </a>
-              </div>
-
-              {/* Quick highlights */}
-              <div className="flex flex-wrap gap-4 pt-4">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <WifiOff className="w-3.5 h-3.5" />
-                  <span>Works Offline</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>100% Private</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Installable PWA</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Screenshot placeholder */}
-            <div className="animate-in fade-in slide-in-from-right-4 duration-700 delay-150">
-              <ScreenshotPlaceholder
-                label="Library View Screenshot"
-                className="shadow-2xl"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* App Screenshots Section */}
-        <section className="mb-20">
-          <div className="flex items-center gap-4 mb-8">
-            <ImageIcon className="w-5 h-5" />
-            <h3 className="text-sm font-medium tracking-widest uppercase">Screenshots</h3>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ScreenshotPlaceholder
-              label="Comic Reader View"
-              className="shadow-lg"
-            />
-            <ScreenshotPlaceholder
-              label="Series View"
-              className="shadow-lg"
-            />
-            <ScreenshotPlaceholder
-              label="Bookmarks & Notes"
-              className="shadow-lg"
-            />
-            <ScreenshotPlaceholder
-              label="Mobile View"
-              className="shadow-lg"
-            />
-          </div>
-        </section>
-
-        {/* Features - Comic Panel Grid */}
-        <section className="mb-20">
-          <div className="flex items-center gap-4 mb-8">
-            <Zap className="w-5 h-5" />
-            <h3 className="text-sm font-medium tracking-widest uppercase">Features</h3>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-foreground/10">
-            {features.map((feature, index) => (
-              <div
-                key={feature.title}
-                className="bg-background p-6 relative group animate-in fade-in slide-in-from-bottom-4 duration-500"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                {/* Panel number */}
-                <span className="absolute top-3 right-3 text-[10px] font-mono text-muted-foreground/50 tracking-wider">
-                  {feature.panel}
-                </span>
-
-                {/* Content */}
-                <div className="space-y-3">
-                  <div className="w-10 h-10 border border-foreground/20 flex items-center justify-center group-hover:border-foreground/40 group-hover:bg-foreground/5 transition-all">
-                    <feature.icon className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                  </div>
-                  <h4 className="font-semibold tracking-tight">{feature.title}</h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{feature.description}</p>
-                </div>
-
-                {/* Corner accent on hover */}
-                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-foreground transition-all duration-300 group-hover:w-full" />
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Supported Formats */}
-        <section className="mb-20 animate-in fade-in duration-700 delay-300">
-          <div className="flex items-center gap-4 mb-8">
-            <FileText className="w-5 h-5" />
-            <h3 className="text-sm font-medium tracking-widest uppercase">Supported Formats</h3>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { format: "CBZ", description: "Comic Book Zip" },
-              { format: "CBR", description: "Comic Book RAR" },
-              { format: "PDF", description: "Portable Document" },
-              { format: "EPUB", description: "Electronic Publication" },
-            ].map((item) => (
-              <div
-                key={item.format}
-                className="border-2 border-foreground/10 p-4 text-center hover:border-foreground/30 transition-colors"
-              >
-                <div className="text-2xl font-bold tracking-tight font-mono">{item.format}</div>
-                <div className="text-[10px] text-muted-foreground mt-1 tracking-wide uppercase">{item.description}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Free Comic Sources */}
-        <section className="mb-20 animate-in fade-in duration-700 delay-400">
-          <FreeComicsSources variant="full" />
-        </section>
-
-        {/* Tech Stack - Inline list */}
-        <section className="mb-20 animate-in fade-in duration-700 delay-500">
-          <div className="border-2 border-dashed border-foreground/20 p-6 sm:p-8">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <span className="text-[10px] font-medium tracking-widest uppercase text-muted-foreground shrink-0">
-                Built with
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {techStack.map((tech, index) => (
-                  <span
-                    key={tech}
-                    className="px-3 py-1.5 text-xs font-mono border border-foreground/20 hover:border-foreground/40 hover:bg-foreground/5 transition-all cursor-default"
-                    style={{ animationDelay: `${600 + index * 50}ms` }}
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="mb-20 text-center animate-in fade-in duration-700 delay-600">
-          <div className="border-2 border-foreground p-8 sm:p-12">
-            <h3 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
-              Ready to start reading?
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-              No sign up required. Just open the app and start adding your comics.
+      <main className="mx-auto w-full max-w-screen-xl px-4 sm:px-6 md:px-8">
+        {/* Hero */}
+        <section className="py-16 sm:py-24 lg:py-32">
+          <div className="max-w-2xl">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
+              Comic book reader,<br />
+              release tracker,<br />
+              pull list manager.
+            </h1>
+            <p className="text-lg text-muted-foreground mb-8 max-w-lg">
+              Read your collection. Discover new releases. Track the series you follow. All in one place.
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap gap-3">
               <Button
                 onClick={handleGetStarted}
                 size="lg"
-                className="gap-2 font-medium"
+                className="gap-2"
               >
-                Open Library
+                {showBackButton ? "Open Library" : "Get Started"}
                 <ArrowRight className="w-4 h-4" />
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="gap-2 border-2"
-                onClick={() => setSupportOpen(true)}
+              <a
+                href="https://github.com/TimMikeladze/floppy"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                <Heart className="w-4 h-4" />
-                Support Project
-              </Button>
+                <Button variant="outline" size="lg" className="gap-2">
+                  <Github className="w-4 h-4" />
+                  GitHub
+                </Button>
+              </a>
             </div>
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="text-center animate-in fade-in duration-700 delay-700">
-          <div className="inline-flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="w-8 h-px bg-border" />
-            <span className="tracking-wide">Made for comic enthusiasts</span>
-            <span className="w-8 h-px bg-border" />
+        {/* Features */}
+        <section className="py-16 border-t border-border/40">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+            {features.map((feature) => (
+              <div key={feature.title}>
+                <feature.icon className="w-5 h-5 mb-3 text-muted-foreground" />
+                <h3 className="font-medium mb-1">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground">{feature.description}</p>
+              </div>
+            ))}
           </div>
-        </footer>
+        </section>
+
+        {/* Formats */}
+        <section className="py-16 border-t border-border/40">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FolderOpen className="w-4 h-4" />
+              <span>Formats</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formats.map((format) => (
+                <span
+                  key={format}
+                  className="px-3 py-1 text-sm font-mono border border-border rounded"
+                >
+                  {format}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section className="py-16 border-t border-border/40">
+          <h2 className="text-lg font-medium mb-8">How it works</h2>
+          <div className="grid sm:grid-cols-3 gap-8">
+            <div>
+              <div className="text-sm text-muted-foreground mb-2">01</div>
+              <h3 className="font-medium mb-1">Add comics</h3>
+              <p className="text-sm text-muted-foreground">
+                Import files from your device or add from URLs. Everything stays local.
+              </p>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground mb-2">02</div>
+              <h3 className="font-medium mb-1">Browse releases</h3>
+              <p className="text-sm text-muted-foreground">
+                Check the weekly release calendar. Follow series to build your pull list.
+              </p>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground mb-2">03</div>
+              <h3 className="font-medium mb-1">Read and track</h3>
+              <p className="text-sm text-muted-foreground">
+                Read in the browser. Your progress syncs across your library automatically.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Free Comics */}
+        <section className="py-16 border-t border-border/40">
+          <FreeComicsSources variant="full" />
+        </section>
+
+        {/* Details */}
+        <section className="py-16 border-t border-border/40">
+          <div className="grid sm:grid-cols-2 gap-12">
+            <div>
+              <h2 className="text-lg font-medium mb-4">Open source</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Free to use, free to modify. Built with Next.js, React, and IndexedDB.
+              </p>
+              <a
+                href="https://github.com/TimMikeladze/floppy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm underline underline-offset-4 hover:text-foreground text-muted-foreground"
+              >
+                View source on GitHub
+              </a>
+            </div>
+            <div>
+              <h2 className="text-lg font-medium mb-4">Works offline</h2>
+              <p className="text-sm text-muted-foreground">
+                Install as an app on any device. Your library is stored locally and works without internet.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="py-16 sm:py-24 border-t border-border/40">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
+              <h2 className="text-xl font-medium mb-2">Start reading</h2>
+              <p className="text-sm text-muted-foreground">No account required.</p>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={handleGetStarted} className="gap-2">
+                Open Library
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" onClick={() => setSupportOpen(true)} className="gap-2">
+                <Heart className="w-4 h-4" />
+                Support
+              </Button>
+            </div>
+          </div>
+        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border/40 py-6">
+        <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6 md:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <span>floppy</span>
+            <div className="flex items-center gap-6">
+              <a
+                href="https://github.com/TimMikeladze/floppy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
+                GitHub
+              </a>
+              <Link href="/releases" className="hover:text-foreground transition-colors">
+                Releases
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
     </div>
