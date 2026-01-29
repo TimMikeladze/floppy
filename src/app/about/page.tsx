@@ -1,7 +1,7 @@
 "use client"
 
-import { LandingContent } from "@/components/landing-content"
+import { AboutContent } from "@/components/about-content"
 
 export default function AboutPage() {
-  return <LandingContent showBackButton />
+  return <AboutContent />
 }

@@ -9,13 +9,10 @@ import {
   FolderOpen,
   Bookmark,
   ArrowRight,
-  ArrowLeft,
   Library,
   Calendar,
   Layers,
-  Search,
   ListChecks,
-  Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SupportDialog } from "@/components/layout/support-dialog"
@@ -24,44 +21,43 @@ import { FreeComicsSources } from "@/components/free-comics-sources"
 const features = [
   {
     icon: BookOpen,
-    title: "Reader",
-    description: "CBZ, CBR, PDF, EPUB. Single and double-page layouts with gesture controls.",
+    title: "Beautiful Reader",
+    description: "Read CBZ, CBR, PDF, and EPUB files with single or double-page layouts. Swipe, zoom, and navigate with intuitive gesture controls.",
   },
   {
     icon: Calendar,
-    title: "Releases",
-    description: "Browse weekly releases. See what's coming out and what you might have missed.",
+    title: "Weekly Releases",
+    description: "Never miss a new issue. Browse this week's releases, discover new series, and see what's dropping next.",
   },
   {
     icon: ListChecks,
     title: "Pull List",
-    description: "Follow series and track upcoming issues. Your personal pull list, always up to date.",
+    description: "Follow the series you love. Get notified when new issues drop. Your personal pull list, always current.",
   },
   {
     icon: Library,
-    title: "Library",
-    description: "Organize your collection by series, reading status, or custom lists.",
+    title: "Your Library",
+    description: "Your entire collection in one place. Filter by series, reading status, or create custom collections.",
   },
   {
     icon: Layers,
-    title: "Series Tracking",
-    description: "Auto-group issues by series. Track your progress through runs.",
+    title: "Smart Organization",
+    description: "Issues automatically group by series. Track your progress through runs and never lose your place.",
   },
   {
     icon: Bookmark,
     title: "Bookmarks & Notes",
-    description: "Save your place. Add notes to pages. Pick up where you left off.",
+    description: "Mark pages, add notes, and pick up exactly where you left off. Your reading progress, always saved.",
   },
 ]
 
 const formats = ["CBZ", "CBR", "PDF", "EPUB"]
 
 interface LandingContentProps {
-  showBackButton?: boolean
   onGetStarted?: () => void
 }
 
-export function LandingContent({ showBackButton = false, onGetStarted }: LandingContentProps) {
+export function LandingContent({ onGetStarted }: LandingContentProps) {
   const [supportOpen, setSupportOpen] = useState(false)
 
   const handleGetStarted = () => {
@@ -78,24 +74,11 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
       <header className="sticky top-0 z-40 border-b border-border/40 bg-background/80 backdrop-blur-xl">
         <div className="safe-top safe-x bg-background/80 backdrop-blur-xl" />
         <div className="flex items-center justify-between h-14 px-4 sm:px-6 md:px-8 mx-auto w-full max-w-screen-xl safe-x">
-          <div className="flex items-center gap-3">
-            {showBackButton ? (
-              <>
-                <Link href="/library">
-                  <Button variant="ghost" size="icon" className="h-9 w-9">
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <span className="text-sm font-medium">About</span>
-              </>
-            ) : (
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-foreground rounded-sm flex items-center justify-center">
-                  <div className="w-3 h-3 bg-background rounded-[2px]" />
-                </div>
-                <span className="font-semibold tracking-tight">floppy</span>
-              </div>
-            )}
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-foreground rounded-sm flex items-center justify-center">
+              <div className="w-3 h-3 bg-background rounded-[2px]" />
+            </div>
+            <span className="font-semibold tracking-tight">floppy</span>
           </div>
           <div className="flex items-center gap-2">
             <a
@@ -113,7 +96,7 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
               size="sm"
               className="gap-1.5"
             >
-              {showBackButton ? "Library" : "Open App"}
+              Open App
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -125,12 +108,12 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
         <section className="py-16 sm:py-24 lg:py-32">
           <div className="max-w-2xl">
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
-              Comic book reader,<br />
-              release tracker,<br />
-              pull list manager.
+              Your comics.<br />
+              One app.<br />
+              Zero friction.
             </h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-lg">
-              Read your collection. Discover new releases. Track the series you follow. All in one place.
+              The open-source comic reader that does it all. Read your collection, track new releases, and manage your pull list—no account required, works offline.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button
@@ -138,7 +121,7 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
                 size="lg"
                 className="gap-2"
               >
-                {showBackButton ? "Open Library" : "Get Started"}
+                Get Started
                 <ArrowRight className="w-4 h-4" />
               </Button>
               <a
@@ -190,27 +173,27 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
 
         {/* How it works */}
         <section className="py-16 border-t border-border/40">
-          <h2 className="text-lg font-medium mb-8">How it works</h2>
+          <h2 className="text-lg font-medium mb-8">Get started in seconds</h2>
           <div className="grid sm:grid-cols-3 gap-8">
             <div>
               <div className="text-sm text-muted-foreground mb-2">01</div>
-              <h3 className="font-medium mb-1">Add comics</h3>
+              <h3 className="font-medium mb-1">Drop in your comics</h3>
               <p className="text-sm text-muted-foreground">
-                Import files from your device or add from URLs. Everything stays local.
+                Drag files from your device or paste URLs. Your collection stays on your device—private and secure.
               </p>
             </div>
             <div>
               <div className="text-sm text-muted-foreground mb-2">02</div>
-              <h3 className="font-medium mb-1">Browse releases</h3>
+              <h3 className="font-medium mb-1">Discover what's new</h3>
               <p className="text-sm text-muted-foreground">
-                Check the weekly release calendar. Follow series to build your pull list.
+                Browse weekly releases, find new series, and build your pull list to track what's coming.
               </p>
             </div>
             <div>
               <div className="text-sm text-muted-foreground mb-2">03</div>
-              <h3 className="font-medium mb-1">Read and track</h3>
+              <h3 className="font-medium mb-1">Read anywhere</h3>
               <p className="text-sm text-muted-foreground">
-                Read in the browser. Your progress syncs across your library automatically.
+                Open in your browser or install as an app. Your progress syncs automatically across your library.
               </p>
             </div>
           </div>
@@ -225,9 +208,9 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
         <section className="py-16 border-t border-border/40">
           <div className="grid sm:grid-cols-2 gap-12">
             <div>
-              <h2 className="text-lg font-medium mb-4">Open source</h2>
+              <h2 className="text-lg font-medium mb-4">100% Open Source</h2>
               <p className="text-sm text-muted-foreground mb-4">
-                Free to use, free to modify. Built with Next.js, React, and IndexedDB.
+                No subscriptions. No tracking. No data harvesting. Just a well-crafted app you can trust, inspect, and modify.
               </p>
               <a
                 href="https://github.com/TimMikeladze/floppy"
@@ -239,9 +222,9 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
               </a>
             </div>
             <div>
-              <h2 className="text-lg font-medium mb-4">Works offline</h2>
+              <h2 className="text-lg font-medium mb-4">Offline-first</h2>
               <p className="text-sm text-muted-foreground">
-                Install as an app on any device. Your library is stored locally and works without internet.
+                Install on any device and read anywhere—even without internet. Your library lives on your device, always available.
               </p>
             </div>
           </div>
@@ -251,8 +234,8 @@ export function LandingContent({ showBackButton = false, onGetStarted }: Landing
         <section className="py-16 sm:py-24 border-t border-border/40">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-              <h2 className="text-xl font-medium mb-2">Start reading</h2>
-              <p className="text-sm text-muted-foreground">No account required.</p>
+              <h2 className="text-xl font-medium mb-2">Ready to dive in?</h2>
+              <p className="text-sm text-muted-foreground">Free forever. No sign-up needed.</p>
             </div>
             <div className="flex gap-3">
               <Button onClick={handleGetStarted} className="gap-2">
