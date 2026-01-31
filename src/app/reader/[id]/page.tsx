@@ -37,6 +37,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   const [comic, setComic] = useState<Comic | null>(null)
   const [pageUrls, setPageUrls] = useState<string[]>([])
   const [remotePageData, setRemotePageData] = useState<RemotePage[]>([])
+  const [usingCachedPages, setUsingCachedPages] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -112,7 +113,8 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
 
   // Load remote pages on demand (current page + adjacent for smooth navigation)
   useEffect(() => {
-    if (!comic || comic.sourceType !== "remote" || remotePageData.length === 0) return
+    // Skip if using cached pages (offline mode) or if no remote data available
+    if (!comic || comic.sourceType !== "remote" || remotePageData.length === 0 || usingCachedPages) return
 
     const pagesToLoad = [currentPage - 1, currentPage, currentPage + 1].filter(
       (p) => p >= 0 && p < remotePageData.length
@@ -239,6 +241,18 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     // Handle remote comics
     if (comic.sourceType === "remote") {
       try {
+        // First, check for cached pages (offline support)
+        const cachedPages = await getPagesForComic(comic.id)
+        if (cachedPages && cachedPages.length > 0) {
+          // Use cached pages - comic is available offline
+          const urls = cachedPages.map((blob) => URL.createObjectURL(blob))
+          setPageUrls(urls)
+          setUsingCachedPages(true)
+          setIsLoading(false)
+          return
+        }
+
+        // No cached pages, fall back to loading from remote URLs
         const remotePagesRecord = await getRemotePages(comic.id)
         if (remotePagesRecord && remotePagesRecord.pages.length > 0) {
           // Sort pages by page number
@@ -413,7 +427,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   // Remote comics have pages loaded from URLs, not files
   const isRemote = comic.sourceType === "remote"
   const hasContent = isRemote
-    ? remotePageData.length > 0
+    ? remotePageData.length > 0 || usingCachedPages
     : useNativePdf
       ? pdfFile !== null
       : comic.hasFile && comic.totalPages
@@ -463,7 +477,9 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     )
   }
 
-  const totalPages = isRemote ? remotePageData.length : (comic.totalPages ?? 0)
+  const totalPages = isRemote
+    ? (usingCachedPages ? pageUrls.length : remotePageData.length)
+    : (comic.totalPages ?? 0)
 
   return (
     <div ref={containerRef} className="fixed inset-0 overflow-hidden bg-black" onMouseMove={handleMouseMove}>
