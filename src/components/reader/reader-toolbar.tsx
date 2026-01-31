@@ -6,6 +6,8 @@ import Link from "next/link"
 
 interface ReaderToolbarProps {
   title: string
+  currentPage: number
+  totalPages: number
   isVisible: boolean
   onMenuClick: () => void
   onBookmarkClick: () => void
@@ -17,6 +19,8 @@ interface ReaderToolbarProps {
 
 export function ReaderToolbar({
   title,
+  currentPage,
+  totalPages,
   isVisible,
   onMenuClick,
   onBookmarkClick,
@@ -45,9 +49,14 @@ export function ReaderToolbar({
           </Link>
         </Button>
 
-        <h1 className="flex-1 truncate text-sm font-medium text-white drop-shadow-md px-2">
-          {title}
-        </h1>
+        <div className="flex-1 min-w-0 px-2">
+          <h1 className="truncate text-sm font-medium text-white drop-shadow-md">
+            {title}
+          </h1>
+          <p className="text-xs text-white/70 tabular-nums">
+            Page {currentPage + 1} of {totalPages}
+          </p>
+        </div>
 
         <Button
           variant="ghost"
