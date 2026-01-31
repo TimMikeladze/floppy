@@ -124,6 +124,7 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
         sourceType: 'local',
         series: parsed.seriesName,
         issue: parsed.issueNumber?.toString(),
+        addedAt: new Date(),
       }
 
       await saveComic(comic)

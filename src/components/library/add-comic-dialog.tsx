@@ -52,6 +52,7 @@ export function AddComicDialogControlled({ open, onOpenChange, onComicAdded }: A
         currentPage: 0,
         hasFile: false,
         sourceType: 'local',
+        addedAt: new Date(),
       }
 
       await saveComic(comic)
@@ -209,6 +210,7 @@ export function AddComicDialog({ onComicAdded }: AddComicDialogProps) {
         currentPage: 0,
         hasFile: false,
         sourceType: 'local',
+        addedAt: new Date(),
       }
 
       await saveComic(comic)

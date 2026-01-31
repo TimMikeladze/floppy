@@ -647,6 +647,7 @@ export async function importLibrary(file: File, options: { merge: boolean } = { 
   // Import comics (without file handles - user must re-attach files)
   for (const comic of data.comics) {
     if (comic.lastRead) comic.lastRead = new Date(comic.lastRead)
+    if (comic.addedAt) comic.addedAt = new Date(comic.addedAt)
     // Mark as needing file re-attachment
     comic.hasFile = false
     comic.fileHandle = undefined

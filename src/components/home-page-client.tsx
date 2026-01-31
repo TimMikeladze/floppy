@@ -18,7 +18,7 @@ import { getStoredLibraryPreferences, saveLibraryPreferences } from "@/hooks/use
 const filterTypes = ["all", "reading", "completed", "want"] as const
 type FilterType = (typeof filterTypes)[number]
 
-const sortTypes = ["title-asc", "title-desc", "recent", "progress"] as const
+const sortTypes = ["title-asc", "title-desc", "recent", "added", "progress"] as const
 type SortType = (typeof sortTypes)[number]
 
 const viewModes = ["grid", "table", "series"] as const
@@ -81,7 +81,7 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
     if (!hasInitializedFromStorage.current) return
 
     saveLibraryPreferences({
-      sortBy: sortBy as "title-asc" | "title-desc" | "recent" | "progress",
+      sortBy: sortBy as "title-asc" | "title-desc" | "recent" | "added" | "progress",
       viewMode: viewMode as "grid" | "table",
       filter: activeFilter as "all" | "reading" | "completed" | "want",
       selectedListId: selectedListId ?? null,
@@ -160,6 +160,10 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
         const aTime = a.lastRead ? new Date(a.lastRead).getTime() : 0
         const bTime = b.lastRead ? new Date(b.lastRead).getTime() : 0
         return bTime - aTime
+      } else if (sortBy === "added") {
+        const aTime = a.addedAt ? new Date(a.addedAt).getTime() : 0
+        const bTime = b.addedAt ? new Date(b.addedAt).getTime() : 0
+        return bTime - aTime // Newest first
       } else if (sortBy === "progress") {
         const aProgress = a.totalPages ? a.currentPage / a.totalPages : 0
         const bProgress = b.totalPages ? b.currentPage / b.totalPages : 0

@@ -221,6 +221,7 @@ export function convertToStorageFormat(
       publisher: issue.publisher,
       releaseDate: issue.releaseDate,
       author: issue.author,
+      addedAt: new Date(),
     }
 
     comics.push(comic)

@@ -45,7 +45,7 @@ interface ComicTableProps {
   onUpload?: () => void
 }
 
-type SortKey = "title" | "series" | "author" | "progress" | "lastRead"
+type SortKey = "title" | "series" | "author" | "progress" | "lastRead" | "addedAt"
 type SortDirection = "asc" | "desc"
 
 export function ComicTable({
@@ -86,6 +86,11 @@ export function ComicTable({
           const aTime = a.lastRead ? new Date(a.lastRead).getTime() : 0
           const bTime = b.lastRead ? new Date(b.lastRead).getTime() : 0
           comparison = aTime - bTime
+          break
+        case "addedAt":
+          const aAddedTime = a.addedAt ? new Date(a.addedAt).getTime() : 0
+          const bAddedTime = b.addedAt ? new Date(b.addedAt).getTime() : 0
+          comparison = aAddedTime - bAddedTime
           break
       }
 
@@ -261,6 +266,9 @@ export function ComicTable({
               <TableHead className="w-[100px]">
                 <SortHeader label="Progress" sortKeyName="progress" />
               </TableHead>
+              <TableHead className="w-[100px]">
+                <SortHeader label="Added" sortKeyName="addedAt" />
+              </TableHead>
               <TableHead className="w-[120px]">Status</TableHead>
               <TableHead className="w-[80px]">Size</TableHead>
               <TableHead className="w-[50px]"></TableHead>
@@ -338,6 +346,11 @@ export function ComicTable({
                     ) : (
                       "-"
                     )}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {comic.addedAt
+                      ? new Date(comic.addedAt).toLocaleDateString()
+                      : "-"}
                   </TableCell>
                   <TableCell>
                     <Badge
