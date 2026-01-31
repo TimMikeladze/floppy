@@ -35,8 +35,8 @@ interface AppBarProps {
   onAddComic: () => void
   searchQuery: string
   onSearchChange: (query: string) => void
-  sortBy: "title-asc" | "title-desc" | "recent" | "progress"
-  onSortChange: (sort: "title-asc" | "title-desc" | "recent" | "progress") => void
+  sortBy: "title-asc" | "title-desc" | "recent" | "added" | "progress"
+  onSortChange: (sort: "title-asc" | "title-desc" | "recent" | "added" | "progress") => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
   onManageLists?: () => void
@@ -91,7 +91,8 @@ export function AppBar({
   const sortLabels = {
     "title-asc": "Title (A-Z)",
     "title-desc": "Title (Z-A)",
-    recent: "Recent",
+    recent: "Recently Read",
+    added: "Recently Added",
     progress: "Progress",
   }
 
@@ -193,7 +194,7 @@ export function AppBar({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuLabel className="text-xs text-muted-foreground">Sort by</DropdownMenuLabel>
-                  {(["recent", "title-asc", "title-desc", "progress"] as const).map((sort) => (
+                  {(["recent", "added", "title-asc", "title-desc", "progress"] as const).map((sort) => (
                     <DropdownMenuItem
                       key={sort}
                       onClick={() => onSortChange(sort)}

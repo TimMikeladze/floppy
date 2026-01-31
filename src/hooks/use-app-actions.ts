@@ -61,6 +61,7 @@ export function useAppActions(onDataChange?: () => Promise<void>) {
           format: metadata.format,
           fileHandle: handle,
           sourceType: 'local',
+          addedAt: new Date(),
         }
 
         await saveComic(comic)

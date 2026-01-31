@@ -8,6 +8,7 @@ export interface Comic {
   totalPages: number | null
   currentPage: number
   lastRead?: Date
+  addedAt?: Date // Date when comic was added to library
   series?: string
   issue?: string
   fileSize?: number

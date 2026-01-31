@@ -3,7 +3,7 @@
 import { useEffect, useCallback, useRef } from "react"
 
 export interface LibraryPreferences {
-  sortBy: "title-asc" | "title-desc" | "recent" | "progress"
+  sortBy: "title-asc" | "title-desc" | "recent" | "added" | "progress"
   viewMode: "grid" | "table" | "series"
   filter: "all" | "reading" | "completed" | "want"
   selectedListId: string | null
