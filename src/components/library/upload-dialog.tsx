@@ -52,14 +52,6 @@ export function UploadDialog({ open, onOpenChange, onFilesSelected }: UploadDial
     }
   }, [onFilesSelected, onOpenChange])
 
-  const handleFolderInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const filesWithHandles: FileWithHandle[] = Array.from(e.target.files).map((file) => ({ file }))
-      onFilesSelected(filesWithHandles)
-      onOpenChange(false)
-    }
-  }, [onFilesSelected, onOpenChange])
-
   const handleFilePicker = useCallback(async () => {
     // Use File System Access API on supported browsers (mainly desktop Chrome/Edge)
     if (supportsFileSystem) {
@@ -218,41 +210,9 @@ export function UploadDialog({ open, onOpenChange, onFilesSelected }: UploadDial
           </div>
 
           {/* Bottom options */}
-          <div className="p-4 flex gap-3">
-            {/* Folder option */}
-            <label
-              className="flex-1 group cursor-pointer"
-            >
-              <div
-                className="px-4 py-3 rounded-xl text-center transition-all duration-200 group-hover:scale-[1.02] group-active:scale-[0.98]"
-                style={{
-                  background: 'var(--secondary)',
-                  border: '1px solid var(--border)',
-                }}
-              >
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: 'var(--foreground)' }}
-                >
-                  Import folder
-                </span>
-              </div>
-              <input
-                type="file"
-                accept={IOS_FRIENDLY_ACCEPT}
-                multiple
-                // @ts-ignore
-                webkitdirectory=""
-                // @ts-ignore
-                directory=""
-                onChange={handleFolderInput}
-                className="hidden"
-                aria-label="Import folder"
-              />
-            </label>
-
+          <div className="p-4">
             {/* Select files button - always show on mobile/iOS for better UX */}
-            <label className="flex-1 group cursor-pointer">
+            <label className="group cursor-pointer block">
               <div
                 className="px-4 py-3 rounded-xl text-center transition-all duration-200 group-hover:scale-[1.02] group-active:scale-[0.98]"
                 style={{
