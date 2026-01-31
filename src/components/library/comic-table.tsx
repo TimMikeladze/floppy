@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useCallback } from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import {
   Table,
   TableBody,
@@ -178,6 +179,20 @@ export function ComicTable({
     completed: { label: "Completed", variant: "default" as const },
   }
 
+  // Row height: cover image is h-10 (40px) + padding
+  const ROW_HEIGHT = 52
+
+  // Virtualizer for table rows using window scroll
+  const virtualizer = useVirtualizer({
+    count: sortedComics.length,
+    getScrollElement: useCallback(
+      () => (typeof window !== "undefined" ? document.documentElement : null),
+      []
+    ),
+    estimateSize: useCallback(() => ROW_HEIGHT, []),
+    overscan: 10,
+  })
+
   if (comics.length === 0) {
     return <LibraryEmptyState onUpload={onUpload} />
   }
@@ -252,7 +267,12 @@ export function ComicTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedComics.map((comic) => {
+            {/* Spacer for virtualization */}
+            {virtualizer.getVirtualItems().length > 0 && (
+              <tr style={{ height: virtualizer.getVirtualItems()[0]?.start ?? 0 }} />
+            )}
+            {virtualizer.getVirtualItems().map((virtualRow) => {
+              const comic = sortedComics[virtualRow.index]
               const status = getStatus(comic)
               const progress = getProgress(comic)
               const isSelected = selectedIds.has(comic.id)
@@ -260,8 +280,10 @@ export function ComicTable({
               return (
                 <TableRow
                   key={comic.id}
+                  data-index={virtualRow.index}
                   data-state={isSelected ? "selected" : undefined}
                   className="cursor-pointer"
+                  style={{ height: ROW_HEIGHT }}
                   onClick={() => {
                     if (comic.hasFile) {
                       router.push(`/reader/${comic.id}`)
@@ -368,6 +390,16 @@ export function ComicTable({
                 </TableRow>
               )
             })}
+            {/* Bottom spacer */}
+            {virtualizer.getVirtualItems().length > 0 && (
+              <tr
+                style={{
+                  height:
+                    virtualizer.getTotalSize() -
+                    (virtualizer.getVirtualItems()[virtualizer.getVirtualItems().length - 1]?.end ?? 0),
+                }}
+              />
+            )}
           </TableBody>
         </Table>
       </div>
