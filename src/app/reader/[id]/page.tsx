@@ -469,6 +469,8 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     <div ref={containerRef} className="fixed inset-0 overflow-hidden bg-black" onMouseMove={handleMouseMove}>
       <ReaderToolbar
         title={comic.title}
+        currentPage={currentPage}
+        totalPages={totalPages}
         isVisible={controlsVisible}
         onMenuClick={() => setMenuOpen(true)}
         onBookmarkClick={handleBookmark}
