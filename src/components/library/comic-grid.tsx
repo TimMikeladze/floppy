@@ -81,7 +81,7 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
   const gap = containerWidth ? getGap(containerWidth) : 12
 
   return (
-    <div ref={containerRef}>
+    <div ref={containerRef} className="w-full min-h-[200px]">
       {containerWidth > 0 && (
         <div
           style={{
