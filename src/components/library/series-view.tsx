@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
-import { useVirtualizer } from "@tanstack/react-virtual"
+import { useState, useMemo } from "react"
 import { ChevronDown, ChevronRight, AlertCircle, BookOpen } from "lucide-react"
 import type { Comic, SeriesGroup } from "@/lib/types"
 import { getSeriesName, getIssueNumber, normalizeSeriesName } from "@/lib/series-utils"
@@ -87,23 +86,22 @@ interface SeriesRowProps {
   group: SeriesGroup
   onDelete: (id: string) => void
   onUpdate?: () => void
-  isExpanded: boolean
-  onToggleExpand: () => void
 }
 
-function SeriesRow({ group, onDelete, onUpdate, isExpanded, onToggleExpand }: SeriesRowProps) {
+function SeriesRow({ group, onDelete, onUpdate }: SeriesRowProps) {
+  const [expanded, setExpanded] = useState(false)
   const progress = group.issueCount > 0 ? (group.readCount / group.issueCount) * 100 : 0
 
   return (
     <div className="border-b border-border last:border-b-0">
       {/* Series Header */}
       <button
-        onClick={onToggleExpand}
+        onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center gap-4 p-4 hover:bg-secondary/50 transition-colors text-left"
       >
         {/* Expand/Collapse Icon */}
         <div className="flex-shrink-0 text-muted-foreground">
-          {isExpanded ? (
+          {expanded ? (
             <ChevronDown className="w-5 h-5" />
           ) : (
             <ChevronRight className="w-5 h-5" />
@@ -162,7 +160,7 @@ function SeriesRow({ group, onDelete, onUpdate, isExpanded, onToggleExpand }: Se
       </button>
 
       {/* Expanded Comics Grid */}
-      {isExpanded && (
+      {expanded && (
         <div className="px-4 pb-4">
           <div
             className="grid gap-3"
@@ -190,120 +188,23 @@ function SeriesRow({ group, onDelete, onUpdate, isExpanded, onToggleExpand }: Se
   )
 }
 
-// Collapsed row height: header with thumbnail (h-16 = 64px) + padding (p-4 = 32px)
-const COLLAPSED_ROW_HEIGHT = 96
-
 export function SeriesView({ comics, onDelete, onUpdate, onUpload }: SeriesViewProps) {
   const seriesGroups = useMemo(() => groupComicsBySeries(comics), [comics])
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [scrollMargin, setScrollMargin] = useState(0)
-
-  // Measure scroll margin for virtualizer
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    const measureScrollMargin = () => {
-      const rect = container.getBoundingClientRect()
-      const scrollTop = window.scrollY || document.documentElement.scrollTop
-      setScrollMargin(rect.top + scrollTop)
-    }
-
-    measureScrollMargin()
-    window.addEventListener("resize", measureScrollMargin)
-    return () => window.removeEventListener("resize", measureScrollMargin)
-  }, [])
-
-  // Virtualizer for series rows with dynamic measurement
-  const virtualizer = useVirtualizer({
-    count: seriesGroups.length,
-    getScrollElement: useCallback(
-      () => (typeof window !== "undefined" ? document.documentElement : null),
-      []
-    ),
-    estimateSize: useCallback(
-      (index) => {
-        const group = seriesGroups[index]
-        if (expandedGroups.has(group.normalizedName)) {
-          // Estimate expanded height: header + grid rows
-          // Each comic card is roughly 220px tall, grid has 120px min width
-          // Assume ~6 columns on average, so rows = ceil(comics / 6)
-          const estimatedRows = Math.ceil(group.comics.length / 6)
-          return COLLAPSED_ROW_HEIGHT + (estimatedRows * 220) + 16 // 16px for padding
-        }
-        return COLLAPSED_ROW_HEIGHT
-      },
-      [seriesGroups, expandedGroups]
-    ),
-    overscan: 3,
-    scrollMargin,
-  })
-
-  // Force re-measure when scrollMargin is calculated
-  useLayoutEffect(() => {
-    if (scrollMargin > 0) {
-      virtualizer.measure()
-    }
-  }, [scrollMargin, virtualizer])
-
-  const toggleExpanded = useCallback((normalizedName: string, index: number) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev)
-      if (next.has(normalizedName)) {
-        next.delete(normalizedName)
-      } else {
-        next.add(normalizedName)
-      }
-      return next
-    })
-    // Re-measure after state update
-    setTimeout(() => {
-      virtualizer.measureElement(document.querySelector(`[data-index="${index}"]`) as HTMLElement)
-    }, 0)
-  }, [virtualizer])
 
   if (comics.length === 0) {
     return <LibraryEmptyState onUpload={onUpload} />
   }
 
   return (
-    <div ref={containerRef} className="rounded-2xl border border-border overflow-hidden bg-card">
-      <div
-        style={{
-          height: `${virtualizer.getTotalSize()}px`,
-          width: "100%",
-          position: "relative",
-        }}
-      >
-        {virtualizer.getVirtualItems().map((virtualRow) => {
-          const group = seriesGroups[virtualRow.index]
-          const isExpanded = expandedGroups.has(group.normalizedName)
-
-          return (
-            <div
-              key={group.normalizedName}
-              data-index={virtualRow.index}
-              ref={virtualizer.measureElement}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-            >
-              <SeriesRow
-                group={group}
-                onDelete={onDelete}
-                onUpdate={onUpdate}
-                isExpanded={isExpanded}
-                onToggleExpand={() => toggleExpanded(group.normalizedName, virtualRow.index)}
-              />
-            </div>
-          )
-        })}
-      </div>
+    <div className="divide-y divide-border rounded-2xl border border-border overflow-hidden bg-card">
+      {seriesGroups.map((group) => (
+        <SeriesRow
+          key={group.normalizedName}
+          group={group}
+          onDelete={onDelete}
+          onUpdate={onUpdate}
+        />
+      ))}
     </div>
   )
 }

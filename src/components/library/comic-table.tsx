@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
-import { useVirtualizer } from "@tanstack/react-virtual"
+import { useState, useMemo } from "react"
 import {
   Table,
   TableBody,
@@ -57,29 +56,11 @@ export function ComicTable({
   onUpload,
 }: ComicTableProps) {
   const router = useRouter()
-  const tableContainerRef = useRef<HTMLDivElement>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [sortKey, setSortKey] = useState<SortKey>("title")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [addToListComic, setAddToListComic] = useState<Comic | null>(null)
   const [bulkAddToList, setBulkAddToList] = useState(false)
-  const [scrollMargin, setScrollMargin] = useState(0)
-
-  // Measure scroll margin for virtualizer
-  useEffect(() => {
-    const container = tableContainerRef.current
-    if (!container) return
-
-    const measureScrollMargin = () => {
-      const rect = container.getBoundingClientRect()
-      const scrollTop = window.scrollY || document.documentElement.scrollTop
-      setScrollMargin(rect.top + scrollTop)
-    }
-
-    measureScrollMargin()
-    window.addEventListener("resize", measureScrollMargin)
-    return () => window.removeEventListener("resize", measureScrollMargin)
-  }, [])
 
   const sortedComics = useMemo(() => {
     return [...comics].sort((a, b) => {
@@ -202,28 +183,6 @@ export function ComicTable({
     completed: { label: "Completed", variant: "default" as const },
   }
 
-  // Row height: cover image is h-10 (40px) + padding
-  const ROW_HEIGHT = 52
-
-  // Virtualizer for table rows using window scroll
-  const virtualizer = useVirtualizer({
-    count: sortedComics.length,
-    getScrollElement: useCallback(
-      () => (typeof window !== "undefined" ? document.documentElement : null),
-      []
-    ),
-    estimateSize: useCallback(() => ROW_HEIGHT, []),
-    overscan: 10,
-    scrollMargin,
-  })
-
-  // Force re-measure when scrollMargin is calculated
-  useLayoutEffect(() => {
-    if (scrollMargin > 0) {
-      virtualizer.measure()
-    }
-  }, [scrollMargin, virtualizer])
-
   if (comics.length === 0) {
     return <LibraryEmptyState onUpload={onUpload} />
   }
@@ -266,7 +225,7 @@ export function ComicTable({
         </div>
       )}
 
-      <div ref={tableContainerRef} className="rounded-lg border">
+      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -301,12 +260,7 @@ export function ComicTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {/* Spacer for virtualization */}
-            {virtualizer.getVirtualItems().length > 0 && (
-              <tr style={{ height: virtualizer.getVirtualItems()[0]?.start ?? 0 }} />
-            )}
-            {virtualizer.getVirtualItems().map((virtualRow) => {
-              const comic = sortedComics[virtualRow.index]
+            {sortedComics.map((comic) => {
               const status = getStatus(comic)
               const progress = getProgress(comic)
               const isSelected = selectedIds.has(comic.id)
@@ -314,10 +268,8 @@ export function ComicTable({
               return (
                 <TableRow
                   key={comic.id}
-                  data-index={virtualRow.index}
                   data-state={isSelected ? "selected" : undefined}
                   className="cursor-pointer"
-                  style={{ height: ROW_HEIGHT }}
                   onClick={() => {
                     if (comic.hasFile) {
                       router.push(`/reader/${comic.id}`)
@@ -429,16 +381,6 @@ export function ComicTable({
                 </TableRow>
               )
             })}
-            {/* Bottom spacer */}
-            {virtualizer.getVirtualItems().length > 0 && (
-              <tr
-                style={{
-                  height:
-                    virtualizer.getTotalSize() -
-                    (virtualizer.getVirtualItems()[virtualizer.getVirtualItems().length - 1]?.end ?? 0),
-                }}
-              />
-            )}
           </TableBody>
         </Table>
       </div>
