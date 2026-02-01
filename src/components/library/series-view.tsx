@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback } from "react"
+import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { ChevronDown, ChevronRight, AlertCircle, BookOpen } from "lucide-react"
 import type { Comic, SeriesGroup } from "@/lib/types"
@@ -196,6 +196,24 @@ const COLLAPSED_ROW_HEIGHT = 96
 export function SeriesView({ comics, onDelete, onUpdate, onUpload }: SeriesViewProps) {
   const seriesGroups = useMemo(() => groupComicsBySeries(comics), [comics])
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [scrollMargin, setScrollMargin] = useState(0)
+
+  // Measure scroll margin for virtualizer
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const measureScrollMargin = () => {
+      const rect = container.getBoundingClientRect()
+      const scrollTop = window.scrollY || document.documentElement.scrollTop
+      setScrollMargin(rect.top + scrollTop)
+    }
+
+    measureScrollMargin()
+    window.addEventListener("resize", measureScrollMargin)
+    return () => window.removeEventListener("resize", measureScrollMargin)
+  }, [])
 
   // Virtualizer for series rows with dynamic measurement
   const virtualizer = useVirtualizer({
@@ -219,7 +237,15 @@ export function SeriesView({ comics, onDelete, onUpdate, onUpload }: SeriesViewP
       [seriesGroups, expandedGroups]
     ),
     overscan: 3,
+    scrollMargin,
   })
+
+  // Force re-measure when scrollMargin is calculated
+  useLayoutEffect(() => {
+    if (scrollMargin > 0) {
+      virtualizer.measure()
+    }
+  }, [scrollMargin, virtualizer])
 
   const toggleExpanded = useCallback((normalizedName: string, index: number) => {
     setExpandedGroups((prev) => {
@@ -242,7 +268,7 @@ export function SeriesView({ comics, onDelete, onUpdate, onUpload }: SeriesViewP
   }
 
   return (
-    <div className="rounded-2xl border border-border overflow-hidden bg-card">
+    <div ref={containerRef} className="rounded-2xl border border-border overflow-hidden bg-card">
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
