@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useCallback } from "react"
+import { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import {
   Table,
@@ -57,11 +57,29 @@ export function ComicTable({
   onUpload,
 }: ComicTableProps) {
   const router = useRouter()
+  const tableContainerRef = useRef<HTMLDivElement>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [sortKey, setSortKey] = useState<SortKey>("title")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [addToListComic, setAddToListComic] = useState<Comic | null>(null)
   const [bulkAddToList, setBulkAddToList] = useState(false)
+  const [scrollMargin, setScrollMargin] = useState(0)
+
+  // Measure scroll margin for virtualizer
+  useEffect(() => {
+    const container = tableContainerRef.current
+    if (!container) return
+
+    const measureScrollMargin = () => {
+      const rect = container.getBoundingClientRect()
+      const scrollTop = window.scrollY || document.documentElement.scrollTop
+      setScrollMargin(rect.top + scrollTop)
+    }
+
+    measureScrollMargin()
+    window.addEventListener("resize", measureScrollMargin)
+    return () => window.removeEventListener("resize", measureScrollMargin)
+  }, [])
 
   const sortedComics = useMemo(() => {
     return [...comics].sort((a, b) => {
@@ -196,7 +214,15 @@ export function ComicTable({
     ),
     estimateSize: useCallback(() => ROW_HEIGHT, []),
     overscan: 10,
+    scrollMargin,
   })
+
+  // Force re-measure when scrollMargin is calculated
+  useLayoutEffect(() => {
+    if (scrollMargin > 0) {
+      virtualizer.measure()
+    }
+  }, [scrollMargin, virtualizer])
 
   if (comics.length === 0) {
     return <LibraryEmptyState onUpload={onUpload} />
@@ -240,7 +266,7 @@ export function ComicTable({
         </div>
       )}
 
-      <div className="rounded-lg border">
+      <div ref={tableContainerRef} className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>

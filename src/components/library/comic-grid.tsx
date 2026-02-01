@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useEffect, useCallback, useMemo } from "react"
+import { useRef, useState, useEffect, useCallback, useMemo, useLayoutEffect } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { ComicCard } from "./comic-card"
 import { LibraryEmptyState } from "./library-empty-state"
@@ -31,20 +31,29 @@ const ESTIMATED_ROW_HEIGHT = 280
 export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: ComicGridProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
+  const [scrollMargin, setScrollMargin] = useState(0)
 
-  // Measure container width
+  // Measure container width and scroll margin
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
+
+    const measureScrollMargin = () => {
+      const rect = container.getBoundingClientRect()
+      const scrollTop = window.scrollY || document.documentElement.scrollTop
+      setScrollMargin(rect.top + scrollTop)
+    }
 
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0]
       if (entry) {
         setContainerWidth(entry.contentRect.width)
+        measureScrollMargin()
       }
     })
 
     observer.observe(container)
+    measureScrollMargin()
     return () => observer.disconnect()
   }, [])
 
@@ -68,11 +77,21 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
   // Set up virtualizer
   const virtualizer = useVirtualizer({
     count: rows.length,
-    getScrollElement: () =>
-      typeof window !== "undefined" ? document.documentElement : null,
+    getScrollElement: useCallback(
+      () => (typeof window !== "undefined" ? document.documentElement : null),
+      []
+    ),
     estimateSize: useCallback(() => ESTIMATED_ROW_HEIGHT, []),
     overscan: 3,
+    scrollMargin,
   })
+
+  // Force re-measure when containerWidth changes to ensure proper initialization
+  useLayoutEffect(() => {
+    if (containerWidth > 0) {
+      virtualizer.measure()
+    }
+  }, [containerWidth, virtualizer])
 
   if (comics.length === 0) {
     return <LibraryEmptyState onUpload={onUpload} />
