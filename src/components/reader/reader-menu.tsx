@@ -1,7 +1,7 @@
 "use client"
 
 import { useReading } from "@/lib/reading-context"
-import { Bookmark, Download, CheckCircle2, Loader2 } from "lucide-react"
+import { Bookmark, Download, CheckCircle2, Loader2, Check, RotateCcw, Plus, Pencil, Image, CloudOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DeleteButton } from "@/components/ui/delete-button"
 import { Slider } from "@/components/ui/slider"
@@ -13,9 +13,12 @@ import { PageNavigator } from "./page-navigator"
 import { BookmarksPanel } from "./bookmarks-panel"
 import { NotesPanel } from "./notes-panel"
 import { SettingsPanel } from "./settings-panel"
-import type { Bookmark as BookmarkType } from "@/lib/types"
+import { AddToListDialog } from "@/components/library/add-to-list-dialog"
+import { EditComicDialog } from "@/components/library/edit-comic-dialog"
+import { CoverManager } from "@/components/library/cover-manager"
+import type { Bookmark as BookmarkType, Comic } from "@/lib/types"
 import { useState, useEffect, useCallback } from "react"
-import { getOfflineStatus, saveComicForOffline, type OfflineStatus } from "@/lib/storage"
+import { getOfflineStatus, saveComicForOffline, removeOfflineCache, saveComic, type OfflineStatus } from "@/lib/storage"
 import { toast } from "sonner"
 
 interface ReaderMenuProps {
@@ -25,11 +28,12 @@ interface ReaderMenuProps {
   totalPages: number
   onPageChange: (page: number) => void
   onBookmarkClick: () => void
-  comicId: string
+  comic: Comic
   pages: string[]
   bookmarks: BookmarkType[]
   onRefreshBookmarks: () => void
   onDelete: () => void
+  onComicUpdate?: () => void
 }
 
 export function ReaderMenu({
@@ -39,16 +43,24 @@ export function ReaderMenu({
   totalPages,
   onPageChange,
   onBookmarkClick,
-  comicId,
+  comic,
   pages,
   bookmarks,
   onRefreshBookmarks,
   onDelete,
+  onComicUpdate,
 }: ReaderMenuProps) {
   const { settings } = useReading()
   const [isDesktop, setIsDesktop] = useState(false)
   const [offlineStatus, setOfflineStatus] = useState<OfflineStatus | null>(null)
   const [saving, setSaving] = useState(false)
+  const [addToListOpen, setAddToListOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [coverManagerOpen, setCoverManagerOpen] = useState(false)
+
+  const comicId = comic.id
+  const isComplete = comic.totalPages && currentPage >= comic.totalPages - 1
+  const hasProgress = currentPage > 0
 
   useEffect(() => {
     // Check for desktop on mount and window resize
@@ -99,6 +111,51 @@ export function ReaderMenu({
     }
   }
 
+  const handleRemoveOffline = async () => {
+    try {
+      await removeOfflineCache(comicId)
+      toast.success("Offline cache removed")
+      refreshOfflineStatus()
+    } catch (error) {
+      console.error("Failed to remove offline cache:", error)
+      toast.error("Failed to remove offline cache")
+    }
+  }
+
+  const handleMarkAsRead = async () => {
+    if (!comic.totalPages) {
+      toast.error("Cannot mark as read: page count unknown")
+      return
+    }
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: comic.totalPages,
+        lastRead: new Date(),
+      })
+      toast.success("Marked as read")
+      onComicUpdate?.()
+    } catch (error) {
+      console.error("Failed to mark as read:", error)
+      toast.error("Failed to mark as read")
+    }
+  }
+
+  const handleMarkAsUnread = async () => {
+    try {
+      await saveComic({
+        ...comic,
+        currentPage: 0,
+        lastRead: undefined,
+      })
+      toast.success("Marked as unread")
+      onComicUpdate?.()
+    } catch (error) {
+      console.error("Failed to mark as unread:", error)
+      toast.error("Failed to mark as unread")
+    }
+  }
+
   // Use bottom on mobile, respect toolbarPosition on desktop
   const drawerDirection = isDesktop ? (settings.toolbarPosition ?? "right") : "bottom"
 
@@ -124,8 +181,8 @@ export function ReaderMenu({
           </div>
         </div>
 
-        {/* Quick Actions Row */}
-        <div className="px-4 py-3">
+        {/* Quick Actions Row - Navigation */}
+        <div className="px-4 py-3 border-b border-border/50">
           <div className="flex justify-around">
             <Button
               variant="ghost"
@@ -173,16 +230,79 @@ export function ReaderMenu({
               variant="menu"
             />
 
-            {/* Save for Offline button */}
+            <SettingsPanel variant="menu" />
+          </div>
+        </div>
+
+        {/* Comic Actions Row */}
+        <div className="px-4 py-3">
+          <div className="flex justify-around">
+            {/* Mark as Read / Unread */}
+            {comic.totalPages && !isComplete ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-col gap-1 h-auto py-2 px-3"
+                onClick={handleMarkAsRead}
+              >
+                <Check className="h-5 w-5" />
+                <span className="text-xs">Mark Read</span>
+              </Button>
+            ) : hasProgress ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-col gap-1 h-auto py-2 px-3"
+                onClick={handleMarkAsUnread}
+              >
+                <RotateCcw className="h-5 w-5" />
+                <span className="text-xs">Unread</span>
+              </Button>
+            ) : null}
+
+            {/* Add to List */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-col gap-1 h-auto py-2 px-3"
+              onClick={() => setAddToListOpen(true)}
+            >
+              <Plus className="h-5 w-5" />
+              <span className="text-xs">Add to List</span>
+            </Button>
+
+            {/* Edit Details */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-col gap-1 h-auto py-2 px-3"
+              onClick={() => setEditDialogOpen(true)}
+            >
+              <Pencil className="h-5 w-5" />
+              <span className="text-xs">Edit</span>
+            </Button>
+
+            {/* Manage Cover */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-col gap-1 h-auto py-2 px-3"
+              onClick={() => setCoverManagerOpen(true)}
+            >
+              <Image className="h-5 w-5" />
+              <span className="text-xs">Cover</span>
+            </Button>
+
+            {/* Offline actions */}
             {offlineStatus?.isAvailableOffline ? (
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex-col gap-1 h-auto py-2 px-3 text-green-600 dark:text-green-400"
-                disabled
+                className="flex-col gap-1 h-auto py-2 px-3"
+                onClick={handleRemoveOffline}
               >
-                <CheckCircle2 className="h-5 w-5" />
-                <span className="text-xs">Offline</span>
+                <CloudOff className="h-5 w-5" />
+                <span className="text-xs">Remove</span>
               </Button>
             ) : (
               <Button
@@ -197,11 +317,9 @@ export function ReaderMenu({
                 ) : (
                   <Download className="h-5 w-5" />
                 )}
-                <span className="text-xs">{saving ? "Saving" : "Save"}</span>
+                <span className="text-xs">{saving ? "Saving" : "Offline"}</span>
               </Button>
             )}
-
-            <SettingsPanel variant="menu" />
 
             <DeleteButton
               onDelete={onDelete}
@@ -212,6 +330,28 @@ export function ReaderMenu({
           </div>
         </div>
       </DrawerContent>
+
+      {/* Dialogs */}
+      <AddToListDialog
+        comicId={comicId}
+        comicTitle={comic.title}
+        open={addToListOpen}
+        onOpenChange={setAddToListOpen}
+      />
+
+      <EditComicDialog
+        comic={comic}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSave={() => onComicUpdate?.()}
+      />
+
+      <CoverManager
+        comic={comic}
+        open={coverManagerOpen}
+        onOpenChange={setCoverManagerOpen}
+        onCoverChange={() => onComicUpdate?.()}
+      />
     </Drawer>
   )
 }
