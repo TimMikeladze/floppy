@@ -85,7 +85,7 @@ export default function RootLayout({
             </ReadingProvider>
           </ThemeProvider>
           <Toaster
-            position="top-center"
+            position="bottom-center"
             toastOptions={{
               className: "!bg-card !text-card-foreground !border-border",
             }}
