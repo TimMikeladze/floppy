@@ -541,11 +541,12 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         totalPages={totalPages}
         onPageChange={handlePageChange}
         onBookmarkClick={handleBookmark}
-        comicId={comic.id}
+        comic={comic}
         pages={pageUrls}
         bookmarks={bookmarks}
         onRefreshBookmarks={loadBookmarks}
         onDelete={handleDelete}
+        onComicUpdate={loadComic}
       />
 
       <QuickNoteDialog
