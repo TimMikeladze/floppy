@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `floppy-${CACHE_VERSION}`;
 
 // Static assets to pre-cache on install
@@ -135,6 +135,23 @@ async function staleWhileRevalidate(request) {
   const networkResponse = await fetchPromise;
   if (networkResponse) {
     return networkResponse;
+  }
+
+  // Special handling for reader pages when offline:
+  // Serve any cached reader page as a shell - the React app will hydrate
+  // and load the correct comic from IndexedDB based on the URL's comic ID
+  const url = new URL(request.url);
+  if (request.mode === 'navigate' && url.pathname.startsWith('/reader/')) {
+    const allCachedRequests = await cache.keys();
+    for (const cachedRequest of allCachedRequests) {
+      const cachedUrl = new URL(cachedRequest.url);
+      if (cachedUrl.pathname.startsWith('/reader/')) {
+        const readerShell = await cache.match(cachedRequest);
+        if (readerShell) {
+          return readerShell;
+        }
+      }
+    }
   }
 
   // Fallback for navigation
