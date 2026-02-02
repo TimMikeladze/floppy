@@ -3,6 +3,7 @@
 import { useReading } from "@/lib/reading-context"
 import { Bookmark, Download, CheckCircle2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DeleteButton } from "@/components/ui/delete-button"
 import { Slider } from "@/components/ui/slider"
 import {
   Drawer,
@@ -28,6 +29,7 @@ interface ReaderMenuProps {
   pages: string[]
   bookmarks: BookmarkType[]
   onRefreshBookmarks: () => void
+  onDelete: () => void
 }
 
 export function ReaderMenu({
@@ -41,6 +43,7 @@ export function ReaderMenu({
   pages,
   bookmarks,
   onRefreshBookmarks,
+  onDelete,
 }: ReaderMenuProps) {
   const { settings } = useReading()
   const [isDesktop, setIsDesktop] = useState(false)
@@ -199,6 +202,13 @@ export function ReaderMenu({
             )}
 
             <SettingsPanel variant="menu" />
+
+            <DeleteButton
+              onDelete={onDelete}
+              size="sm"
+              className="flex-col gap-1 h-auto py-2 px-3 text-destructive hover:text-destructive"
+              variant="menu"
+            />
           </div>
         </div>
       </DrawerContent>

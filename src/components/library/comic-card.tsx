@@ -44,6 +44,7 @@ import { loadRemoteImage, revokeRemoteImage } from "@/lib/remote-loader"
 import { saveComic, getOfflineStatus, saveComicForOffline, removeOfflineCache, type OfflineStatus } from "@/lib/storage"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { useConfirmDelete } from "@/lib/use-confirm-delete"
 
 interface ComicCardProps {
   comic: Comic
@@ -182,6 +183,7 @@ interface CardContextMenuProps {
 function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManageCover, offlineStatus, onOfflineStatusChange }: CardContextMenuProps) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  const handleDelete = useConfirmDelete(onDelete)
   const isRemote = comic.sourceType === 'remote'
   const canRead = comic.hasFile || isRemote
   const hasProgress = comic.currentPage > 0
@@ -380,7 +382,7 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManage
           <DropdownMenuItem
             onClick={(e) => {
               e.preventDefault()
-              onDelete()
+              handleDelete()
             }}
             className="text-destructive focus:text-destructive"
           >
@@ -420,6 +422,10 @@ function MobileActionsSheet({
 }: MobileActionsSheetProps) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  const handleDelete = useConfirmDelete(() => {
+    onDelete()
+    onOpenChange(false)
+  })
   const isRemote = comic.sourceType === 'remote'
   const canRead = comic.hasFile || isRemote
   const hasProgress = comic.currentPage > 0
@@ -600,7 +606,7 @@ function MobileActionsSheet({
           <Button
             variant="ghost"
             className="w-full justify-start h-12 text-base text-destructive hover:text-destructive"
-            onClick={() => handleAction(onDelete)}
+            onClick={handleDelete}
           >
             <Trash2 className="mr-3 h-5 w-5" />
             Delete

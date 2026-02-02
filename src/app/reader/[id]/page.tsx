@@ -18,6 +18,7 @@ import {
   getRemotePages,
   getAllComics,
   getFileFromHandle,
+  deleteComic,
 } from "@/lib/storage"
 import { SUPPORTED_FORMATS } from "@/lib/comic-parser"
 import { loadRemoteImage, revokeAllRemoteImages } from "@/lib/remote-loader"
@@ -395,6 +396,18 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     [comic, currentPage]
   )
 
+  const handleDelete = useCallback(async () => {
+    if (!comic) return
+    try {
+      await deleteComic(comic.id)
+      toast.success("Comic deleted")
+      router.push("/library")
+    } catch (error) {
+      console.error("[reader] Error deleting comic:", error)
+      toast.error("Failed to delete comic")
+    }
+  }, [comic, router])
+
   // Handler to show controls when mouse is near top edge in fullscreen
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -532,6 +545,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         pages={pageUrls}
         bookmarks={bookmarks}
         onRefreshBookmarks={loadBookmarks}
+        onDelete={handleDelete}
       />
 
       <QuickNoteDialog
