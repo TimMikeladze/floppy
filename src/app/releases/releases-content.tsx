@@ -16,7 +16,9 @@ import {
   ChevronRight,
   Heart,
   Bell,
+  Plus,
 } from "lucide-react"
+import { ReleaseSubmissionDialog } from "@/components/releases/release-submission-dialog"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns"
 import { usePullList } from "@/hooks/use-pull-list"
 import { useReleasesCrud } from "@/hooks/use-releases-crud"
@@ -34,6 +36,7 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
   const [activeView, setActiveView] = useQueryState("view", parseAsStringLiteral(viewTypes).withDefault("new"))
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [showSubmissionDialog, setShowSubmissionDialog] = useState(false)
 
   // Track if we've initialized from localStorage
   const hasInitializedFromStorage = useRef(false)
@@ -189,6 +192,16 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
                 </button>
               )
             })}
+            <div className="flex-1" />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowSubmissionDialog(true)}
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              Submit Release
+            </Button>
           </div>
           <ScrollBar orientation="horizontal" className="invisible" />
         </ScrollArea>
@@ -388,6 +401,11 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
       {activeView === "pull-list" && (
         <PullListView releases={releases} pullList={pullList} />
       )}
+
+      <ReleaseSubmissionDialog
+        open={showSubmissionDialog}
+        onOpenChange={setShowSubmissionDialog}
+      />
     </AppLayout>
   )
 }
