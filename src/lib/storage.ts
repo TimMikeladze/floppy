@@ -1126,6 +1126,9 @@ export async function saveComicForOffline(
       // Save all pages to IndexedDB
       await savePagesForComic(comicId, result.pages)
 
+      // Pre-cache the reader page for offline access
+      await preCacheReaderPage(comicId)
+
       onProgress?.({ currentPage: result.pages.length, totalPages: result.pages.length, status: "complete" })
       return true
 
@@ -1169,6 +1172,9 @@ export async function saveComicForOffline(
         await saveComic({ ...comic, totalPages: pageBlobs.length })
       }
 
+      // Pre-cache the reader page for offline access
+      await preCacheReaderPage(comicId)
+
       onProgress?.({ currentPage: pageBlobs.length, totalPages: pageBlobs.length, status: "complete" })
       return true
     }
@@ -1176,6 +1182,24 @@ export async function saveComicForOffline(
     console.error("[storage] Failed to save comic for offline:", error)
     onProgress?.({ currentPage: 0, totalPages, status: "error", error: String(error) })
     return false
+  }
+}
+
+/**
+ * Pre-cache the reader page for a comic to ensure offline navigation works.
+ * This fetches the reader page so the service worker can cache it.
+ */
+async function preCacheReaderPage(comicId: string): Promise<void> {
+  try {
+    // Fetch the reader page to trigger service worker caching
+    // Use a simple fetch with no-cors to avoid issues, the service worker will cache it
+    await fetch(`/reader/${comicId}`, {
+      method: 'GET',
+      cache: 'no-cache', // Ensure we get a fresh response that the SW can cache
+    })
+  } catch (error) {
+    // Non-critical - the service worker fallback will still work if any reader page is cached
+    console.warn("[storage] Failed to pre-cache reader page:", error)
   }
 }
 
