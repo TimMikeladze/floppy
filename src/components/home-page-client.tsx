@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useQueryState, parseAsStringLiteral, parseAsString } from "nuqs"
 import { AppLayout } from "@/components/layout/app-layout"
 import { ComicGrid } from "@/components/library/comic-grid"
@@ -42,7 +42,6 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
 
   // Local state
   const [comics, setComics] = useState<Comic[]>([])
-  const [filteredComics, setFilteredComics] = useState<Comic[]>([])
   const [lists, setLists] = useState<ComicList[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [importDataSourceDialogOpen, setImportDataSourceDialogOpen] = useState(false)
@@ -88,10 +87,6 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
     })
   }, [sortBy, viewMode, activeFilter, selectedListId])
 
-  useEffect(() => {
-    filterAndSortComics()
-  }, [comics, searchQuery, sortBy, selectedListId, lists, activeFilter])
-
   async function loadComics() {
     try {
       const allComics = await getAllComics()
@@ -109,7 +104,7 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
     setLists(allLists)
   }
 
-  function filterAndSortComics() {
+  const filteredComics = useMemo(() => {
     let filtered = [...comics]
 
     // Apply list filter
@@ -172,8 +167,8 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
       return 0
     })
 
-    setFilteredComics(filtered)
-  }
+    return filtered
+  }, [comics, searchQuery, sortBy, selectedListId, lists, activeFilter])
 
   function getFilterCounts() {
     const counts = { all: comics.length, reading: 0, completed: 0, want: 0 }

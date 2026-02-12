@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
+import { useWindowVirtualizer } from "@tanstack/react-virtual"
 import {
   Table,
   TableBody,
@@ -96,6 +97,15 @@ export function ComicTable({
       return sortDirection === "asc" ? comparison : -comparison
     })
   }, [comics, sortKey, sortDirection])
+
+  const tableBodyRef = useRef<HTMLTableSectionElement>(null)
+
+  const rowVirtualizer = useWindowVirtualizer({
+    count: sortedComics.length,
+    estimateSize: () => 57,
+    overscan: 20,
+    scrollMargin: tableBodyRef.current?.offsetTop ?? 0,
+  })
 
   const allSelected = comics.length > 0 && selectedIds.size === comics.length
   const someSelected = selectedIds.size > 0 && selectedIds.size < comics.length
@@ -259,128 +269,149 @@ export function ComicTable({
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {sortedComics.map((comic) => {
-              const status = getStatus(comic)
-              const progress = getProgress(comic)
-              const isSelected = selectedIds.has(comic.id)
+          <TableBody ref={tableBodyRef}>
+            {(() => {
+              const virtualRows = rowVirtualizer.getVirtualItems()
+              const totalSize = rowVirtualizer.getTotalSize()
+              const scrollMargin = rowVirtualizer.options.scrollMargin
+              const paddingTop = virtualRows.length > 0 ? Math.max(0, virtualRows[0].start - scrollMargin) : 0
+              const paddingBottom = virtualRows.length > 0 ? Math.max(0, totalSize - (virtualRows[virtualRows.length - 1].end - scrollMargin)) : 0
 
               return (
-                <TableRow
-                  key={comic.id}
-                  data-state={isSelected ? "selected" : undefined}
-                  className="cursor-pointer"
-                  onClick={() => {
-                    if (comic.hasFile) {
-                      router.push(`/reader/${comic.id}`)
-                    }
-                  }}
-                >
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => toggleSelect(comic.id)}
-                      aria-label={`Select ${comic.title}`}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-3">
-                      {comic.coverImage && (
-                        <img
-                          src={comic.coverImage}
-                          alt=""
-                          className="h-10 w-7 object-cover rounded-sm"
-                        />
-                      )}
-                      <span className="truncate max-w-[200px]">{comic.title}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {comic.series ? (
-                      <span>
-                        {comic.series}
-                        {comic.issue && <span className="opacity-70"> #{comic.issue}</span>}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {comic.author || "-"}
-                  </TableCell>
-                  <TableCell>
-                    {comic.totalPages ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full transition-all"
-                            style={{ width: `${progress}%` }}
+                <>
+                  {paddingTop > 0 && (
+                    <tr><td colSpan={9} style={{ height: paddingTop, padding: 0, border: 0 }} /></tr>
+                  )}
+                  {virtualRows.map((virtualRow) => {
+                    const comic = sortedComics[virtualRow.index]
+                    const status = getStatus(comic)
+                    const progress = getProgress(comic)
+                    const isSelected = selectedIds.has(comic.id)
+
+                    return (
+                      <TableRow
+                        key={comic.id}
+                        data-index={virtualRow.index}
+                        ref={rowVirtualizer.measureElement}
+                        data-state={isSelected ? "selected" : undefined}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          if (comic.hasFile) {
+                            router.push(`/reader/${comic.id}`)
+                          }
+                        }}
+                      >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(comic.id)}
+                            aria-label={`Select ${comic.title}`}
                           />
-                        </div>
-                        <span className="text-xs text-muted-foreground w-8">
-                          {progress}%
-                        </span>
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {comic.addedAt
-                      ? new Date(comic.addedAt).toLocaleDateString()
-                      : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={statusConfig[status].variant}
-                      className={
-                        status === "completed"
-                          ? "bg-green-500/10 text-green-600 border-green-500/20"
-                          : status === "reading"
-                            ? "bg-blue-500/10 text-blue-600 border-blue-500/20"
-                            : ""
-                      }
-                    >
-                      {statusConfig[status].label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {formatFileSize(comic.fileSize)}
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {comic.hasFile && (
-                          <DropdownMenuItem
-                            onClick={() => router.push(`/reader/${comic.id}`)}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-3">
+                            {comic.coverImage && (
+                              <img
+                                src={comic.coverImage}
+                                alt=""
+                                className="h-10 w-7 object-cover rounded-sm"
+                              />
+                            )}
+                            <span className="truncate max-w-[200px]">{comic.title}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {comic.series ? (
+                            <span>
+                              {comic.series}
+                              {comic.issue && <span className="opacity-70"> #{comic.issue}</span>}
+                            </span>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {comic.author || "-"}
+                        </TableCell>
+                        <TableCell>
+                          {comic.totalPages ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary rounded-full transition-all"
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground w-8">
+                                {progress}%
+                              </span>
+                            </div>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {comic.addedAt
+                            ? new Date(comic.addedAt).toLocaleDateString()
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={statusConfig[status].variant}
+                            className={
+                              status === "completed"
+                                ? "bg-green-500/10 text-green-600 border-green-500/20"
+                                : status === "reading"
+                                  ? "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                                  : ""
+                            }
                           >
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            Read
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem onClick={() => setAddToListComic(comic)}>
-                          <ListPlus className="mr-2 h-4 w-4" />
-                          Add to List
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => onDelete(comic.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
+                            {statusConfig[status].label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {formatFileSize(comic.fileSize)}
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {comic.hasFile && (
+                                <DropdownMenuItem
+                                  onClick={() => router.push(`/reader/${comic.id}`)}
+                                >
+                                  <BookOpen className="mr-2 h-4 w-4" />
+                                  Read
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => setAddToListComic(comic)}>
+                                <ListPlus className="mr-2 h-4 w-4" />
+                                Add to List
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => onDelete(comic.id)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                  {paddingBottom > 0 && (
+                    <tr><td colSpan={9} style={{ height: paddingBottom, padding: 0, border: 0 }} /></tr>
+                  )}
+                </>
               )
-            })}
+            })()}
           </TableBody>
         </Table>
       </div>

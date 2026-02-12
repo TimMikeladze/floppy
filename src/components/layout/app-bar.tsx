@@ -22,7 +22,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useTheme } from "next-themes"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { SupportDialog } from "./support-dialog"
@@ -70,6 +71,20 @@ export function AppBar({
   const [supportDialogOpen, setSupportDialogOpen] = useState(false)
   const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
+
+  // Local search state for responsive input, debounced propagation to parent
+  const [localSearch, setLocalSearch] = useState(searchQuery)
+  const debouncedSearchChange = useDebouncedCallback(onSearchChange, 300)
+
+  // Sync local state when external searchQuery changes (e.g. cleared programmatically)
+  useEffect(() => {
+    setLocalSearch(searchQuery)
+  }, [searchQuery])
+
+  const handleSearchInput = useCallback((value: string) => {
+    setLocalSearch(value)
+    debouncedSearchChange(value)
+  }, [debouncedSearchChange])
 
   const handleImportClick = () => {
     importInputRef.current?.click()
@@ -143,8 +158,8 @@ export function AppBar({
                 <Input
                   type="search"
                   placeholder="Search comics..."
-                  value={searchQuery}
-                  onChange={(e) => onSearchChange(e.target.value)}
+                  value={localSearch}
+                  onChange={(e) => handleSearchInput(e.target.value)}
                   className="pl-9 h-10 bg-secondary border-border/50 placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/50"
                   autoFocus
                 />
@@ -154,6 +169,7 @@ export function AppBar({
                 size="icon"
                 onClick={() => {
                   setSearchExpanded(false)
+                  setLocalSearch("")
                   onSearchChange("")
                 }}
                 className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
@@ -170,8 +186,8 @@ export function AppBar({
                   <Input
                     type="search"
                     placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
+                    value={localSearch}
+                    onChange={(e) => handleSearchInput(e.target.value)}
                     className="w-48 lg:w-64 pl-9 h-9 bg-secondary border-border/50 placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:border-primary/30"
                   />
                 </div>

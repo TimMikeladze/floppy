@@ -94,10 +94,10 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
     }
   }, [selectedDate, releases, getByDate])
 
-  const filterReleases = (releasesToFilter: Release[]) => {
-    if (!searchQuery) return releasesToFilter
+  const filteredNewReleases = useMemo(() => {
+    if (!searchQuery) return newReleases
     const query = searchQuery.toLowerCase()
-    return releasesToFilter.filter(
+    return newReleases.filter(
       (release) =>
         release.title.toLowerCase().includes(query) ||
         release.series.toLowerCase().includes(query) ||
@@ -105,10 +105,20 @@ export function ReleasesContent({ releasesEnabled }: ReleasesContentProps) {
         release.writers.some((w) => w.toLowerCase().includes(query)) ||
         release.artists.some((a) => a.toLowerCase().includes(query))
     )
-  }
+  }, [newReleases, searchQuery])
 
-  const filteredNewReleases = filterReleases(newReleases)
-  const filteredUpcomingReleases = filterReleases(upcomingReleases)
+  const filteredUpcomingReleases = useMemo(() => {
+    if (!searchQuery) return upcomingReleases
+    const query = searchQuery.toLowerCase()
+    return upcomingReleases.filter(
+      (release) =>
+        release.title.toLowerCase().includes(query) ||
+        release.series.toLowerCase().includes(query) ||
+        release.publisher.toLowerCase().includes(query) ||
+        release.writers.some((w) => w.toLowerCase().includes(query)) ||
+        release.artists.some((a) => a.toLowerCase().includes(query))
+    )
+  }, [upcomingReleases, searchQuery])
 
   const calendarDays = useMemo(() => {
     const start = startOfMonth(currentMonth)
