@@ -15,7 +15,7 @@ export const releaseSchema = z.object({
   publisher: z.string().min(1, "Publisher is required"),
   writers: z.array(z.string()).min(1, "At least one writer is required"),
   artists: z.array(z.string()).min(1, "At least one artist is required"),
-  description: z.string().default(""),
+  description: z.string(),
   price: z
     .string()
     .regex(/^\$?\d+\.?\d*$/, "Invalid price format (e.g., $4.99)")
