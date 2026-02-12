@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { ChevronDown, ChevronRight, AlertCircle, BookOpen } from "lucide-react"
 import type { Comic, SeriesGroup } from "@/lib/types"
-import { getSeriesName, getIssueNumber, normalizeSeriesName } from "@/lib/series-utils"
+import { getSeriesName, getIssueNumber, getYear, normalizeSeriesName } from "@/lib/series-utils"
 import { ComicCard } from "./comic-card"
 import { LibraryEmptyState } from "./library-empty-state"
 import { cn } from "@/lib/utils"
@@ -38,7 +38,14 @@ function groupComicsBySeries(comics: Comic[]): SeriesGroup[] {
       if (aIssue === null && bIssue === null) return a.title.localeCompare(b.title)
       if (aIssue === null) return 1
       if (bIssue === null) return -1
-      return aIssue - bIssue
+      if (aIssue !== bIssue) return aIssue - bIssue
+      // Same issue number: sort by year ascending (oldest first)
+      const aYear = getYear(a)
+      const bYear = getYear(b)
+      if (aYear !== null && bYear !== null) return aYear - bYear
+      if (aYear !== null) return -1
+      if (bYear !== null) return 1
+      return a.title.localeCompare(b.title)
     })
 
     // Calculate read count

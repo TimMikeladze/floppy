@@ -1,4 +1,5 @@
 import type { Comic } from "./types"
+import { naturalCollator } from "./sort-utils"
 
 interface ParsedComic {
   seriesName: string
@@ -140,6 +141,18 @@ export function getSeriesName(comic: Comic): string {
 }
 
 /**
+ * Get the year for a comic, either from releaseDate field or parsed from title.
+ */
+export function getYear(comic: Comic): number | null {
+  if (comic.releaseDate) {
+    const year = new Date(comic.releaseDate).getFullYear()
+    if (!isNaN(year)) return year
+  }
+  const parsed = parseComicTitle(comic.title)
+  return parsed.year ?? null
+}
+
+/**
  * Find the next issue in the series for a given comic.
  * Returns null if no next issue is found.
  */
@@ -179,9 +192,9 @@ export function findNextIssue(currentComic: Comic, allComics: Comic[]): Comic | 
  * Returns null if this is the last comic alphabetically.
  */
 export function findNextComicByName(currentComic: Comic, allComics: Comic[]): Comic | null {
-  // Sort all comics alphabetically by title (case-insensitive)
+  // Sort all comics alphabetically by title using natural number sort
   const sortedComics = [...allComics].sort((a, b) =>
-    a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+    naturalCollator.compare(a.title, b.title)
   )
 
   // Find current comic's position

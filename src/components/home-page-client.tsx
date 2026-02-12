@@ -14,6 +14,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Library, BookOpen, CheckCircle2, Heart } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { getStoredLibraryPreferences, saveLibraryPreferences } from "@/hooks/use-library-preferences"
+import { naturalCollator } from "@/lib/sort-utils"
 
 const filterTypes = ["all", "reading", "completed", "want"] as const
 type FilterType = (typeof filterTypes)[number]
@@ -148,9 +149,9 @@ export function HomePageClient({ csvImportEnabled, releasesEnabled }: HomePageCl
     // Apply sort
     filtered.sort((a, b) => {
       if (sortBy === "title-asc") {
-        return a.title.localeCompare(b.title)
+        return naturalCollator.compare(a.title, b.title)
       } else if (sortBy === "title-desc") {
-        return b.title.localeCompare(a.title)
+        return naturalCollator.compare(b.title, a.title)
       } else if (sortBy === "recent") {
         const aTime = a.lastRead ? new Date(a.lastRead).getTime() : 0
         const bTime = b.lastRead ? new Date(b.lastRead).getTime() : 0
