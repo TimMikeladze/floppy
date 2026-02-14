@@ -1316,138 +1316,74 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
         {/* Glowing top border */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
 
-        {/* Comic panel corner brackets */}
-        <div className="hidden sm:block absolute top-4 left-4 sm:left-6 md:left-8 w-8 h-8 border-l-2 border-t-2 border-border/15" />
-        <div className="hidden sm:block absolute top-4 right-4 sm:right-6 md:right-8 w-8 h-8 border-r-2 border-t-2 border-border/15" />
-
-        <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6 md:px-8 py-14 sm:py-16">
-          {/* Brand section */}
-          <div className="flex items-start gap-4 mb-12">
-            <div className="w-10 h-10 bg-foreground rounded-sm flex items-center justify-center flex-shrink-0">
-              <div className="w-4 h-4 bg-background rounded-[2px]" />
-            </div>
-            <div>
-              <div className="text-xl font-bold tracking-tight mb-1">floppy</div>
-              <div className="text-sm text-muted-foreground">
-                The open-source comic reader
+        <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6 md:px-8 py-8 sm:py-10">
+          {/* Main footer row */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            {/* Brand */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-foreground rounded-sm flex items-center justify-center flex-shrink-0">
+                <div className="w-3 h-3 bg-background rounded-[1px]" />
               </div>
-              <div className="text-xs text-muted-foreground/50 mt-0.5">
-                Built for privacy, speed, and offline reading
+              <div>
+                <div className="text-sm font-semibold tracking-tight">floppy</div>
+                <div className="text-xs text-muted-foreground/60">The open-source comic reader</div>
               </div>
             </div>
-          </div>
 
-          {/* Link columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-12 mb-12 pb-12 border-b border-border/10">
-            {/* Resources */}
-            <div>
-              <h3 className="text-[11px] font-semibold tracking-widest uppercase text-foreground/70 mb-4">
-                Resources
-              </h3>
-              <ul className="space-y-3">
-                <li>
-                  <a
-                    href="https://github.com/TimMikeladze/floppy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2 group"
-                  >
-                    <span className="text-muted-foreground/40 group-hover:text-muted-foreground/60 transition-colors">&rarr;</span>
-                    GitHub
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://github.com/TimMikeladze/floppy/releases"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2 group"
-                  >
-                    <span className="text-muted-foreground/40 group-hover:text-muted-foreground/60 transition-colors">&rarr;</span>
-                    Releases
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://github.com/TimMikeladze/floppy/issues"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2 group"
-                  >
-                    <span className="text-muted-foreground/40 group-hover:text-muted-foreground/60 transition-colors">&rarr;</span>
-                    Report a Bug
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Connect */}
-            <div>
-              <h3 className="text-[11px] font-semibold tracking-widest uppercase text-foreground/70 mb-4">
-                Connect
-              </h3>
-              <ul className="space-y-3">
-                <li>
-                  <a
-                    href="https://twitter.com/linesofcode"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2.5"
-                  >
-                    <Twitter className="w-3.5 h-3.5 opacity-50" />
-                    Twitter
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://bsky.app/profile/linesofcode.bsky.social"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2.5"
-                  >
-                    <svg className="w-3.5 h-3.5 opacity-50" viewBox="0 0 568 501" fill="currentColor">
-                      <path d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.333 453.32c-119.86 122.992-172.272-30.859-185.702-70.281-2.462-7.227-3.614-10.608-3.631-7.733-.017-2.875-1.169.506-3.631 7.733-13.43 39.422-65.842 193.273-185.702 70.281-63.111-64.76-33.89-129.52 80.986-149.071-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.659 0 75.291 0 57.946 0-28.906 76.135-1.612 123.121 33.664Z"/>
-                    </svg>
-                    Bluesky
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Support */}
-            <div className="col-span-2 sm:col-span-1">
-              <h3 className="text-[11px] font-semibold tracking-widest uppercase text-foreground/70 mb-4">
+            {/* Links */}
+            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+              <a
+                href="https://github.com/TimMikeladze/floppy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors inline-flex items-center gap-1.5"
+              >
+                <Github className="w-3.5 h-3.5 opacity-60" />
+                GitHub
+              </a>
+              <a
+                href="https://github.com/TimMikeladze/floppy/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
+                Releases
+              </a>
+              <a
+                href="https://twitter.com/linesofcode"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors inline-flex items-center gap-1.5"
+              >
+                <Twitter className="w-3.5 h-3.5 opacity-60" />
+                Twitter
+              </a>
+              <a
+                href="https://bsky.app/profile/linesofcode.bsky.social"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors inline-flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5 opacity-60" viewBox="0 0 568 501" fill="currentColor">
+                  <path d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.333 453.32c-119.86 122.992-172.272-30.859-185.702-70.281-2.462-7.227-3.614-10.608-3.631-7.733-.017-2.875-1.169.506-3.631 7.733-13.43 39.422-65.842 193.273-185.702 70.281-63.111-64.76-33.89-129.52 80.986-149.071-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.659 0 75.291 0 57.946 0-28.906 76.135-1.612 123.121 33.664Z"/>
+                </svg>
+                Bluesky
+              </a>
+              <button
+                onClick={() => setSupportOpen(true)}
+                className="hover:text-foreground transition-colors inline-flex items-center gap-1.5 group"
+              >
+                <Heart className="w-3.5 h-3.5 text-pink-400/70 fill-pink-400/20 group-hover:text-pink-500 group-hover:fill-pink-500/40 transition-all" />
                 Support
-              </h3>
-              <ul className="space-y-3">
-                <li>
-                  <button
-                    onClick={() => setSupportOpen(true)}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2.5 group"
-                  >
-                    <Heart className="w-3.5 h-3.5 opacity-50 group-hover:opacity-70 transition-opacity" />
-                    Support this project
-                  </button>
-                </li>
-              </ul>
-            </div>
+              </button>
+            </nav>
           </div>
 
-          {/* Halftone decorative bar */}
-          <div className="mb-8 relative h-2 overflow-hidden">
-            <div
-              className="absolute inset-0 opacity-[0.12]"
-              style={{
-                backgroundImage: "radial-gradient(circle, currentColor 0.75px, transparent 0.75px)",
-                backgroundSize: "6px 6px",
-                mask: "linear-gradient(90deg, transparent 0%, black 30%, black 70%, transparent 100%)",
-                WebkitMask: "linear-gradient(90deg, transparent 0%, black 30%, black 70%, transparent 100%)",
-              }}
-            />
-          </div>
+          {/* Divider */}
+          <div className="my-6 h-px bg-border/10" />
 
           {/* Credits */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground/50">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground/50">
             <div className="flex items-center gap-1.5">
               <span>Built by</span>
               <a
@@ -1466,10 +1402,6 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
             </div>
           </div>
         </div>
-
-        {/* Bottom corner brackets */}
-        <div className="hidden sm:block absolute bottom-4 left-4 sm:left-6 md:left-8 w-8 h-8 border-l-2 border-b-2 border-border/15" />
-        <div className="hidden sm:block absolute bottom-4 right-4 sm:right-6 md:right-8 w-8 h-8 border-r-2 border-b-2 border-border/15" />
       </footer>
 
       <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
