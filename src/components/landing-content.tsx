@@ -1,12 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef, ReactNode } from "react"
-import Link from "next/link"
 import {
   Github,
   Heart,
   BookOpen,
-  Calendar,
   Library,
   ArrowRight,
   Code,
@@ -14,7 +12,6 @@ import {
   Zap,
   Users,
   Smartphone,
-  Wifi,
   WifiOff,
   Layers,
   Hand,
@@ -25,7 +22,6 @@ import {
   Download,
   Monitor,
   Tablet,
-  ChevronRight,
   ChevronDown,
   Twitter,
   Star,
@@ -94,9 +90,9 @@ const features = [
     description: "Single or double-page layouts with gesture controls",
   },
   {
-    icon: Calendar,
-    title: "Weekly Releases",
-    description: "Browse new issues, build your pull list",
+    icon: Layers,
+    title: "Multiple Formats",
+    description: "CBZ, CBR, PDF, and EPUB—all in one app",
   },
   {
     icon: Library,
@@ -135,9 +131,9 @@ const libraryFeatures = [
     description: "Issues automatically group by series. Filter by reading status, publisher, or create custom collections.",
   },
   {
-    icon: Bell,
-    title: "Pull List",
-    description: "Follow series you love. Get notified when new issues drop. Never miss a release.",
+    icon: Bookmark,
+    title: "Reading Progress",
+    description: "Track where you left off. Pick up any series right where you stopped reading.",
   },
   {
     icon: Download,
@@ -224,7 +220,7 @@ const faqs = [
   },
   {
     q: "How is this different from a PDF reader?",
-    a: "Floppy is purpose-built for comics—gesture controls, automatic progress tracking, pull lists, weekly release calendar. Not a document viewer with comic support.",
+    a: "Floppy is purpose-built for comics—gesture controls, automatic progress tracking, smart library organization. Not a document viewer with comic support.",
   },
 ]
 
@@ -303,7 +299,7 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                 Everywhere.
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-lg">
-                The free comic reader that works offline, respects your privacy, and runs on every device. No sign-up. No tracking. Just reading.
+                The free, open-source comic book app that works offline, respects your privacy, and runs on every device. No sign-up. No tracking. Just reading.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
                 <Button onClick={handleGetStarted} size="lg" className="gap-2">
@@ -797,7 +793,7 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
               </h2>
               <div className="w-12 h-0.5 bg-foreground/20 mx-auto mb-4 animate-draw-line" />
               <p className="text-muted-foreground">
-                Whether you&apos;re catching up on Wednesday pulls or managing a massive digital collection.
+                Whether you&apos;re reading your first comic or managing a massive digital collection.
               </p>
             </div>
             <div className="grid sm:grid-cols-3 gap-6">
@@ -911,104 +907,6 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                   </div>
                 </div>
               ))}
-            </div>
-          </ScrollAnimatedSection>
-        </section>
-
-        {/* Weekly Releases */}
-        <section className="border-t border-border/40 px-4 sm:px-6 md:px-8 relative overflow-hidden">
-          {/* Diagonal speed lines - comic style */}
-          <div
-            className="absolute inset-0 opacity-[0.015]"
-            style={{
-              backgroundImage: "repeating-linear-gradient(-25deg, transparent, transparent 20px, currentColor 20px, currentColor 21px)",
-            }}
-          />
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-24" animation="fade-in-up">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
-                  Never miss an issue
-                </h2>
-                <p className="text-muted-foreground mb-6">
-                  Browse this week's releases across all major publishers. See what's dropping, discover new series, and build your reading queue.
-                </p>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center gap-3 text-sm">
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    <span>Weekly release calendar from major publishers</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-sm">
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    <span>Follow series to track new issues</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-sm">
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    <span>Discover trending and new series</span>
-                  </li>
-                </ul>
-                <Link href="/releases">
-                  <Button variant="outline" className="gap-2">
-                    Browse Releases
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </div>
-              <div className="hidden lg:block">
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { issue: "#12", titleW: "w-3/4", accentOpacity: "bg-foreground/10" },
-                    { issue: "#7", titleW: "w-2/3", accentOpacity: "bg-foreground/8" },
-                    { issue: "#1", titleW: "w-4/5", accentOpacity: "bg-foreground/6" },
-                    { issue: "#34", titleW: "w-1/2", accentOpacity: "bg-foreground/12" },
-                    { issue: "#5", titleW: "w-3/5", accentOpacity: "bg-foreground/7" },
-                    { issue: "#21", titleW: "w-2/3", accentOpacity: "bg-foreground/9" },
-                  ].map((cover, i) => (
-                    <div
-                      key={i}
-                      className="aspect-[2/3] border border-border bg-background opacity-0 animate-fade-in relative overflow-hidden group hover-lift"
-                      style={{
-                        animationDelay: `${i * 80}ms`,
-                        animationFillMode: "forwards",
-                      }}
-                    >
-                      {/* Cover art area */}
-                      <div className={`absolute inset-0 h-[65%] ${cover.accentOpacity}`}>
-                        {/* Speed lines */}
-                        {[...Array(6)].map((_, j) => (
-                          <div
-                            key={j}
-                            className="absolute w-px h-[150%] bg-border/20"
-                            style={{
-                              left: `${10 + j * 16}%`,
-                              top: "-25%",
-                              transform: `rotate(${-20 + (i * 5)}deg)`,
-                            }}
-                          />
-                        ))}
-                        {/* Silhouette shape */}
-                        <div
-                          className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-secondary/50"
-                          style={{
-                            width: `${40 + (i % 3) * 10}%`,
-                            height: `${50 + (i % 2) * 15}%`,
-                            borderRadius: "40% 40% 0 0",
-                          }}
-                        />
-                      </div>
-                      {/* Issue badge */}
-                      <div className="absolute top-1.5 left-1.5 px-1 py-0.5 border border-border/60 bg-background">
-                        <span className="text-[7px] font-mono font-bold text-muted-foreground">{cover.issue}</span>
-                      </div>
-                      {/* Title area */}
-                      <div className="absolute bottom-0 left-0 right-0 h-[35%] p-2 flex flex-col justify-end border-t border-border/30">
-                        <div className={`${cover.titleW} h-2 bg-foreground/60 rounded-sm mb-1.5`} />
-                        <div className="w-2/5 h-1.5 bg-muted-foreground/25 rounded-sm" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </ScrollAnimatedSection>
         </section>
@@ -1163,7 +1061,7 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Why floppy stays different</h2>
               <div className="w-12 h-0.5 bg-foreground/20 mx-auto mb-4 animate-draw-line" />
               <p className="text-muted-foreground">
-                No venture funding. No growth hacks. Just a reader that puts you first.
+                Open source from day one. Community-built, community-driven. A comic book app that puts you first.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1326,7 +1224,7 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
               </div>
               <div>
                 <div className="text-sm font-semibold tracking-tight">floppy</div>
-                <div className="text-xs text-muted-foreground/60">The open-source comic reader</div>
+                <div className="text-xs text-muted-foreground/60">The open-source comic book app</div>
               </div>
             </div>
 
