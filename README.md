@@ -1,22 +1,28 @@
 # floppy
 
-The free, open-source comic book app that works offline, respects your privacy, and runs on every device. No sign-up. No tracking. Just reading.
+A comic book reader that runs in your browser. Free, open source, and offline-first.
 
-Supports CBZ, CBR, PDF, and EPUB. All data stays on your device — no backend, no accounts, nothing collected. Purpose-built for comics: gesture controls, reading progress, bookmarks, and a library that auto-organizes by series. Install it as a PWA on any phone, tablet, or desktop.
+## What it does
 
-Free forever. Open source from day one. Community-driven — bug reports and pull requests welcome.
+Drop in your comics and start reading. Floppy handles CBZ, CBR, PDF, and EPUB files — the formats you actually have sitting on your hard drive.
+
+**Reader** — Single page, double-page spreads, or continuous scroll. Swipe to turn pages, pinch to zoom. Pick up where you left off — your progress is saved automatically.
+
+**Library** — Your collection organizes itself by series. Filter by reading status, search across everything, or build custom lists. Works whether you have 10 issues or 10,000.
+
+**Bookmarks & notes** — Mark pages you want to come back to. Add notes while you read.
+
+**Releases tracker** — Follow upcoming releases across publishers. Know what's coming out and when.
+
+## How it works
+
+Everything stays on your device. There's no server storing your data, no account to create, no information collected. Your comics are saved in the browser's local storage and accessible offline.
+
+Floppy is a progressive web app — install it on your phone, tablet, or desktop directly from the browser. No app store required.
 
 ## Running locally
 
-### Prerequisites
-
-- [Bun](https://bun.sh/) (recommended) or Node.js 18+
-
-```bash
-curl -fsSL https://bun.sh/install | bash
-```
-
-### Setup
+Install [Bun](https://bun.sh/) (or use Node.js 18+), then:
 
 ```bash
 git clone https://github.com/TimMikeladze/floppy.git
@@ -25,36 +31,12 @@ bun install
 bun run dev
 ```
 
-The app will be available at [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000).
 
-### Scripts
-
-| Command | Description |
-|---|---|
-| `bun run dev` | Start the dev server |
-| `bun run build` | Production build |
-| `bun start` | Run the production server |
-| `bun run lint` | Run the linter |
-| `bun run generate:releases` | Regenerate releases data from YAML sources |
-
-### Docker
+Or with Docker:
 
 ```bash
 docker compose up -d
-```
-
-## Project structure
-
-```
-src/
-├── app/            # Next.js pages and routes
-├── components/     # React components (library, reader, releases, ui)
-├── hooks/          # Custom React hooks
-├── lib/            # Parsers, storage, types, utilities
-└── flags/          # Feature flags
-data/               # YAML source files for the releases tracker
-scripts/            # Build-time data generation
-public/             # Static assets, PWA manifest, service worker
 ```
 
 ## Contributing
