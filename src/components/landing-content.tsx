@@ -274,10 +274,22 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
             </div>
             <span className="font-semibold tracking-tight">floppy</span>
           </div>
-          <Button onClick={handleGetStarted} size="sm" className="gap-1.5">
-            Open App
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <a
+              href="https://github.com/TimMikeladze/floppy"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Github className="w-3.5 h-3.5" />
+                GitHub
+              </Button>
+            </a>
+            <Button onClick={handleGetStarted} size="sm" className="gap-1.5">
+              Open App
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -1238,14 +1250,6 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
               >
                 <Github className="w-3.5 h-3.5 opacity-60" />
                 GitHub
-              </a>
-              <a
-                href="https://github.com/TimMikeladze/floppy/releases"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors"
-              >
-                Releases
               </a>
               <a
                 href="https://twitter.com/linesofcode"
