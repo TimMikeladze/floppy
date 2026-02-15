@@ -1,54 +1,41 @@
-<div align="center">
-  <img src="https://via.placeholder.com/800x200/1a1a2e/eaeaea?text=FLOPPY" alt="Floppy Banner" width="100%">
+# floppy
 
-  <h3>A modern, web-based comic book reader</h3>
+A free, open-source comic book reader that runs in the browser. Offline-first, no account required, no data collected.
 
-  <p>
-    <a href="https://github.com/TimMikeladze/floppy/stargazers"><img src="https://img.shields.io/github/stars/TimMikeladze/floppy?style=flat" alt="Stars"></a>
-    <a href="https://github.com/TimMikeladze/floppy/blob/main/LICENSE"><img src="https://img.shields.io/github/license/TimMikeladze/floppy" alt="License"></a>
-    <a href="https://github.com/TimMikeladze/floppy/issues"><img src="https://img.shields.io/github/issues/TimMikeladze/floppy" alt="Issues"></a>
-  </p>
-</div>
+## What is this?
 
----
+Floppy is a web-based app for reading and organizing comic books. It supports CBZ, CBR, PDF, and EPUB formats. All data lives in your browser via IndexedDB — there's no backend, no database server, and nothing leaves your device.
 
-## Screenshots
+### Goals
 
-<div align="center">
-  <img src="https://via.placeholder.com/400x300/2d2d44/eaeaea?text=Library+View" alt="Library" width="45%">
-  <img src="https://via.placeholder.com/400x300/2d2d44/eaeaea?text=Reader+View" alt="Reader" width="45%">
-</div>
+- **Privacy by default** — no accounts, no tracking, no server-side storage
+- **Offline-first** — works without an internet connection once loaded
+- **Multi-format** — handle the comic formats people actually use
+- **Installable** — runs as a PWA on any device, no app store needed
 
-<div align="center">
-  <img src="https://via.placeholder.com/400x300/2d2d44/eaeaea?text=Mobile+View" alt="Mobile" width="45%">
-  <img src="https://via.placeholder.com/400x300/2d2d44/eaeaea?text=Settings" alt="Settings" width="45%">
-</div>
+## Tech stack
 
----
+| Layer | Tech |
+|---|---|
+| Framework | [Next.js 16](https://nextjs.org/) (App Router) |
+| UI | [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/) |
+| Styling | [Tailwind CSS 4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/) |
+| Comic parsing | [libarchive.js](https://github.com/nicholaskariniemi/libarchive.js) (CBR/RAR), [JSZip](https://stuk.github.io/jszip/) (CBZ), [PDF.js](https://mozilla.github.io/pdf.js/) (PDF) |
+| Storage | IndexedDB, [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API) |
+| Linting | [Biome](https://biomejs.dev/) |
+| Runtime | [Bun](https://bun.sh/) |
 
-## Features
-
-- **Multi-format support** — Read CBZ, CBR, and PDF files
-- **Library management** — Organize comics into lists, track reading progress, search and filter
-- **Customizable reader** — Single/double page layouts, multiple fit modes, light/dark themes
-- **Bookmarks & notes** — Annotate pages and save your favorite moments
-- **Offline-first** — All data stored locally in your browser
-- **PWA support** — Install as a standalone app on any device
-- **Import/Export** — Backup your library or import from CSV data sources
-
----
-
-## Running Locally
+## Running locally
 
 ### Prerequisites
 
-Install [Bun](https://bun.sh/) if you don't have it:
+- [Bun](https://bun.sh/) (recommended) or Node.js 18+
 
 ```bash
 curl -fsSL https://bun.sh/install | bash
 ```
 
-### Development
+### Setup
 
 ```bash
 git clone https://github.com/TimMikeladze/floppy.git
@@ -57,77 +44,45 @@ bun install
 bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+The app will be available at [http://localhost:3000](http://localhost:3000).
 
-### Production Build
+### Scripts
 
-```bash
-bun run build
-bun start
-```
+| Command | Description |
+|---|---|
+| `bun run dev` | Start the dev server |
+| `bun run build` | Production build |
+| `bun start` | Run the production server |
+| `bun run lint` | Run the linter |
+| `bun run generate:releases` | Regenerate releases data from YAML sources |
 
----
-
-## Docker
-
-### Using Docker Compose (Recommended)
+### Docker
 
 ```bash
 docker compose up -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+## Project structure
 
-### Using Docker Directly
-
-```bash
-docker build -t floppy .
-docker run -p 3000:3000 floppy
+```
+src/
+├── app/            # Next.js pages and routes
+├── components/     # React components (library, reader, releases, ui)
+├── hooks/          # Custom React hooks
+├── lib/            # Parsers, storage, types, utilities
+└── flags/          # Feature flags
+data/               # YAML source files for the releases tracker
+scripts/            # Build-time data generation
+public/             # Static assets, PWA manifest, service worker
 ```
 
----
+## Contributing
 
-## Deployment
-
-### Vercel (Recommended)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/TimMikeladze/floppy)
-
-Or deploy via CLI:
-
-```bash
-bunx vercel
-```
-
-### Docker (Any Platform)
-
-Deploy the Docker image to any container platform:
-
-- **Railway**: `railway up`
-- **Fly.io**: `fly launch`
-- **DigitalOcean App Platform**: Connect your repo and deploy
-- **AWS/GCP/Azure**: Push to your container registry and deploy
-
-### Self-Hosted
-
-Any platform that supports Node.js, Bun, or Docker.
-
-#### Using Bun/Node.js:
-
-```bash
-bun run build
-bun start
-```
-
-#### Using Docker:
-
-```bash
-docker build -t floppy .
-docker run -p 3000:3000 floppy
-```
-
----
+1. Fork the repo and create a branch
+2. Make your changes
+3. Make sure `bun run build` succeeds
+4. Open a pull request
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT
