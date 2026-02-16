@@ -1,42 +1,46 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { AppLayout } from "@/components/layout/app-layout"
-import type { Release, Publisher } from "@/lib/releases-types"
-import { format } from "date-fns"
-import { usePullList } from "@/hooks/use-pull-list"
+import { format } from "date-fns";
 import {
-  Heart,
+  ArrowLeft,
   Bell,
+  BookOpen,
   Calendar,
   DollarSign,
-  BookOpen,
-  User,
+  Heart,
   Palette,
   Tag,
-  ArrowLeft,
-} from "lucide-react"
+  User,
+} from "lucide-react";
+import Link from "next/link";
+import { AppLayout } from "@/components/layout/app-layout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { usePullList } from "@/hooks/use-pull-list";
+import type { Publisher, Release } from "@/lib/releases-types";
 
 interface ReleaseDetailContentProps {
-  release: Release
-  publisher?: Publisher
-  releasesEnabled?: boolean
+  release: Release;
+  publisher?: Publisher;
+  releasesEnabled?: boolean;
 }
 
-export function ReleaseDetailContent({ release, publisher, releasesEnabled = true }: ReleaseDetailContentProps) {
-  const pullList = usePullList()
-  const isInPullList = pullList.isInList(release.id)
-  const isSeriesSubscribed = pullList.isSubscribedToSeries(release.series)
+export function ReleaseDetailContent({
+  release,
+  publisher,
+  releasesEnabled = true,
+}: ReleaseDetailContentProps) {
+  const pullList = usePullList();
+  const isInPullList = pullList.isInList(release.id);
+  const isSeriesSubscribed = pullList.isSubscribedToSeries(release.series);
 
   const statusColors: Record<string, string> = {
     upcoming: "bg-blue-500/10 text-blue-500",
     released: "bg-green-500/10 text-green-500",
     delayed: "bg-yellow-500/10 text-yellow-500",
     cancelled: "bg-red-500/10 text-red-500",
-  }
+  };
 
   return (
     <AppLayout
@@ -74,7 +78,9 @@ export function ReleaseDetailContent({ release, publisher, releasesEnabled = tru
 
             <div className="flex-1 space-y-4">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">{release.title}</h1>
+                <h1 className="text-2xl font-bold text-foreground">
+                  {release.title}
+                </h1>
                 <p className="text-muted-foreground">
                   {release.series} #{release.issueNumber}
                 </p>
@@ -82,7 +88,8 @@ export function ReleaseDetailContent({ release, publisher, releasesEnabled = tru
 
               {/* Status Badge */}
               <Badge className={statusColors[release.status] || ""}>
-                {release.status.charAt(0).toUpperCase() + release.status.slice(1)}
+                {release.status.charAt(0).toUpperCase() +
+                  release.status.slice(1)}
               </Badge>
 
               {/* Pull List Actions */}
@@ -98,7 +105,9 @@ export function ReleaseDetailContent({ release, publisher, releasesEnabled = tru
                 </Button>
                 <Button
                   variant={isSeriesSubscribed ? "default" : "outline"}
-                  onClick={() => pullList.toggleSeriesSubscription(release.series)}
+                  onClick={() =>
+                    pullList.toggleSeriesSubscription(release.series)
+                  }
                 >
                   <Bell
                     className={`h-4 w-4 mr-2 ${isSeriesSubscribed ? "fill-current" : ""}`}
@@ -164,7 +173,9 @@ export function ReleaseDetailContent({ release, publisher, releasesEnabled = tru
                     style={{ backgroundColor: publisher.color }}
                   />
                 )}
-                <p className="text-sm font-medium">{publisher?.name || release.publisher}</p>
+                <p className="text-sm font-medium">
+                  {publisher?.name || release.publisher}
+                </p>
               </div>
             </div>
           </div>
@@ -216,7 +227,9 @@ export function ReleaseDetailContent({ release, publisher, releasesEnabled = tru
             <>
               <Separator />
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Description</p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Description
+                </p>
                 <p className="text-sm leading-relaxed">{release.description}</p>
               </div>
             </>
@@ -244,7 +257,9 @@ export function ReleaseDetailContent({ release, publisher, releasesEnabled = tru
             <>
               <Separator />
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Variant Covers</p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Variant Covers
+                </p>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {release.variants.map((variant, index) => (
                     <div key={index} className="space-y-1">
@@ -257,7 +272,9 @@ export function ReleaseDetailContent({ release, publisher, releasesEnabled = tru
                           />
                         </div>
                       )}
-                      <p className="text-xs text-center truncate">{variant.name}</p>
+                      <p className="text-xs text-center truncate">
+                        {variant.name}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -294,5 +311,5 @@ export function ReleaseDetailContent({ release, publisher, releasesEnabled = tru
         </div>
       </div>
     </AppLayout>
-  )
+  );
 }

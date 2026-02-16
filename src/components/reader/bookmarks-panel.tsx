@@ -1,97 +1,118 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { BookmarkIcon, Trash2, StickyNote } from "lucide-react"
-import type { Bookmark } from "@/lib/types"
-import { getBookmarks, deleteBookmark } from "@/lib/storage"
-import { formatDistanceToNow } from "date-fns"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
+import { formatDistanceToNow } from "date-fns";
+import { BookmarkIcon, StickyNote, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { deleteBookmark, getBookmarks } from "@/lib/storage";
+import type { Bookmark } from "@/lib/types";
 
 interface BookmarksPanelProps {
-  comicId: string
-  pages: string[]
-  currentPage: number
-  onPageSelect: (page: number) => void
-  onRefresh?: () => void
-  variant?: "icon" | "menu"
+  comicId: string;
+  pages: string[];
+  currentPage: number;
+  onPageSelect: (page: number) => void;
+  onRefresh?: () => void;
+  variant?: "icon" | "menu";
 }
 
-export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRefresh, variant = "icon" }: BookmarksPanelProps) {
-  const [open, setOpen] = useState(false)
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editNote, setEditNote] = useState("")
-  const [searchQuery, setSearchQuery] = useState("")
+export function BookmarksPanel({
+  comicId,
+  pages,
+  currentPage,
+  onPageSelect,
+  onRefresh,
+  variant = "icon",
+}: BookmarksPanelProps) {
+  const [open, setOpen] = useState(false);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editNote, setEditNote] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loadBookmarks is stable
   useEffect(() => {
     if (open) {
-      loadBookmarks()
+      loadBookmarks();
     }
-  }, [open, comicId])
+  }, [open]);
 
   async function loadBookmarks() {
     try {
-      const loaded = await getBookmarks(comicId)
-      setBookmarks(loaded.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()))
+      const loaded = await getBookmarks(comicId);
+      setBookmarks(
+        loaded.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+      );
     } catch (error) {
-      console.error("[v0] Error loading bookmarks:", error)
+      console.error("[v0] Error loading bookmarks:", error);
     }
   }
 
   async function handleDelete(id: string) {
     try {
-      await deleteBookmark(id)
-      await loadBookmarks()
-      if (onRefresh) onRefresh()
+      await deleteBookmark(id);
+      await loadBookmarks();
+      if (onRefresh) onRefresh();
     } catch (error) {
-      console.error("[v0] Error deleting bookmark:", error)
+      console.error("[v0] Error deleting bookmark:", error);
     }
   }
 
   async function handleSaveEdit(bookmark: Bookmark) {
     try {
-      const { saveBookmark } = await import("@/lib/storage")
+      const { saveBookmark } = await import("@/lib/storage");
       await saveBookmark({
         ...bookmark,
         note: editNote,
-      })
-      setEditingId(null)
-      setEditNote("")
-      await loadBookmarks()
+      });
+      setEditingId(null);
+      setEditNote("");
+      await loadBookmarks();
     } catch (error) {
-      console.error("[v0] Error updating bookmark:", error)
+      console.error("[v0] Error updating bookmark:", error);
     }
   }
 
   const filteredBookmarks = bookmarks.filter(
     (b) =>
       b.note?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.tags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      b.tags?.some((tag) =>
+        tag.toLowerCase().includes(searchQuery.toLowerCase()),
+      ) ||
       `page ${b.pageNumber + 1}`.includes(searchQuery.toLowerCase()),
-  )
+  );
 
-  const trigger = variant === "menu" ? (
-    <Button variant="ghost" size="sm" className="flex-col gap-1 h-auto py-2 px-3">
-      <BookmarkIcon className="h-5 w-5" />
-      <span className="text-xs">Bookmarks</span>
-    </Button>
-  ) : (
-    <Button variant="ghost" size="icon">
-      <BookmarkIcon className="h-5 w-5" />
-      <span className="sr-only">View bookmarks</span>
-    </Button>
-  )
+  const trigger =
+    variant === "menu" ? (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="flex-col gap-1 h-auto py-2 px-3"
+      >
+        <BookmarkIcon className="h-5 w-5" />
+        <span className="text-xs">Bookmarks</span>
+      </Button>
+    ) : (
+      <Button variant="ghost" size="icon">
+        <BookmarkIcon className="h-5 w-5" />
+        <span className="sr-only">View bookmarks</span>
+      </Button>
+    );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Bookmarks</DialogTitle>
@@ -124,9 +145,10 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
                   className="group relative overflow-hidden rounded-lg border border-border bg-card transition-all hover:shadow-md"
                 >
                   <button
+                    type="button"
                     onClick={() => {
-                      onPageSelect(bookmark.pageNumber)
-                      setOpen(false)
+                      onPageSelect(bookmark.pageNumber);
+                      setOpen(false);
                     }}
                     className="flex w-full items-start gap-3 p-3 text-left"
                     disabled={editingId === bookmark.id}
@@ -146,10 +168,15 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground">Page {bookmark.pageNumber + 1}</p>
+                      <p className="font-medium text-foreground">
+                        Page {bookmark.pageNumber + 1}
+                      </p>
 
                       {editingId === bookmark.id ? (
-                        <div className="mt-2 space-y-2" onClick={(e) => e.stopPropagation()}>
+                        <div
+                          className="mt-2 space-y-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Textarea
                             value={editNote}
                             onChange={(e) => setEditNote(e.target.value)}
@@ -158,15 +185,18 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
                             autoFocus
                           />
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={() => handleSaveEdit(bookmark)}>
+                            <Button
+                              size="sm"
+                              onClick={() => handleSaveEdit(bookmark)}
+                            >
                               Save
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                setEditingId(null)
-                                setEditNote("")
+                                setEditingId(null);
+                                setEditNote("");
                               }}
                             >
                               Cancel
@@ -176,12 +206,18 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
                       ) : (
                         <>
                           {bookmark.note && (
-                            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{bookmark.note}</p>
+                            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                              {bookmark.note}
+                            </p>
                           )}
                           {bookmark.tags && bookmark.tags.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-1">
                               {bookmark.tags.map((tag, i) => (
-                                <Badge key={i} variant="secondary" className="text-xs">
+                                <Badge
+                                  key={i}
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
                                   {tag}
                                 </Badge>
                               ))}
@@ -191,7 +227,9 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
                       )}
 
                       <p className="mt-1.5 text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(bookmark.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(bookmark.createdAt), {
+                          addSuffix: true,
+                        })}
                       </p>
                     </div>
                   </button>
@@ -203,9 +241,9 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
                         size="icon"
                         className="h-8 w-8"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          setEditingId(bookmark.id)
-                          setEditNote(bookmark.note || "")
+                          e.stopPropagation();
+                          setEditingId(bookmark.id);
+                          setEditNote(bookmark.note || "");
                         }}
                       >
                         <StickyNote className="h-4 w-4" />
@@ -216,8 +254,8 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
                         size="icon"
                         className="h-8 w-8"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          handleDelete(bookmark.id)
+                          e.stopPropagation();
+                          handleDelete(bookmark.id);
                         }}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -232,5 +270,5 @@ export function BookmarksPanel({ comicId, pages, currentPage, onPageSelect, onRe
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

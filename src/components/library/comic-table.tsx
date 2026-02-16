@@ -1,7 +1,28 @@
-"use client"
+"use client";
 
-import { useState, useMemo, useRef } from "react"
-import { useWindowVirtualizer } from "@tanstack/react-virtual"
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  BookOpen,
+  ListPlus,
+  MoreHorizontal,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -9,162 +30,158 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import {
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  MoreHorizontal,
-  Trash2,
-  BookOpen,
-  ListPlus,
-  X,
-} from "lucide-react"
-import type { Comic } from "@/lib/types"
-import { useRouter } from "next/navigation"
-import { AddToListDialog } from "./add-to-list-dialog"
-import { LibraryEmptyState } from "./library-empty-state"
-import { naturalCollator } from "@/lib/sort-utils"
+} from "@/components/ui/table";
+import { naturalCollator } from "@/lib/sort-utils";
+import type { Comic } from "@/lib/types";
+import { AddToListDialog } from "./add-to-list-dialog";
+import { LibraryEmptyState } from "./library-empty-state";
 
 interface ComicTableProps {
-  comics: Comic[]
-  onDelete: (id: string) => void
-  onBulkDelete: (ids: string[]) => void
-  onUpdate?: () => void
-  onSelect?: (comic: Comic) => void
-  onUpload?: () => void
+  comics: Comic[];
+  onDelete: (id: string) => void;
+  onBulkDelete: (ids: string[]) => void;
+  onUpdate?: () => void;
+  onSelect?: (comic: Comic) => void;
+  onUpload?: () => void;
 }
 
-type SortKey = "title" | "series" | "author" | "progress" | "lastRead" | "addedAt"
-type SortDirection = "asc" | "desc"
+type SortKey =
+  | "title"
+  | "series"
+  | "author"
+  | "progress"
+  | "lastRead"
+  | "addedAt";
+type SortDirection = "asc" | "desc";
 
 export function ComicTable({
   comics,
   onDelete,
   onBulkDelete,
   onUpdate,
-  onSelect,
+  onSelect: _onSelect,
   onUpload,
 }: ComicTableProps) {
-  const router = useRouter()
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [sortKey, setSortKey] = useState<SortKey>("title")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
-  const [addToListComic, setAddToListComic] = useState<Comic | null>(null)
-  const [bulkAddToList, setBulkAddToList] = useState(false)
+  const router = useRouter();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortKey, setSortKey] = useState<SortKey>("title");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [addToListComic, setAddToListComic] = useState<Comic | null>(null);
+  const [bulkAddToList, setBulkAddToList] = useState(false);
 
   const sortedComics = useMemo(() => {
     return [...comics].sort((a, b) => {
-      let comparison = 0
+      let comparison = 0;
 
       switch (sortKey) {
         case "title":
-          comparison = naturalCollator.compare(a.title, b.title)
-          break
+          comparison = naturalCollator.compare(a.title, b.title);
+          break;
         case "series":
-          comparison = naturalCollator.compare(a.series || "", b.series || "")
-          break
+          comparison = naturalCollator.compare(a.series || "", b.series || "");
+          break;
         case "author":
-          comparison = naturalCollator.compare(a.author || "", b.author || "")
-          break
-        case "progress":
-          const aProgress = a.totalPages ? a.currentPage / a.totalPages : 0
-          const bProgress = b.totalPages ? b.currentPage / b.totalPages : 0
-          comparison = aProgress - bProgress
-          break
-        case "lastRead":
-          const aTime = a.lastRead ? new Date(a.lastRead).getTime() : 0
-          const bTime = b.lastRead ? new Date(b.lastRead).getTime() : 0
-          comparison = aTime - bTime
-          break
-        case "addedAt":
-          const aAddedTime = a.addedAt ? new Date(a.addedAt).getTime() : 0
-          const bAddedTime = b.addedAt ? new Date(b.addedAt).getTime() : 0
-          comparison = aAddedTime - bAddedTime
-          break
+          comparison = naturalCollator.compare(a.author || "", b.author || "");
+          break;
+        case "progress": {
+          const aProgress = a.totalPages ? a.currentPage / a.totalPages : 0;
+          const bProgress = b.totalPages ? b.currentPage / b.totalPages : 0;
+          comparison = aProgress - bProgress;
+          break;
+        }
+        case "lastRead": {
+          const aTime = a.lastRead ? new Date(a.lastRead).getTime() : 0;
+          const bTime = b.lastRead ? new Date(b.lastRead).getTime() : 0;
+          comparison = aTime - bTime;
+          break;
+        }
+        case "addedAt": {
+          const aAddedTime = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+          const bAddedTime = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+          comparison = aAddedTime - bAddedTime;
+          break;
+        }
       }
 
-      return sortDirection === "asc" ? comparison : -comparison
-    })
-  }, [comics, sortKey, sortDirection])
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [comics, sortKey, sortDirection]);
 
-  const tableBodyRef = useRef<HTMLTableSectionElement>(null)
+  const tableBodyRef = useRef<HTMLTableSectionElement>(null);
 
   const rowVirtualizer = useWindowVirtualizer({
     count: sortedComics.length,
     estimateSize: () => 57,
     overscan: 20,
     scrollMargin: tableBodyRef.current?.offsetTop ?? 0,
-  })
+  });
 
-  const allSelected = comics.length > 0 && selectedIds.size === comics.length
-  const someSelected = selectedIds.size > 0 && selectedIds.size < comics.length
+  const allSelected = comics.length > 0 && selectedIds.size === comics.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < comics.length;
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
-      setSortDirection((d) => (d === "asc" ? "desc" : "asc"))
+      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
     } else {
-      setSortKey(key)
-      setSortDirection("asc")
+      setSortKey(key);
+      setSortDirection("asc");
     }
   }
 
   function toggleSelectAll() {
     if (allSelected) {
-      setSelectedIds(new Set())
+      setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(comics.map((c) => c.id)))
+      setSelectedIds(new Set(comics.map((c) => c.id)));
     }
   }
 
   function toggleSelect(id: string) {
-    const newSet = new Set(selectedIds)
+    const newSet = new Set(selectedIds);
     if (newSet.has(id)) {
-      newSet.delete(id)
+      newSet.delete(id);
     } else {
-      newSet.add(id)
+      newSet.add(id);
     }
-    setSelectedIds(newSet)
+    setSelectedIds(newSet);
   }
 
   function handleBulkDelete() {
-    onBulkDelete(Array.from(selectedIds))
-    setSelectedIds(new Set())
+    onBulkDelete(Array.from(selectedIds));
+    setSelectedIds(new Set());
   }
 
   function getProgress(comic: Comic): number {
-    if (!comic.totalPages) return 0
-    return Math.round((comic.currentPage / comic.totalPages) * 100)
+    if (!comic.totalPages) return 0;
+    return Math.round((comic.currentPage / comic.totalPages) * 100);
   }
 
-  function getStatus(comic: Comic): "want" | "reading" | "completed" | "no-file" {
-    if (!comic.hasFile) return "no-file"
-    if (!comic.totalPages) return "want"
-    const progress = comic.currentPage / comic.totalPages
-    if (progress >= 1) return "completed"
-    if (progress > 0) return "reading"
-    return "want"
+  function getStatus(
+    comic: Comic,
+  ): "want" | "reading" | "completed" | "no-file" {
+    if (!comic.hasFile) return "no-file";
+    if (!comic.totalPages) return "want";
+    const progress = comic.currentPage / comic.totalPages;
+    if (progress >= 1) return "completed";
+    if (progress > 0) return "reading";
+    return "want";
   }
 
   function formatFileSize(bytes?: number): string {
-    if (!bytes) return "-"
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    if (!bytes) return "-";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
-  function SortHeader({ label, sortKeyName }: { label: string; sortKeyName: SortKey }) {
-    const isActive = sortKey === sortKeyName
+  function SortHeader({
+    label,
+    sortKeyName,
+  }: {
+    label: string;
+    sortKeyName: SortKey;
+  }) {
+    const isActive = sortKey === sortKeyName;
     return (
       <Button
         variant="ghost"
@@ -183,7 +200,7 @@ export function ComicTable({
           <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />
         )}
       </Button>
-    )
+    );
   }
 
   const statusConfig = {
@@ -191,10 +208,10 @@ export function ComicTable({
     want: { label: "Want to Read", variant: "secondary" as const },
     reading: { label: "Reading", variant: "default" as const },
     completed: { label: "Completed", variant: "default" as const },
-  }
+  };
 
   if (comics.length === 0) {
-    return <LibraryEmptyState onUpload={onUpload} />
+    return <LibraryEmptyState onUpload={onUpload} />;
   }
 
   return (
@@ -243,7 +260,12 @@ export function ComicTable({
                 <Checkbox
                   checked={allSelected}
                   ref={(el) => {
-                    if (el) (el as HTMLButtonElement).dataset.state = someSelected ? "indeterminate" : allSelected ? "checked" : "unchecked"
+                    if (el)
+                      (el as HTMLButtonElement).dataset.state = someSelected
+                        ? "indeterminate"
+                        : allSelected
+                          ? "checked"
+                          : "unchecked";
                   }}
                   onCheckedChange={toggleSelectAll}
                   aria-label="Select all"
@@ -271,22 +293,38 @@ export function ComicTable({
           </TableHeader>
           <TableBody ref={tableBodyRef}>
             {(() => {
-              const virtualRows = rowVirtualizer.getVirtualItems()
-              const totalSize = rowVirtualizer.getTotalSize()
-              const scrollMargin = rowVirtualizer.options.scrollMargin
-              const paddingTop = virtualRows.length > 0 ? Math.max(0, virtualRows[0].start - scrollMargin) : 0
-              const paddingBottom = virtualRows.length > 0 ? Math.max(0, totalSize - (virtualRows[virtualRows.length - 1].end - scrollMargin)) : 0
+              const virtualRows = rowVirtualizer.getVirtualItems();
+              const totalSize = rowVirtualizer.getTotalSize();
+              const scrollMargin = rowVirtualizer.options.scrollMargin;
+              const paddingTop =
+                virtualRows.length > 0
+                  ? Math.max(0, virtualRows[0].start - scrollMargin)
+                  : 0;
+              const paddingBottom =
+                virtualRows.length > 0
+                  ? Math.max(
+                      0,
+                      totalSize -
+                        (virtualRows[virtualRows.length - 1].end -
+                          scrollMargin),
+                    )
+                  : 0;
 
               return (
                 <>
                   {paddingTop > 0 && (
-                    <tr><td colSpan={9} style={{ height: paddingTop, padding: 0, border: 0 }} /></tr>
+                    <tr>
+                      <td
+                        colSpan={9}
+                        style={{ height: paddingTop, padding: 0, border: 0 }}
+                      />
+                    </tr>
                   )}
                   {virtualRows.map((virtualRow) => {
-                    const comic = sortedComics[virtualRow.index]
-                    const status = getStatus(comic)
-                    const progress = getProgress(comic)
-                    const isSelected = selectedIds.has(comic.id)
+                    const comic = sortedComics[virtualRow.index];
+                    const status = getStatus(comic);
+                    const progress = getProgress(comic);
+                    const isSelected = selectedIds.has(comic.id);
 
                     return (
                       <TableRow
@@ -297,7 +335,7 @@ export function ComicTable({
                         className="cursor-pointer"
                         onClick={() => {
                           if (comic.hasFile) {
-                            router.push(`/reader/${comic.id}`)
+                            router.push(`/reader/${comic.id}`);
                           }
                         }}
                       >
@@ -317,14 +355,21 @@ export function ComicTable({
                                 className="h-10 w-7 object-cover rounded-sm"
                               />
                             )}
-                            <span className="truncate max-w-[200px]">{comic.title}</span>
+                            <span className="truncate max-w-[200px]">
+                              {comic.title}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {comic.series ? (
                             <span>
                               {comic.series}
-                              {comic.issue && <span className="opacity-70"> #{comic.issue}</span>}
+                              {comic.issue && (
+                                <span className="opacity-70">
+                                  {" "}
+                                  #{comic.issue}
+                                </span>
+                              )}
                             </span>
                           ) : (
                             "-"
@@ -375,20 +420,28 @@ export function ComicTable({
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               {comic.hasFile && (
                                 <DropdownMenuItem
-                                  onClick={() => router.push(`/reader/${comic.id}`)}
+                                  onClick={() =>
+                                    router.push(`/reader/${comic.id}`)
+                                  }
                                 >
                                   <BookOpen className="mr-2 h-4 w-4" />
                                   Read
                                 </DropdownMenuItem>
                               )}
-                              <DropdownMenuItem onClick={() => setAddToListComic(comic)}>
+                              <DropdownMenuItem
+                                onClick={() => setAddToListComic(comic)}
+                              >
                                 <ListPlus className="mr-2 h-4 w-4" />
                                 Add to List
                               </DropdownMenuItem>
@@ -404,13 +457,18 @@ export function ComicTable({
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    )
+                    );
                   })}
                   {paddingBottom > 0 && (
-                    <tr><td colSpan={9} style={{ height: paddingBottom, padding: 0, border: 0 }} /></tr>
+                    <tr>
+                      <td
+                        colSpan={9}
+                        style={{ height: paddingBottom, padding: 0, border: 0 }}
+                      />
+                    </tr>
                   )}
                 </>
-              )
+              );
             })()}
           </TableBody>
         </Table>
@@ -434,13 +492,13 @@ export function ComicTable({
           open={bulkAddToList}
           onOpenChange={(open) => {
             if (!open) {
-              setBulkAddToList(false)
-              setSelectedIds(new Set())
+              setBulkAddToList(false);
+              setSelectedIds(new Set());
             }
           }}
           onSuccess={onUpdate}
         />
       )}
     </div>
-  )
+  );
 }

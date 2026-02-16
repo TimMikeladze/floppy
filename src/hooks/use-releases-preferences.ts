@@ -1,62 +1,67 @@
-"use client"
+"use client";
 
-import { useCallback, useRef } from "react"
+import { useCallback, useRef } from "react";
 
 export interface ReleasesPreferences {
-  view: "new" | "upcoming" | "calendar" | "pull-list"
+  view: "new" | "upcoming" | "calendar" | "pull-list";
 }
 
-const STORAGE_KEY = "floppy-releases-preferences"
+const STORAGE_KEY = "floppy-releases-preferences";
 
 const defaultPreferences: ReleasesPreferences = {
   view: "new",
-}
+};
 
 export function getStoredReleasesPreferences(): ReleasesPreferences {
   if (typeof window === "undefined") {
-    return defaultPreferences
+    return defaultPreferences;
   }
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored)
+      const parsed = JSON.parse(stored);
       return {
         ...defaultPreferences,
         ...parsed,
-      }
+      };
     }
   } catch (e) {
-    console.error("Failed to parse releases preferences from localStorage", e)
+    console.error("Failed to parse releases preferences from localStorage", e);
   }
 
-  return defaultPreferences
+  return defaultPreferences;
 }
 
-export function saveReleasesPreferences(preferences: Partial<ReleasesPreferences>): void {
+export function saveReleasesPreferences(
+  preferences: Partial<ReleasesPreferences>,
+): void {
   if (typeof window === "undefined") {
-    return
+    return;
   }
 
   try {
-    const current = getStoredReleasesPreferences()
-    const updated = { ...current, ...preferences }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+    const current = getStoredReleasesPreferences();
+    const updated = { ...current, ...preferences };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (e) {
-    console.error("Failed to save releases preferences to localStorage", e)
+    console.error("Failed to save releases preferences to localStorage", e);
   }
 }
 
 export function useReleasesPreferences() {
-  const hasInitialized = useRef(false)
+  const hasInitialized = useRef(false);
 
-  const persistPreferences = useCallback((preferences: Partial<ReleasesPreferences>) => {
-    saveReleasesPreferences(preferences)
-  }, [])
+  const persistPreferences = useCallback(
+    (preferences: Partial<ReleasesPreferences>) => {
+      saveReleasesPreferences(preferences);
+    },
+    [],
+  );
 
   return {
     getStoredPreferences: getStoredReleasesPreferences,
     persistPreferences,
     hasInitialized,
-  }
+  };
 }

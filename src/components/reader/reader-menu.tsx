@@ -1,39 +1,52 @@
-"use client"
+"use client";
 
-import { useReading } from "@/lib/reading-context"
-import { Bookmark, Download, CheckCircle2, Loader2, Check, RotateCcw, Plus, Pencil, Image, CloudOff } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DeleteButton } from "@/components/ui/delete-button"
-import { Slider } from "@/components/ui/slider"
 import {
-  Drawer,
-  DrawerContent,
-} from "@/components/ui/drawer"
-import { PageNavigator } from "./page-navigator"
-import { BookmarksPanel } from "./bookmarks-panel"
-import { NotesPanel } from "./notes-panel"
-import { SettingsPanel } from "./settings-panel"
-import { AddToListDialog } from "@/components/library/add-to-list-dialog"
-import { EditComicDialog } from "@/components/library/edit-comic-dialog"
-import { CoverManager } from "@/components/library/cover-manager"
-import type { Bookmark as BookmarkType, Comic } from "@/lib/types"
-import { useState, useEffect, useCallback } from "react"
-import { getOfflineStatus, saveComicForOffline, removeOfflineCache, saveComic, type OfflineStatus } from "@/lib/storage"
-import { toast } from "sonner"
+  Bookmark,
+  Check,
+  CloudOff,
+  Download,
+  Image,
+  Loader2,
+  Pencil,
+  Plus,
+  RotateCcw,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { AddToListDialog } from "@/components/library/add-to-list-dialog";
+import { CoverManager } from "@/components/library/cover-manager";
+import { EditComicDialog } from "@/components/library/edit-comic-dialog";
+import { Button } from "@/components/ui/button";
+import { DeleteButton } from "@/components/ui/delete-button";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { Slider } from "@/components/ui/slider";
+import { useReading } from "@/lib/reading-context";
+import {
+  getOfflineStatus,
+  type OfflineStatus,
+  removeOfflineCache,
+  saveComic,
+  saveComicForOffline,
+} from "@/lib/storage";
+import type { Bookmark as BookmarkType, Comic } from "@/lib/types";
+import { BookmarksPanel } from "./bookmarks-panel";
+import { NotesPanel } from "./notes-panel";
+import { PageNavigator } from "./page-navigator";
+import { SettingsPanel } from "./settings-panel";
 
 interface ReaderMenuProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  currentPage: number
-  totalPages: number
-  onPageChange: (page: number) => void
-  onBookmarkClick: () => void
-  comic: Comic
-  pages: string[]
-  bookmarks: BookmarkType[]
-  onRefreshBookmarks: () => void
-  onDelete: () => void
-  onComicUpdate?: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  onBookmarkClick: () => void;
+  comic: Comic;
+  pages: string[];
+  bookmarks: BookmarkType[];
+  onRefreshBookmarks: () => void;
+  onDelete: () => void;
+  onComicUpdate?: () => void;
 }
 
 export function ReaderMenu({
@@ -50,96 +63,98 @@ export function ReaderMenu({
   onDelete,
   onComicUpdate,
 }: ReaderMenuProps) {
-  const { settings } = useReading()
-  const [isDesktop, setIsDesktop] = useState(false)
-  const [offlineStatus, setOfflineStatus] = useState<OfflineStatus | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [addToListOpen, setAddToListOpen] = useState(false)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [coverManagerOpen, setCoverManagerOpen] = useState(false)
+  const { settings } = useReading();
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [offlineStatus, setOfflineStatus] = useState<OfflineStatus | null>(
+    null,
+  );
+  const [saving, setSaving] = useState(false);
+  const [addToListOpen, setAddToListOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [coverManagerOpen, setCoverManagerOpen] = useState(false);
 
-  const comicId = comic.id
-  const isComplete = comic.totalPages && currentPage >= comic.totalPages - 1
-  const hasProgress = currentPage > 0
+  const comicId = comic.id;
+  const isComplete = comic.totalPages && currentPage >= comic.totalPages - 1;
+  const hasProgress = currentPage > 0;
 
   useEffect(() => {
     // Check for desktop on mount and window resize
-    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768)
-    checkDesktop()
-    window.addEventListener("resize", checkDesktop)
-    return () => window.removeEventListener("resize", checkDesktop)
-  }, [])
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkDesktop();
+    window.addEventListener("resize", checkDesktop);
+    return () => window.removeEventListener("resize", checkDesktop);
+  }, []);
 
   // Check offline status
   const refreshOfflineStatus = useCallback(async () => {
     try {
-      const status = await getOfflineStatus(comicId)
-      setOfflineStatus(status)
+      const status = await getOfflineStatus(comicId);
+      setOfflineStatus(status);
     } catch (error) {
-      console.error("[reader-menu] Failed to get offline status:", error)
+      console.error("[reader-menu] Failed to get offline status:", error);
     }
-  }, [comicId])
+  }, [comicId]);
 
   useEffect(() => {
-    refreshOfflineStatus()
-  }, [refreshOfflineStatus])
+    refreshOfflineStatus();
+  }, [refreshOfflineStatus]);
 
   const handleSaveForOffline = async () => {
-    if (saving) return
-    setSaving(true)
-    toast.info("Saving for offline...")
+    if (saving) return;
+    setSaving(true);
+    toast.info("Saving for offline...");
 
     try {
       const success = await saveComicForOffline(comicId, (prog) => {
         if (prog.status === "complete") {
-          toast.success("Saved for offline")
-          refreshOfflineStatus()
-          setSaving(false)
+          toast.success("Saved for offline");
+          refreshOfflineStatus();
+          setSaving(false);
         } else if (prog.status === "error") {
-          toast.error(prog.error || "Failed to save for offline")
-          setSaving(false)
+          toast.error(prog.error || "Failed to save for offline");
+          setSaving(false);
         }
-      })
+      });
 
       if (!success) {
-        setSaving(false)
+        setSaving(false);
       }
     } catch (error) {
-      console.error("Failed to save for offline:", error)
-      toast.error("Failed to save for offline")
-      setSaving(false)
+      console.error("Failed to save for offline:", error);
+      toast.error("Failed to save for offline");
+      setSaving(false);
     }
-  }
+  };
 
   const handleRemoveOffline = async () => {
     try {
-      await removeOfflineCache(comicId)
-      toast.success("Offline cache removed")
-      refreshOfflineStatus()
+      await removeOfflineCache(comicId);
+      toast.success("Offline cache removed");
+      refreshOfflineStatus();
     } catch (error) {
-      console.error("Failed to remove offline cache:", error)
-      toast.error("Failed to remove offline cache")
+      console.error("Failed to remove offline cache:", error);
+      toast.error("Failed to remove offline cache");
     }
-  }
+  };
 
   const handleMarkAsRead = async () => {
     if (!comic.totalPages) {
-      toast.error("Cannot mark as read: page count unknown")
-      return
+      toast.error("Cannot mark as read: page count unknown");
+      return;
     }
     try {
       await saveComic({
         ...comic,
         currentPage: comic.totalPages,
         lastRead: new Date(),
-      })
-      toast.success("Marked as read")
-      onComicUpdate?.()
+      });
+      toast.success("Marked as read");
+      onComicUpdate?.();
     } catch (error) {
-      console.error("Failed to mark as read:", error)
-      toast.error("Failed to mark as read")
+      console.error("Failed to mark as read:", error);
+      toast.error("Failed to mark as read");
     }
-  }
+  };
 
   const handleMarkAsUnread = async () => {
     try {
@@ -147,23 +162,31 @@ export function ReaderMenu({
         ...comic,
         currentPage: 0,
         lastRead: undefined,
-      })
-      toast.success("Marked as unread")
-      onComicUpdate?.()
+      });
+      toast.success("Marked as unread");
+      onComicUpdate?.();
     } catch (error) {
-      console.error("Failed to mark as unread:", error)
-      toast.error("Failed to mark as unread")
+      console.error("Failed to mark as unread:", error);
+      toast.error("Failed to mark as unread");
     }
-  }
+  };
 
   // Use bottom on mobile, respect toolbarPosition on desktop
-  const drawerDirection = isDesktop ? (settings.toolbarPosition ?? "right") : "bottom"
+  const drawerDirection = isDesktop
+    ? (settings.toolbarPosition ?? "right")
+    : "bottom";
 
-  const isBookmarked = bookmarks.some((b) => b.pageNumber === currentPage)
+  const isBookmarked = bookmarks.some((b) => b.pageNumber === currentPage);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction={drawerDirection}>
-      <DrawerContent className={drawerDirection === "bottom" || drawerDirection === "top" ? "max-h-[85vh]" : ""}>
+      <DrawerContent
+        className={
+          drawerDirection === "bottom" || drawerDirection === "top"
+            ? "max-h-[85vh]"
+            : ""
+        }
+      >
         {/* Page Scrubber - Always visible at top */}
         <div className="px-4 pt-6 pb-2">
           <div className="flex items-center gap-4">
@@ -189,10 +212,12 @@ export function ReaderMenu({
               size="sm"
               className={`flex-col gap-1 h-auto py-2 px-3 ${isBookmarked ? "text-primary" : ""}`}
               onClick={() => {
-                onBookmarkClick()
+                onBookmarkClick();
               }}
             >
-              <Bookmark className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`} />
+              <Bookmark
+                className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`}
+              />
               <span className="text-xs">Bookmark</span>
             </Button>
 
@@ -200,8 +225,8 @@ export function ReaderMenu({
               pages={pages}
               currentPage={currentPage}
               onPageSelect={(page) => {
-                onPageChange(page)
-                onOpenChange(false)
+                onPageChange(page);
+                onOpenChange(false);
               }}
               bookmarks={bookmarks}
               variant="menu"
@@ -212,8 +237,8 @@ export function ReaderMenu({
               pages={pages}
               currentPage={currentPage}
               onPageSelect={(page) => {
-                onPageChange(page)
-                onOpenChange(false)
+                onPageChange(page);
+                onOpenChange(false);
               }}
               onRefresh={onRefreshBookmarks}
               variant="menu"
@@ -224,8 +249,8 @@ export function ReaderMenu({
               pages={pages}
               currentPage={currentPage}
               onPageSelect={(page) => {
-                onPageChange(page)
-                onOpenChange(false)
+                onPageChange(page);
+                onOpenChange(false);
               }}
               variant="menu"
             />
@@ -353,5 +378,5 @@ export function ReaderMenu({
         onCoverChange={() => onComicUpdate?.()}
       />
     </Drawer>
-  )
+  );
 }

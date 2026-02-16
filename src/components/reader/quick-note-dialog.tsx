@@ -1,34 +1,45 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface QuickNoteDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  currentPage: number
-  onSave: (content: string) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentPage: number;
+  onSave: (content: string) => void;
 }
 
-export function QuickNoteDialog({ open, onOpenChange, currentPage, onSave }: QuickNoteDialogProps) {
-  const [content, setContent] = useState("")
+export function QuickNoteDialog({
+  open,
+  onOpenChange,
+  currentPage,
+  onSave,
+}: QuickNoteDialogProps) {
+  const [content, setContent] = useState("");
 
   const handleSave = () => {
     if (content.trim()) {
-      onSave(content.trim())
-      setContent("")
-      onOpenChange(false)
+      onSave(content.trim());
+      setContent("");
+      onOpenChange(false);
     }
-  }
+  };
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      setContent("")
+      setContent("");
     }
-    onOpenChange(open)
-  }
+    onOpenChange(open);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -53,5 +64,5 @@ export function QuickNoteDialog({ open, onOpenChange, currentPage, onSave }: Qui
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

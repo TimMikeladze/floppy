@@ -1,190 +1,201 @@
-"use client"
+"use client";
 
-import { useState, useRef, useCallback } from "react"
-import { Image, Upload, RefreshCw, Trash2, FileImage, Link2, AlertCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {
+  AlertCircle,
+  FileImage,
+  Image,
+  Link2,
+  RefreshCw,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
-import type { Comic } from "@/lib/types"
-import { saveComic, getFileFromHandle } from "@/lib/storage"
-import { generateCoverImage } from "@/lib/comic-parser"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { generateCoverImage } from "@/lib/comic-parser";
+import { getFileFromHandle, saveComic } from "@/lib/storage";
+import type { Comic } from "@/lib/types";
 
 interface CoverManagerProps {
-  comic: Comic
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onCoverChange?: (comic: Comic) => void
+  comic: Comic;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCoverChange?: (comic: Comic) => void;
 }
 
-export function CoverManager({ comic, open, onOpenChange, onCoverChange }: CoverManagerProps) {
-  const [coverUrl, setCoverUrl] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [extractPage, setExtractPage] = useState(1)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+export function CoverManager({
+  comic,
+  open,
+  onOpenChange,
+  onCoverChange,
+}: CoverManagerProps) {
+  const [coverUrl, setCoverUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [extractPage, setExtractPage] = useState(1);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const hasCover = !!comic.coverImage
-  const hasFile = comic.hasFile && comic.fileHandle
-  const isRemote = comic.sourceType === "remote"
+  const hasCover = !!comic.coverImage;
+  const hasFile = comic.hasFile && comic.fileHandle;
+  const _isRemote = comic.sourceType === "remote";
 
   // Handle file upload for cover image
-  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleFileUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file")
-      return
-    }
-
-    setLoading(true)
-    try {
-      const reader = new FileReader()
-      reader.onload = async () => {
-        const base64 = reader.result as string
-        setPreviewUrl(base64)
-
-        const updatedComic: Comic = {
-          ...comic,
-          coverImage: base64,
-        }
-        await saveComic(updatedComic)
-        onCoverChange?.(updatedComic)
-        toast.success("Cover updated")
-        onOpenChange(false)
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select an image file");
+        return;
       }
-      reader.onerror = () => {
-        toast.error("Failed to read image file")
+
+      setLoading(true);
+      try {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64 = reader.result as string;
+          setPreviewUrl(base64);
+
+          const updatedComic: Comic = {
+            ...comic,
+            coverImage: base64,
+          };
+          await saveComic(updatedComic);
+          onCoverChange?.(updatedComic);
+          toast.success("Cover updated");
+          onOpenChange(false);
+        };
+        reader.onerror = () => {
+          toast.error("Failed to read image file");
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        console.error("Failed to upload cover:", error);
+        toast.error("Failed to upload cover");
+      } finally {
+        setLoading(false);
       }
-      reader.readAsDataURL(file)
-    } catch (error) {
-      console.error("Failed to upload cover:", error)
-      toast.error("Failed to upload cover")
-    } finally {
-      setLoading(false)
-    }
-  }, [comic, onCoverChange, onOpenChange])
+    },
+    [comic, onCoverChange, onOpenChange],
+  );
 
   // Handle URL-based cover
   const handleUrlCover = useCallback(async () => {
     if (!coverUrl.trim()) {
-      toast.error("Please enter a URL")
-      return
+      toast.error("Please enter a URL");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       // Fetch the image to convert to base64 (so it works offline)
-      const response = await fetch(coverUrl)
-      if (!response.ok) throw new Error("Failed to fetch image")
+      const response = await fetch(coverUrl);
+      if (!response.ok) throw new Error("Failed to fetch image");
 
-      const blob = await response.blob()
+      const blob = await response.blob();
       if (!blob.type.startsWith("image/")) {
-        toast.error("URL does not point to an image")
-        return
+        toast.error("URL does not point to an image");
+        return;
       }
 
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = async () => {
-        const base64 = reader.result as string
+        const base64 = reader.result as string;
 
         const updatedComic: Comic = {
           ...comic,
           coverImage: base64,
-        }
-        await saveComic(updatedComic)
-        onCoverChange?.(updatedComic)
-        toast.success("Cover updated from URL")
-        setCoverUrl("")
-        onOpenChange(false)
-      }
+        };
+        await saveComic(updatedComic);
+        onCoverChange?.(updatedComic);
+        toast.success("Cover updated from URL");
+        setCoverUrl("");
+        onOpenChange(false);
+      };
       reader.onerror = () => {
-        toast.error("Failed to process image")
-      }
-      reader.readAsDataURL(blob)
+        toast.error("Failed to process image");
+      };
+      reader.readAsDataURL(blob);
     } catch (error) {
-      console.error("Failed to fetch cover from URL:", error)
-      toast.error("Failed to fetch image from URL")
+      console.error("Failed to fetch cover from URL:", error);
+      toast.error("Failed to fetch image from URL");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [coverUrl, comic, onCoverChange, onOpenChange])
+  }, [coverUrl, comic, onCoverChange, onOpenChange]);
 
   // Extract cover from comic file
   const handleExtractFromFile = useCallback(async () => {
     if (!comic.fileHandle) {
-      toast.error("No file attached to this comic")
-      return
+      toast.error("No file attached to this comic");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const file = await getFileFromHandle(comic.fileHandle)
+      const file = await getFileFromHandle(comic.fileHandle);
       if (!file) {
-        toast.error("Unable to access file. Please re-attach it.")
-        return
+        toast.error("Unable to access file. Please re-attach it.");
+        return;
       }
 
-      const { parseComicFile } = await import("@/lib/comic-parser")
-      const result = await parseComicFile(file)
+      const { parseComicFile } = await import("@/lib/comic-parser");
+      const result = await parseComicFile(file);
 
-      const pageIndex = Math.min(extractPage - 1, result.pages.length - 1)
+      const pageIndex = Math.min(extractPage - 1, result.pages.length - 1);
       if (pageIndex < 0) {
-        toast.error("Invalid page number")
-        return
+        toast.error("Invalid page number");
+        return;
       }
 
-      const coverImage = await generateCoverImage(result.pages[pageIndex])
+      const coverImage = await generateCoverImage(result.pages[pageIndex]);
 
       const updatedComic: Comic = {
         ...comic,
         coverImage,
         totalPages: result.pages.length,
-      }
-      await saveComic(updatedComic)
-      onCoverChange?.(updatedComic)
-      toast.success(`Cover extracted from page ${pageIndex + 1}`)
-      onOpenChange(false)
+      };
+      await saveComic(updatedComic);
+      onCoverChange?.(updatedComic);
+      toast.success(`Cover extracted from page ${pageIndex + 1}`);
+      onOpenChange(false);
     } catch (error) {
-      console.error("Failed to extract cover:", error)
-      toast.error("Failed to extract cover from file")
+      console.error("Failed to extract cover:", error);
+      toast.error("Failed to extract cover from file");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [comic, extractPage, onCoverChange, onOpenChange])
+  }, [comic, extractPage, onCoverChange, onOpenChange]);
 
   // Remove cover
   const handleRemoveCover = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const updatedComic: Comic = {
         ...comic,
         coverImage: "",
-      }
-      await saveComic(updatedComic)
-      onCoverChange?.(updatedComic)
-      toast.success("Cover removed")
+      };
+      await saveComic(updatedComic);
+      onCoverChange?.(updatedComic);
+      toast.success("Cover removed");
     } catch (error) {
-      console.error("Failed to remove cover:", error)
-      toast.error("Failed to remove cover")
+      console.error("Failed to remove cover:", error);
+      toast.error("Failed to remove cover");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [comic, onCoverChange])
+  }, [comic, onCoverChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -220,7 +231,8 @@ export function CoverManager({ comic, open, onOpenChange, onCoverChange }: Cover
               <div className="text-sm font-medium">{comic.title}</div>
               {comic.series && (
                 <div className="text-xs text-muted-foreground">
-                  {comic.series}{comic.issue && ` #${comic.issue}`}
+                  {comic.series}
+                  {comic.issue && ` #${comic.issue}`}
                 </div>
               )}
               <div className="flex flex-wrap gap-2 mt-3">
@@ -241,7 +253,10 @@ export function CoverManager({ comic, open, onOpenChange, onCoverChange }: Cover
           </div>
 
           {/* Cover source tabs */}
-          <Tabs defaultValue={hasFile ? "extract" : "upload"} className="w-full">
+          <Tabs
+            defaultValue={hasFile ? "extract" : "upload"}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="upload" className="gap-1.5">
                 <Upload className="h-3.5 w-3.5" />
@@ -251,7 +266,11 @@ export function CoverManager({ comic, open, onOpenChange, onCoverChange }: Cover
                 <Link2 className="h-3.5 w-3.5" />
                 URL
               </TabsTrigger>
-              <TabsTrigger value="extract" disabled={!hasFile} className="gap-1.5">
+              <TabsTrigger
+                value="extract"
+                disabled={!hasFile}
+                className="gap-1.5"
+              >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Extract
               </TabsTrigger>
@@ -316,7 +335,9 @@ export function CoverManager({ comic, open, onOpenChange, onCoverChange }: Cover
                         min={1}
                         max={comic.totalPages || 999}
                         value={extractPage}
-                        onChange={(e) => setExtractPage(parseInt(e.target.value) || 1)}
+                        onChange={(e) =>
+                          setExtractPage(parseInt(e.target.value, 10) || 1)
+                        }
                         className="w-24"
                       />
                       <span className="text-sm text-muted-foreground self-center">
@@ -329,11 +350,14 @@ export function CoverManager({ comic, open, onOpenChange, onCoverChange }: Cover
                     disabled={loading}
                     className="w-full gap-2"
                   >
-                    <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                    <RefreshCw
+                      className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                    />
                     {loading ? "Extracting..." : "Extract Cover"}
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    By default, page 1 is used. Choose a different page if needed.
+                    By default, page 1 is used. Choose a different page if
+                    needed.
                   </p>
                 </div>
               ) : (
@@ -350,7 +374,7 @@ export function CoverManager({ comic, open, onOpenChange, onCoverChange }: Cover
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 /**
@@ -359,11 +383,12 @@ export function CoverManager({ comic, open, onOpenChange, onCoverChange }: Cover
 export function MissingCoverIndicator({ onClick }: { onClick?: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className="absolute top-2 left-2 bg-yellow-500/90 text-yellow-950 rounded-full p-1 hover:bg-yellow-400 transition-colors"
       title="Missing cover - click to add"
     >
       <AlertCircle className="h-3.5 w-3.5" />
     </button>
-  )
+  );
 }

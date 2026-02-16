@@ -1,23 +1,42 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { BookOpen, CheckCircle2, Clock, HardDrive, Library, TrendingUp, Layers } from "lucide-react"
-import { Card } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { getAllComics, getStorageStats, formatBytes, type StorageStats } from "@/lib/storage"
-import { getSeriesName, normalizeSeriesName } from "@/lib/series-utils"
-import type { Comic } from "@/lib/types"
+import {
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  HardDrive,
+  Layers,
+  Library,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { getSeriesName, normalizeSeriesName } from "@/lib/series-utils";
+import {
+  formatBytes,
+  getAllComics,
+  getStorageStats,
+  type StorageStats,
+} from "@/lib/storage";
+import type { Comic } from "@/lib/types";
 
 interface StatsCardProps {
-  title: string
-  value: string | number
-  subtitle?: string
-  icon: React.ReactNode
-  progress?: number
-  color?: string
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: React.ReactNode;
+  progress?: number;
+  color?: string;
 }
 
-function StatsCard({ title, value, subtitle, icon, progress, color }: StatsCardProps) {
+function StatsCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  progress,
+  color,
+}: StatsCardProps) {
   return (
     <Card className="p-4">
       <div className="flex items-start justify-between">
@@ -25,7 +44,10 @@ function StatsCard({ title, value, subtitle, icon, progress, color }: StatsCardP
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             {title}
           </p>
-          <p className="text-2xl font-bold" style={color ? { color } : undefined}>
+          <p
+            className="text-2xl font-bold"
+            style={color ? { color } : undefined}
+          >
             {value}
           </p>
           {subtitle && (
@@ -35,8 +57,8 @@ function StatsCard({ title, value, subtitle, icon, progress, color }: StatsCardP
         <div
           className="p-2 rounded-lg"
           style={{
-            backgroundColor: color ? `${color}15` : 'var(--secondary)',
-            color: color || 'var(--muted-foreground)',
+            backgroundColor: color ? `${color}15` : "var(--secondary)",
+            color: color || "var(--muted-foreground)",
           }}
         >
           {icon}
@@ -48,119 +70,125 @@ function StatsCard({ title, value, subtitle, icon, progress, color }: StatsCardP
         </div>
       )}
     </Card>
-  )
+  );
 }
 
 interface LibraryStatsProps {
-  onClose?: () => void
+  onClose?: () => void;
 }
 
-export function LibraryStats({ onClose }: LibraryStatsProps) {
-  const [comics, setComics] = useState<Comic[]>([])
-  const [storageStats, setStorageStats] = useState<StorageStats | null>(null)
-  const [loading, setLoading] = useState(true)
+export function LibraryStats({ onClose: _onClose }: LibraryStatsProps) {
+  const [comics, setComics] = useState<Comic[]>([]);
+  const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadStats() {
-      setLoading(true)
+      setLoading(true);
       try {
         const [allComics, storage] = await Promise.all([
           getAllComics(),
           getStorageStats(),
-        ])
-        setComics(allComics)
-        setStorageStats(storage)
+        ]);
+        setComics(allComics);
+        setStorageStats(storage);
       } catch (error) {
-        console.error("Failed to load stats:", error)
+        console.error("Failed to load stats:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    loadStats()
-  }, [])
+    loadStats();
+  }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
-    )
+    );
   }
 
   // Calculate stats
-  const totalComics = comics.length
-  const localComics = comics.filter(c => c.sourceType === 'local').length
-  const remoteComics = comics.filter(c => c.sourceType === 'remote').length
+  const totalComics = comics.length;
+  const localComics = comics.filter((c) => c.sourceType === "local").length;
+  const remoteComics = comics.filter((c) => c.sourceType === "remote").length;
 
   // Reading stats
-  const completedComics = comics.filter(c => {
-    if (!c.totalPages) return false
-    return c.currentPage >= c.totalPages
-  }).length
+  const completedComics = comics.filter((c) => {
+    if (!c.totalPages) return false;
+    return c.currentPage >= c.totalPages;
+  }).length;
 
-  const readingComics = comics.filter(c => {
-    if (!c.totalPages) return false
-    const progress = c.currentPage / c.totalPages
-    return progress > 0 && progress < 1
-  }).length
+  const readingComics = comics.filter((c) => {
+    if (!c.totalPages) return false;
+    const progress = c.currentPage / c.totalPages;
+    return progress > 0 && progress < 1;
+  }).length;
 
-  const wantToReadComics = comics.filter(c => {
-    if (!c.totalPages) return c.currentPage === 0
-    return c.currentPage === 0
-  }).length
+  const wantToReadComics = comics.filter((c) => {
+    if (!c.totalPages) return c.currentPage === 0;
+    return c.currentPage === 0;
+  }).length;
 
   // Progress calculations
-  const totalPages = comics.reduce((sum, c) => sum + (c.totalPages || 0), 0)
-  const pagesRead = comics.reduce((sum, c) => sum + c.currentPage, 0)
-  const overallProgress = totalPages > 0 ? (pagesRead / totalPages) * 100 : 0
+  const totalPages = comics.reduce((sum, c) => sum + (c.totalPages || 0), 0);
+  const pagesRead = comics.reduce((sum, c) => sum + c.currentPage, 0);
+  const overallProgress = totalPages > 0 ? (pagesRead / totalPages) * 100 : 0;
 
   // Series stats
   const seriesSet = new Set(
-    comics.map(c => normalizeSeriesName(getSeriesName(c)))
-  )
-  const uniqueSeries = seriesSet.size
+    comics.map((c) => normalizeSeriesName(getSeriesName(c))),
+  );
+  const uniqueSeries = seriesSet.size;
 
   // Completed series
-  const seriesCompletion = new Map<string, { total: number; completed: number }>()
-  comics.forEach(comic => {
-    const series = normalizeSeriesName(getSeriesName(comic))
+  const seriesCompletion = new Map<
+    string,
+    { total: number; completed: number }
+  >();
+  comics.forEach((comic) => {
+    const series = normalizeSeriesName(getSeriesName(comic));
     if (!seriesCompletion.has(series)) {
-      seriesCompletion.set(series, { total: 0, completed: 0 })
+      seriesCompletion.set(series, { total: 0, completed: 0 });
     }
-    const entry = seriesCompletion.get(series)!
-    entry.total++
+    const entry = seriesCompletion.get(series)!;
+    entry.total++;
     if (comic.totalPages && comic.currentPage >= comic.totalPages) {
-      entry.completed++
+      entry.completed++;
     }
-  })
+  });
   const completedSeries = Array.from(seriesCompletion.values()).filter(
-    s => s.total > 0 && s.completed === s.total
-  ).length
+    (s) => s.total > 0 && s.completed === s.total,
+  ).length;
 
   // Format stats
-  const formatsByCount: Record<string, number> = {}
-  comics.forEach(c => {
-    const format = c.format || 'unknown'
-    formatsByCount[format] = (formatsByCount[format] || 0) + 1
-  })
+  const formatsByCount: Record<string, number> = {};
+  comics.forEach((c) => {
+    const format = c.format || "unknown";
+    formatsByCount[format] = (formatsByCount[format] || 0) + 1;
+  });
 
   // Publishers
-  const publisherCounts: Record<string, number> = {}
-  comics.forEach(c => {
+  const publisherCounts: Record<string, number> = {};
+  comics.forEach((c) => {
     if (c.publisher) {
-      publisherCounts[c.publisher] = (publisherCounts[c.publisher] || 0) + 1
+      publisherCounts[c.publisher] = (publisherCounts[c.publisher] || 0) + 1;
     }
-  })
+  });
   const topPublishers = Object.entries(publisherCounts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
+    .slice(0, 5);
 
   // Recently read
   const recentlyRead = comics
-    .filter(c => c.lastRead)
-    .sort((a, b) => new Date(b.lastRead!).getTime() - new Date(a.lastRead!).getTime())
-    .slice(0, 5)
+    .filter((c) => c.lastRead)
+    .sort(
+      (a, b) =>
+        new Date(b.lastRead!).getTime() - new Date(a.lastRead!).getTime(),
+    )
+    .slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -202,22 +230,32 @@ export function LibraryStats({ onClose }: LibraryStatsProps) {
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Overall Progress</span>
-              <span className="text-sm font-medium">{Math.round(overallProgress)}%</span>
+              <span className="text-sm text-muted-foreground">
+                Overall Progress
+              </span>
+              <span className="text-sm font-medium">
+                {Math.round(overallProgress)}%
+              </span>
             </div>
             <Progress value={overallProgress} className="h-2" />
           </div>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold text-green-500">{pagesRead.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-green-500">
+                {pagesRead.toLocaleString()}
+              </p>
               <p className="text-xs text-muted-foreground">Pages Read</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalPages.toLocaleString()}</p>
+              <p className="text-2xl font-bold">
+                {totalPages.toLocaleString()}
+              </p>
               <p className="text-xs text-muted-foreground">Total Pages</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-muted-foreground">{(totalPages - pagesRead).toLocaleString()}</p>
+              <p className="text-2xl font-bold text-muted-foreground">
+                {(totalPages - pagesRead).toLocaleString()}
+              </p>
               <p className="text-xs text-muted-foreground">Pages Remaining</p>
             </div>
           </div>
@@ -233,11 +271,15 @@ export function LibraryStats({ onClose }: LibraryStatsProps) {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-lg font-bold">{formatBytes(storageStats.totalSize)}</p>
+              <p className="text-lg font-bold">
+                {formatBytes(storageStats.totalSize)}
+              </p>
               <p className="text-xs text-muted-foreground">Total Size</p>
             </div>
             <div>
-              <p className="text-lg font-bold">{formatBytes(storageStats.pagesSize)}</p>
+              <p className="text-lg font-bold">
+                {formatBytes(storageStats.pagesSize)}
+              </p>
               <p className="text-xs text-muted-foreground">Cached Pages</p>
             </div>
             <div>
@@ -265,9 +307,14 @@ export function LibraryStats({ onClose }: LibraryStatsProps) {
                   <div className="flex items-center gap-2">
                     <div
                       className="h-2 bg-primary rounded-full"
-                      style={{ width: `${(count / totalComics) * 100}px`, maxWidth: '100px' }}
+                      style={{
+                        width: `${(count / totalComics) * 100}px`,
+                        maxWidth: "100px",
+                      }}
                     />
-                    <span className="text-sm text-muted-foreground w-8 text-right">{count}</span>
+                    <span className="text-sm text-muted-foreground w-8 text-right">
+                      {count}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -279,14 +326,24 @@ export function LibraryStats({ onClose }: LibraryStatsProps) {
             <h3 className="text-sm font-medium mb-4">Top Publishers</h3>
             <div className="space-y-2">
               {topPublishers.map(([publisher, count]) => (
-                <div key={publisher} className="flex items-center justify-between">
-                  <span className="text-sm truncate max-w-[150px]">{publisher}</span>
+                <div
+                  key={publisher}
+                  className="flex items-center justify-between"
+                >
+                  <span className="text-sm truncate max-w-[150px]">
+                    {publisher}
+                  </span>
                   <div className="flex items-center gap-2">
                     <div
                       className="h-2 bg-primary rounded-full"
-                      style={{ width: `${(count / totalComics) * 100}px`, maxWidth: '100px' }}
+                      style={{
+                        width: `${(count / totalComics) * 100}px`,
+                        maxWidth: "100px",
+                      }}
                     />
-                    <span className="text-sm text-muted-foreground w-8 text-right">{count}</span>
+                    <span className="text-sm text-muted-foreground w-8 text-right">
+                      {count}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -319,7 +376,8 @@ export function LibraryStats({ onClose }: LibraryStatsProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{comic.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    {comic.totalPages && `${Math.round((comic.currentPage / comic.totalPages) * 100)}% complete`}
+                    {comic.totalPages &&
+                      `${Math.round((comic.currentPage / comic.totalPages) * 100)}% complete`}
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground">
@@ -331,5 +389,5 @@ export function LibraryStats({ onClose }: LibraryStatsProps) {
         </Card>
       )}
     </div>
-  )
+  );
 }

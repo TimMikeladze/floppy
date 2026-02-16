@@ -1,58 +1,58 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { format } from "date-fns"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import {
   CalendarIcon,
-  Plus,
-  X,
-  Copy,
   Check,
-  Send,
+  Copy,
   FileText,
-} from "lucide-react"
+  Plus,
+  Send,
+  X,
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "sonner"
-import { cn } from "@/lib/utils"
-import {
-  releaseSchema,
   getDefaultReleaseFormData,
   type ReleaseFormData,
-} from "@/lib/releases-schemas"
-import type { ReleaseFormat, ReleaseStatus } from "@/lib/releases-types"
+  releaseSchema,
+} from "@/lib/releases-schemas";
+import type { ReleaseFormat, ReleaseStatus } from "@/lib/releases-types";
+import { cn } from "@/lib/utils";
 
 interface ReleaseSubmissionDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const FORMAT_OPTIONS: { value: ReleaseFormat; label: string }[] = [
@@ -60,14 +60,14 @@ const FORMAT_OPTIONS: { value: ReleaseFormat; label: string }[] = [
   { value: "trade-paperback", label: "Trade Paperback" },
   { value: "hardcover", label: "Hardcover" },
   { value: "omnibus", label: "Omnibus" },
-]
+];
 
 const STATUS_OPTIONS: { value: ReleaseStatus; label: string }[] = [
   { value: "upcoming", label: "Upcoming" },
   { value: "released", label: "Released" },
   { value: "delayed", label: "Delayed" },
   { value: "cancelled", label: "Cancelled" },
-]
+];
 
 const COMMON_PUBLISHERS = [
   "Marvel Comics",
@@ -80,7 +80,7 @@ const COMMON_PUBLISHERS = [
   "Valiant Comics",
   "Oni Press",
   "Aftershock Comics",
-]
+];
 
 const COMMON_GENRES = [
   "Superhero",
@@ -95,18 +95,22 @@ const COMMON_GENRES = [
   "Comedy",
   "Drama",
   "Slice of Life",
-]
+];
 
-function generateSlug(title: string, series: string, issueNumber: string): string {
+function generateSlug(
+  title: string,
+  series: string,
+  issueNumber: string,
+): string {
   const base = `${series}-${issueNumber}-${title}`
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-  return base
+    .replace(/^-+|-+$/g, "");
+  return base;
 }
 
 function generateYaml(data: ReleaseFormData): string {
-  const slug = generateSlug(data.title, data.series, data.issueNumber)
+  const slug = generateSlug(data.title, data.series, data.issueNumber);
 
   const lines: string[] = [
     `- slug: "${slug}"`,
@@ -126,156 +130,180 @@ function generateYaml(data: ReleaseFormData): string {
     `  genres:`,
     ...data.genres.map((g) => `    - "${g}"`),
     `  status: "${data.status}"`,
-  ]
+  ];
 
   if (data.pageCount) {
-    lines.push(`  pageCount: ${data.pageCount}`)
+    lines.push(`  pageCount: ${data.pageCount}`);
   }
   if (data.isbn) {
-    lines.push(`  isbn: "${data.isbn}"`)
+    lines.push(`  isbn: "${data.isbn}"`);
   }
   if (data.diamond) {
-    lines.push(`  diamond: "${data.diamond}"`)
+    lines.push(`  diamond: "${data.diamond}"`);
   }
   if (data.upc) {
-    lines.push(`  upc: "${data.upc}"`)
+    lines.push(`  upc: "${data.upc}"`);
   }
   if (data.ageRating) {
-    lines.push(`  ageRating: "${data.ageRating}"`)
+    lines.push(`  ageRating: "${data.ageRating}"`);
   }
   if (data.tags && data.tags.length > 0) {
-    lines.push(`  tags:`)
-    data.tags.forEach((t) => lines.push(`    - "${t}"`))
+    lines.push(`  tags:`);
+    for (const t of data.tags) {
+      lines.push(`    - "${t}"`);
+    }
   }
 
-  return lines.join("\n")
+  return lines.join("\n");
 }
 
 export function ReleaseSubmissionDialog({
   open,
   onOpenChange,
 }: ReleaseSubmissionDialogProps) {
-  const [activeTab, setActiveTab] = useState<"form" | "preview">("form")
-  const [copied, setCopied] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
+  const [activeTab, setActiveTab] = useState<"form" | "preview">("form");
+  const [copied, setCopied] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Array field inputs
-  const [writerInput, setWriterInput] = useState("")
-  const [artistInput, setArtistInput] = useState("")
-  const [tagInput, setTagInput] = useState("")
+  const [writerInput, setWriterInput] = useState("");
+  const [artistInput, setArtistInput] = useState("");
+  const [tagInput, setTagInput] = useState("");
 
   const form = useForm<ReleaseFormData>({
     resolver: zodResolver(releaseSchema),
     defaultValues: getDefaultReleaseFormData(),
-  })
+  });
 
-  const formValues = form.watch()
-  const isValid = form.formState.isValid
+  const formValues = form.watch();
+  const _isValid = form.formState.isValid;
 
   const yamlOutput = useMemo(() => {
     if (!formValues.title || !formValues.series || !formValues.issueNumber) {
-      return "// Fill in required fields to see preview"
+      return "// Fill in required fields to see preview";
     }
     try {
-      return generateYaml(formValues)
+      return generateYaml(formValues);
     } catch {
-      return "// Error generating YAML"
+      return "// Error generating YAML";
     }
-  }, [formValues])
+  }, [formValues]);
 
   const handleAddWriter = () => {
     if (writerInput.trim()) {
-      const current = form.getValues("writers") || []
-      form.setValue("writers", [...current, writerInput.trim()], { shouldValidate: true })
-      setWriterInput("")
+      const current = form.getValues("writers") || [];
+      form.setValue("writers", [...current, writerInput.trim()], {
+        shouldValidate: true,
+      });
+      setWriterInput("");
     }
-  }
+  };
 
   const handleRemoveWriter = (index: number) => {
-    const current = form.getValues("writers") || []
-    form.setValue("writers", current.filter((_, i) => i !== index), { shouldValidate: true })
-  }
+    const current = form.getValues("writers") || [];
+    form.setValue(
+      "writers",
+      current.filter((_, i) => i !== index),
+      { shouldValidate: true },
+    );
+  };
 
   const handleAddArtist = () => {
     if (artistInput.trim()) {
-      const current = form.getValues("artists") || []
-      form.setValue("artists", [...current, artistInput.trim()], { shouldValidate: true })
-      setArtistInput("")
+      const current = form.getValues("artists") || [];
+      form.setValue("artists", [...current, artistInput.trim()], {
+        shouldValidate: true,
+      });
+      setArtistInput("");
     }
-  }
+  };
 
   const handleRemoveArtist = (index: number) => {
-    const current = form.getValues("artists") || []
-    form.setValue("artists", current.filter((_, i) => i !== index), { shouldValidate: true })
-  }
+    const current = form.getValues("artists") || [];
+    form.setValue(
+      "artists",
+      current.filter((_, i) => i !== index),
+      { shouldValidate: true },
+    );
+  };
 
   const handleAddTag = () => {
     if (tagInput.trim()) {
-      const current = form.getValues("tags") || []
-      form.setValue("tags", [...current, tagInput.trim()], { shouldValidate: true })
-      setTagInput("")
+      const current = form.getValues("tags") || [];
+      form.setValue("tags", [...current, tagInput.trim()], {
+        shouldValidate: true,
+      });
+      setTagInput("");
     }
-  }
+  };
 
   const handleRemoveTag = (index: number) => {
-    const current = form.getValues("tags") || []
-    form.setValue("tags", current.filter((_, i) => i !== index), { shouldValidate: true })
-  }
+    const current = form.getValues("tags") || [];
+    form.setValue(
+      "tags",
+      current.filter((_, i) => i !== index),
+      { shouldValidate: true },
+    );
+  };
 
   const handleToggleGenre = (genre: string) => {
-    const current = form.getValues("genres") || []
+    const current = form.getValues("genres") || [];
     if (current.includes(genre)) {
-      form.setValue("genres", current.filter((g) => g !== genre), { shouldValidate: true })
+      form.setValue(
+        "genres",
+        current.filter((g) => g !== genre),
+        { shouldValidate: true },
+      );
     } else {
-      form.setValue("genres", [...current, genre], { shouldValidate: true })
+      form.setValue("genres", [...current, genre], { shouldValidate: true });
     }
-  }
+  };
 
   const handleCopyYaml = async () => {
     try {
-      await navigator.clipboard.writeText(yamlOutput)
-      setCopied(true)
-      toast.success("YAML copied to clipboard")
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(yamlOutput);
+      setCopied(true);
+      toast.success("YAML copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Failed to copy to clipboard")
+      toast.error("Failed to copy to clipboard");
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    const result = await form.trigger()
+    const result = await form.trigger();
     if (!result) {
-      toast.error("Please fix the validation errors")
-      setActiveTab("form")
-      return
+      toast.error("Please fix the validation errors");
+      setActiveTab("form");
+      return;
     }
 
-    setSubmitting(true)
+    setSubmitting(true);
     try {
       // In a real implementation, this would send to an API
       // For now, we'll copy to clipboard and show success
-      await navigator.clipboard.writeText(yamlOutput)
+      await navigator.clipboard.writeText(yamlOutput);
       toast.success(
         "Submission copied to clipboard! Share this YAML with the admin team to add this release to the database.",
-        { duration: 5000 }
-      )
-      onOpenChange(false)
-      form.reset(getDefaultReleaseFormData())
+        { duration: 5000 },
+      );
+      onOpenChange(false);
+      form.reset(getDefaultReleaseFormData());
     } catch {
-      toast.error("Failed to submit. Please try copying the YAML manually.")
+      toast.error("Failed to submit. Please try copying the YAML manually.");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   const handleClose = () => {
-    onOpenChange(false)
+    onOpenChange(false);
     // Reset form after a short delay to avoid flashing
     setTimeout(() => {
-      form.reset(getDefaultReleaseFormData())
-      setActiveTab("form")
-    }, 200)
-  }
+      form.reset(getDefaultReleaseFormData());
+      setActiveTab("form");
+    }, 200);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -283,11 +311,16 @@ export function ReleaseSubmissionDialog({
         <DialogHeader>
           <DialogTitle>Submit a New Release</DialogTitle>
           <DialogDescription>
-            Fill out the release information below. Once submitted, the admin team will review and add it to the global releases database.
+            Fill out the release information below. Once submitted, the admin
+            team will review and add it to the global releases database.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "form" | "preview")} className="flex-1 flex flex-col min-h-0">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "form" | "preview")}
+          className="flex-1 flex flex-col min-h-0"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="form">
               <FileText className="w-4 h-4 mr-2" />
@@ -319,7 +352,9 @@ export function ReleaseSubmissionDialog({
                         {...form.register("title")}
                       />
                       {form.formState.errors.title && (
-                        <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
+                        <p className="text-sm text-destructive">
+                          {form.formState.errors.title.message}
+                        </p>
                       )}
                     </div>
 
@@ -334,7 +369,9 @@ export function ReleaseSubmissionDialog({
                           {...form.register("series")}
                         />
                         {form.formState.errors.series && (
-                          <p className="text-sm text-destructive">{form.formState.errors.series.message}</p>
+                          <p className="text-sm text-destructive">
+                            {form.formState.errors.series.message}
+                          </p>
                         )}
                       </div>
                       <div className="grid gap-2">
@@ -347,7 +384,9 @@ export function ReleaseSubmissionDialog({
                           {...form.register("issueNumber")}
                         />
                         {form.formState.errors.issueNumber && (
-                          <p className="text-sm text-destructive">{form.formState.errors.issueNumber.message}</p>
+                          <p className="text-sm text-destructive">
+                            {form.formState.errors.issueNumber.message}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -355,7 +394,8 @@ export function ReleaseSubmissionDialog({
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
                         <Label>
-                          Release Date <span className="text-destructive">*</span>
+                          Release Date{" "}
+                          <span className="text-destructive">*</span>
                         </Label>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -363,7 +403,8 @@ export function ReleaseSubmissionDialog({
                               variant="outline"
                               className={cn(
                                 "justify-start text-left font-normal",
-                                !formValues.releaseDate && "text-muted-foreground"
+                                !formValues.releaseDate &&
+                                  "text-muted-foreground",
                               )}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -378,7 +419,12 @@ export function ReleaseSubmissionDialog({
                             <Calendar
                               mode="single"
                               selected={formValues.releaseDate}
-                              onSelect={(date) => date && form.setValue("releaseDate", date, { shouldValidate: true })}
+                              onSelect={(date) =>
+                                date &&
+                                form.setValue("releaseDate", date, {
+                                  shouldValidate: true,
+                                })
+                              }
                             />
                           </PopoverContent>
                         </Popover>
@@ -391,7 +437,9 @@ export function ReleaseSubmissionDialog({
                           {...form.register("price")}
                         />
                         {form.formState.errors.price && (
-                          <p className="text-sm text-destructive">{form.formState.errors.price.message}</p>
+                          <p className="text-sm text-destructive">
+                            {form.formState.errors.price.message}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -403,7 +451,11 @@ export function ReleaseSubmissionDialog({
                         </Label>
                         <Select
                           value={formValues.publisher}
-                          onValueChange={(v) => form.setValue("publisher", v, { shouldValidate: true })}
+                          onValueChange={(v) =>
+                            form.setValue("publisher", v, {
+                              shouldValidate: true,
+                            })
+                          }
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select publisher" />
@@ -417,7 +469,9 @@ export function ReleaseSubmissionDialog({
                           </SelectContent>
                         </Select>
                         {form.formState.errors.publisher && (
-                          <p className="text-sm text-destructive">{form.formState.errors.publisher.message}</p>
+                          <p className="text-sm text-destructive">
+                            {form.formState.errors.publisher.message}
+                          </p>
                         )}
                       </div>
                       <div className="grid gap-2">
@@ -426,7 +480,11 @@ export function ReleaseSubmissionDialog({
                         </Label>
                         <Select
                           value={formValues.format}
-                          onValueChange={(v) => form.setValue("format", v as ReleaseFormat, { shouldValidate: true })}
+                          onValueChange={(v) =>
+                            form.setValue("format", v as ReleaseFormat, {
+                              shouldValidate: true,
+                            })
+                          }
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select format" />
@@ -446,7 +504,11 @@ export function ReleaseSubmissionDialog({
                       <Label>Status</Label>
                       <Select
                         value={formValues.status}
-                        onValueChange={(v) => form.setValue("status", v as ReleaseStatus, { shouldValidate: true })}
+                        onValueChange={(v) =>
+                          form.setValue("status", v as ReleaseStatus, {
+                            shouldValidate: true,
+                          })
+                        }
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select status" />
@@ -481,19 +543,28 @@ export function ReleaseSubmissionDialog({
                           onChange={(e) => setWriterInput(e.target.value)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                              e.preventDefault()
-                              handleAddWriter()
+                              e.preventDefault();
+                              handleAddWriter();
                             }
                           }}
                         />
-                        <Button type="button" variant="outline" size="icon" onClick={handleAddWriter}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={handleAddWriter}
+                        >
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
                       {formValues.writers && formValues.writers.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
                           {formValues.writers.map((writer, index) => (
-                            <Badge key={index} variant="secondary" className="gap-1">
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="gap-1"
+                            >
                               {writer}
                               <button
                                 type="button"
@@ -507,7 +578,9 @@ export function ReleaseSubmissionDialog({
                         </div>
                       )}
                       {form.formState.errors.writers && (
-                        <p className="text-sm text-destructive">{form.formState.errors.writers.message}</p>
+                        <p className="text-sm text-destructive">
+                          {form.formState.errors.writers.message}
+                        </p>
                       )}
                     </div>
 
@@ -522,19 +595,28 @@ export function ReleaseSubmissionDialog({
                           onChange={(e) => setArtistInput(e.target.value)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                              e.preventDefault()
-                              handleAddArtist()
+                              e.preventDefault();
+                              handleAddArtist();
                             }
                           }}
                         />
-                        <Button type="button" variant="outline" size="icon" onClick={handleAddArtist}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={handleAddArtist}
+                        >
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
                       {formValues.artists && formValues.artists.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
                           {formValues.artists.map((artist, index) => (
-                            <Badge key={index} variant="secondary" className="gap-1">
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="gap-1"
+                            >
                               {artist}
                               <button
                                 type="button"
@@ -548,7 +630,9 @@ export function ReleaseSubmissionDialog({
                         </div>
                       )}
                       {form.formState.errors.artists && (
-                        <p className="text-sm text-destructive">{form.formState.errors.artists.message}</p>
+                        <p className="text-sm text-destructive">
+                          {form.formState.errors.artists.message}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -579,7 +663,9 @@ export function ReleaseSubmissionDialog({
                         {...form.register("coverUrl")}
                       />
                       {form.formState.errors.coverUrl && (
-                        <p className="text-sm text-destructive">{form.formState.errors.coverUrl.message}</p>
+                        <p className="text-sm text-destructive">
+                          {form.formState.errors.coverUrl.message}
+                        </p>
                       )}
                     </div>
 
@@ -589,7 +675,11 @@ export function ReleaseSubmissionDialog({
                         {COMMON_GENRES.map((genre) => (
                           <Badge
                             key={genre}
-                            variant={formValues.genres?.includes(genre) ? "default" : "outline"}
+                            variant={
+                              formValues.genres?.includes(genre)
+                                ? "default"
+                                : "outline"
+                            }
                             className="cursor-pointer"
                             onClick={() => handleToggleGenre(genre)}
                           >
@@ -608,19 +698,28 @@ export function ReleaseSubmissionDialog({
                           onChange={(e) => setTagInput(e.target.value)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                              e.preventDefault()
-                              handleAddTag()
+                              e.preventDefault();
+                              handleAddTag();
                             }
                           }}
                         />
-                        <Button type="button" variant="outline" size="icon" onClick={handleAddTag}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={handleAddTag}
+                        >
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
                       {formValues.tags && formValues.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
                           {formValues.tags.map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="gap-1">
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="gap-1"
+                            >
                               {tag}
                               <button
                                 type="button"
@@ -715,7 +814,9 @@ export function ReleaseSubmissionDialog({
                 )}
               </Button>
               <ScrollArea className="h-full rounded-md border bg-muted/50 p-4">
-                <pre className="text-sm font-mono whitespace-pre-wrap">{yamlOutput}</pre>
+                <pre className="text-sm font-mono whitespace-pre-wrap">
+                  {yamlOutput}
+                </pre>
               </ScrollArea>
             </div>
           </TabsContent>
@@ -738,5 +839,5 @@ export function ReleaseSubmissionDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

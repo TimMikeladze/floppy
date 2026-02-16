@@ -1,135 +1,149 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import { Command } from "cmdk"
+import { Command } from "cmdk";
 import {
-  Search,
-  BookOpen,
-  Library,
-  Sparkles,
-  CheckCircle2,
-  FolderPlus,
-  Layers,
   BarChart3,
+  BookOpen,
+  Layers,
+  Library,
   Moon,
+  Search,
+  Settings,
+  Sparkles,
   Sun,
   Upload,
-  Settings,
-} from "lucide-react"
-import { getAllComics, saveComic } from "@/lib/storage"
-import { getSeriesName, normalizeSeriesName } from "@/lib/series-utils"
-import type { Comic } from "@/lib/types"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { toast } from "sonner"
-import { useTheme } from "next-themes"
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { getSeriesName, normalizeSeriesName } from "@/lib/series-utils";
+import { getAllComics, saveComic } from "@/lib/storage";
+import type { Comic } from "@/lib/types";
 
 interface CommandPaletteProps {
-  onOpenChange?: (open: boolean) => void
-  onUpload?: () => void
-  onOpenStats?: () => void
+  onOpenChange?: (open: boolean) => void;
+  onUpload?: () => void;
+  onOpenStats?: () => void;
 }
 
-export function CommandPalette({ onOpenChange, onUpload, onOpenStats }: CommandPaletteProps) {
-  const [open, setOpen] = useState(false)
-  const [comics, setComics] = useState<Comic[]>([])
-  const [search, setSearch] = useState("")
-  const router = useRouter()
-  const { theme, setTheme } = useTheme()
+export function CommandPalette({
+  onOpenChange,
+  onUpload,
+  onOpenStats,
+}: CommandPaletteProps) {
+  const [open, setOpen] = useState(false);
+  const [comics, setComics] = useState<Comic[]>([]);
+  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const { theme, setTheme } = useTheme();
 
   // Load comics when palette opens
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loadComics is stable
   useEffect(() => {
     if (open) {
-      loadComics()
+      loadComics();
     }
-  }, [open])
+  }, [open]);
 
   async function loadComics() {
     try {
-      const allComics = await getAllComics()
-      setComics(allComics)
+      const allComics = await getAllComics();
+      setComics(allComics);
     } catch (error) {
-      console.error("Failed to load comics:", error)
+      console.error("Failed to load comics:", error);
     }
   }
 
   // Get unique series
-  const uniqueSeries = [...new Set(
-    comics.map(c => normalizeSeriesName(getSeriesName(c)))
-  )].map(normalized => {
-    const comic = comics.find(c => normalizeSeriesName(getSeriesName(c)) === normalized)
-    return {
-      normalized,
-      display: comic ? getSeriesName(comic) : normalized,
-      count: comics.filter(c => normalizeSeriesName(getSeriesName(c)) === normalized).length,
-    }
-  }).sort((a, b) => b.count - a.count)
+  const uniqueSeries = [
+    ...new Set(comics.map((c) => normalizeSeriesName(getSeriesName(c)))),
+  ]
+    .map((normalized) => {
+      const comic = comics.find(
+        (c) => normalizeSeriesName(getSeriesName(c)) === normalized,
+      );
+      return {
+        normalized,
+        display: comic ? getSeriesName(comic) : normalized,
+        count: comics.filter(
+          (c) => normalizeSeriesName(getSeriesName(c)) === normalized,
+        ).length,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
 
   // In-progress comics for quick continue
   const inProgressComics = comics
-    .filter(c => c.totalPages && c.currentPage > 0 && c.currentPage < c.totalPages)
+    .filter(
+      (c) => c.totalPages && c.currentPage > 0 && c.currentPage < c.totalPages,
+    )
     .sort((a, b) => {
-      const aTime = a.lastRead ? new Date(a.lastRead).getTime() : 0
-      const bTime = b.lastRead ? new Date(b.lastRead).getTime() : 0
-      return bTime - aTime
+      const aTime = a.lastRead ? new Date(a.lastRead).getTime() : 0;
+      const bTime = b.lastRead ? new Date(b.lastRead).getTime() : 0;
+      return bTime - aTime;
     })
-    .slice(0, 5)
+    .slice(0, 5);
 
-  const handleMarkAsRead = async (comic: Comic) => {
+  const _handleMarkAsRead = async (comic: Comic) => {
     if (!comic.totalPages) {
-      toast.error("Cannot mark as read: page count unknown")
-      return
+      toast.error("Cannot mark as read: page count unknown");
+      return;
     }
     try {
       await saveComic({
         ...comic,
         currentPage: comic.totalPages,
         lastRead: new Date(),
-      })
-      toast.success(`Marked "${comic.title}" as read`)
-      loadComics()
-    } catch (error) {
-      toast.error("Failed to mark as read")
+      });
+      toast.success(`Marked "${comic.title}" as read`);
+      loadComics();
+    } catch (_error) {
+      toast.error("Failed to mark as read");
     }
-  }
+  };
 
   // Keyboard shortcut: Cmd+K or Ctrl+K
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setOpen((open) => !open)
+        e.preventDefault();
+        setOpen((open) => !open);
       }
-    }
+    };
 
-    document.addEventListener("keydown", down)
-    return () => document.removeEventListener("keydown", down)
-  }, [])
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
 
-  const handleOpenChange = useCallback((open: boolean) => {
-    setOpen(open)
-    onOpenChange?.(open)
-    if (!open) {
-      setSearch("")
-    }
-  }, [onOpenChange])
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      setOpen(open);
+      onOpenChange?.(open);
+      if (!open) {
+        setSearch("");
+      }
+    },
+    [onOpenChange],
+  );
 
   const handleSelect = useCallback((callback: () => void) => {
-    setOpen(false)
-    setSearch("")
-    callback()
-  }, [])
+    setOpen(false);
+    setSearch("");
+    callback();
+  }, []);
 
   // Filter comics based on search
   const filteredComics = comics.filter((comic) => {
-    const query = search.toLowerCase()
+    const query = search.toLowerCase();
     return (
       comic.title.toLowerCase().includes(query) ||
       comic.series?.toLowerCase().includes(query) ||
       comic.issue?.toLowerCase().includes(query) ||
       comic.author?.toLowerCase().includes(query)
-    )
-  })
+    );
+  });
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -163,7 +177,9 @@ export function CommandPalette({ onOpenChange, onUpload, onOpenStats }: CommandP
                   >
                     <Upload className="h-4 w-4" />
                     <span>Upload Comics</span>
-                    <kbd className="ml-auto text-xs text-muted-foreground">⌘U</kbd>
+                    <kbd className="ml-auto text-xs text-muted-foreground">
+                      ⌘U
+                    </kbd>
                   </Command.Item>
                 )}
                 {onOpenStats && (
@@ -176,10 +192,18 @@ export function CommandPalette({ onOpenChange, onUpload, onOpenStats }: CommandP
                   </Command.Item>
                 )}
                 <Command.Item
-                  onSelect={() => handleSelect(() => setTheme(theme === 'dark' ? 'light' : 'dark'))}
+                  onSelect={() =>
+                    handleSelect(() =>
+                      setTheme(theme === "dark" ? "light" : "dark"),
+                    )
+                  }
                   className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
                 >
-                  {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
                   <span>Toggle Theme</span>
                 </Command.Item>
               </Command.Group>
@@ -192,12 +216,18 @@ export function CommandPalette({ onOpenChange, onUpload, onOpenStats }: CommandP
                   <Command.Item
                     key={`continue-${comic.id}`}
                     value={`continue-${comic.id}`}
-                    onSelect={() => handleSelect(() => router.push(`/reader/${comic.id}`))}
+                    onSelect={() =>
+                      handleSelect(() => router.push(`/reader/${comic.id}`))
+                    }
                     className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
                   >
                     <div className="flex-shrink-0">
                       {comic.coverImage ? (
-                        <img src={comic.coverImage} alt="" className="h-10 w-7 object-cover rounded-sm" />
+                        <img
+                          src={comic.coverImage}
+                          alt=""
+                          className="h-10 w-7 object-cover rounded-sm"
+                        />
                       ) : (
                         <div className="h-10 w-7 rounded-sm bg-muted flex items-center justify-center">
                           <BookOpen className="h-4 w-4 text-muted-foreground" />
@@ -211,7 +241,10 @@ export function CommandPalette({ onOpenChange, onUpload, onOpenStats }: CommandP
                       </div>
                     </div>
                     <div className="text-xs text-primary font-medium">
-                      {Math.round((comic.currentPage / comic.totalPages!) * 100)}%
+                      {Math.round(
+                        (comic.currentPage / comic.totalPages!) * 100,
+                      )}
+                      %
                     </div>
                   </Command.Item>
                 ))}
@@ -246,69 +279,91 @@ export function CommandPalette({ onOpenChange, onUpload, onOpenStats }: CommandP
             )}
 
             {/* Series - when searching */}
-            {search && uniqueSeries.filter(s =>
-              s.display.toLowerCase().includes(search.toLowerCase())
-            ).length > 0 && (
-              <Command.Group heading="Series">
-                {uniqueSeries
-                  .filter(s => s.display.toLowerCase().includes(search.toLowerCase()))
-                  .slice(0, 5)
-                  .map((series) => (
-                    <Command.Item
-                      key={`series-${series.normalized}`}
-                      value={`series-${series.normalized}`}
-                      onSelect={() => handleSelect(() => router.push(`/library?q=${encodeURIComponent(series.display)}&view=series`))}
-                      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
-                    >
-                      <Layers className="h-4 w-4" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{series.display}</div>
-                        <div className="text-xs text-muted-foreground">{series.count} issues</div>
-                      </div>
-                    </Command.Item>
-                  ))}
-              </Command.Group>
-            )}
+            {search &&
+              uniqueSeries.filter((s) =>
+                s.display.toLowerCase().includes(search.toLowerCase()),
+              ).length > 0 && (
+                <Command.Group heading="Series">
+                  {uniqueSeries
+                    .filter((s) =>
+                      s.display.toLowerCase().includes(search.toLowerCase()),
+                    )
+                    .slice(0, 5)
+                    .map((series) => (
+                      <Command.Item
+                        key={`series-${series.normalized}`}
+                        value={`series-${series.normalized}`}
+                        onSelect={() =>
+                          handleSelect(() =>
+                            router.push(
+                              `/library?q=${encodeURIComponent(series.display)}&view=series`,
+                            ),
+                          )
+                        }
+                        className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                      >
+                        <Layers className="h-4 w-4" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">
+                            {series.display}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {series.count} issues
+                          </div>
+                        </div>
+                      </Command.Item>
+                    ))}
+                </Command.Group>
+              )}
 
             {/* Comics */}
             {filteredComics.length > 0 && (
               <Command.Group heading={search ? "Comics" : "Recent Comics"}>
-                {(search ? filteredComics : filteredComics.slice(0, 8)).map((comic) => (
-                  <Command.Item
-                    key={comic.id}
-                    value={comic.id}
-                    onSelect={() => handleSelect(() => router.push(`/reader/${comic.id}`))}
-                    className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
-                  >
-                    <div className="flex-shrink-0">
-                      {comic.coverImage ? (
-                        <img
-                          src={comic.coverImage}
-                          alt=""
-                          className="h-10 w-7 object-cover rounded-sm"
-                        />
-                      ) : (
-                        <div className="h-10 w-7 rounded-sm bg-muted flex items-center justify-center">
-                          <BookOpen className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{comic.title}</div>
-                      {comic.series && (
-                        <div className="text-xs text-muted-foreground truncate">
-                          {comic.series}
-                          {comic.issue && ` #${comic.issue}`}
-                        </div>
-                      )}
-                    </div>
-                    {comic.currentPage > 0 && comic.totalPages && (
-                      <div className="text-xs text-muted-foreground">
-                        {Math.round((comic.currentPage / comic.totalPages) * 100)}%
+                {(search ? filteredComics : filteredComics.slice(0, 8)).map(
+                  (comic) => (
+                    <Command.Item
+                      key={comic.id}
+                      value={comic.id}
+                      onSelect={() =>
+                        handleSelect(() => router.push(`/reader/${comic.id}`))
+                      }
+                      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                    >
+                      <div className="flex-shrink-0">
+                        {comic.coverImage ? (
+                          <img
+                            src={comic.coverImage}
+                            alt=""
+                            className="h-10 w-7 object-cover rounded-sm"
+                          />
+                        ) : (
+                          <div className="h-10 w-7 rounded-sm bg-muted flex items-center justify-center">
+                            <BookOpen className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </Command.Item>
-                ))}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">
+                          {comic.title}
+                        </div>
+                        {comic.series && (
+                          <div className="text-xs text-muted-foreground truncate">
+                            {comic.series}
+                            {comic.issue && ` #${comic.issue}`}
+                          </div>
+                        )}
+                      </div>
+                      {comic.currentPage > 0 && comic.totalPages && (
+                        <div className="text-xs text-muted-foreground">
+                          {Math.round(
+                            (comic.currentPage / comic.totalPages) * 100,
+                          )}
+                          %
+                        </div>
+                      )}
+                    </Command.Item>
+                  ),
+                )}
               </Command.Group>
             )}
           </Command.List>
@@ -338,5 +393,5 @@ export function CommandPalette({ onOpenChange, onUpload, onOpenStats }: CommandP
         </Command>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,187 +1,217 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useCallback, useRef } from "react"
-import { Database, FileSpreadsheet, AlertCircle, CheckCircle2, Link2, Upload } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { parseCsvDataSource, convertToStorageFormat } from "@/lib/csv-parser"
-import { saveComic, saveRemotePages, saveSource } from "@/lib/storage"
-import type { ComicSource } from "@/lib/types"
-import { toast } from "sonner"
+import {
+  AlertCircle,
+  CheckCircle2,
+  Database,
+  FileSpreadsheet,
+  Link2,
+  Upload,
+} from "lucide-react";
+import type React from "react";
+import { useCallback, useRef, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { convertToStorageFormat, parseCsvDataSource } from "@/lib/csv-parser";
+import { saveComic, saveRemotePages, saveSource } from "@/lib/storage";
+import type { ComicSource } from "@/lib/types";
 
 interface ImportDataSourceDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onImportComplete: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onImportComplete: () => void;
 }
 
-type ImportStep = "upload" | "preview" | "importing" | "complete"
-type UploadMode = "file" | "url"
+type ImportStep = "upload" | "preview" | "importing" | "complete";
+type UploadMode = "file" | "url";
 
 export function ImportDataSourceDialog({
   open,
   onOpenChange,
   onImportComplete,
 }: ImportDataSourceDialogProps) {
-  const [step, setStep] = useState<ImportStep>("upload")
-  const [uploadMode, setUploadMode] = useState<UploadMode>("file")
-  const [dragActive, setDragActive] = useState(false)
-  const [sourceName, setSourceName] = useState("")
-  const [csvFile, setCsvFile] = useState<File | null>(null)
-  const [csvUrl, setCsvUrl] = useState("")
-  const [urlLoading, setUrlLoading] = useState(false)
-  const [parseResult, setParseResult] = useState<ReturnType<typeof parseCsvDataSource> | null>(null)
-  const [importProgress, setImportProgress] = useState(0)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [step, setStep] = useState<ImportStep>("upload");
+  const [uploadMode, setUploadMode] = useState<UploadMode>("file");
+  const [dragActive, setDragActive] = useState(false);
+  const [sourceName, setSourceName] = useState("");
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvUrl, setCsvUrl] = useState("");
+  const [urlLoading, setUrlLoading] = useState(false);
+  const [parseResult, setParseResult] = useState<ReturnType<
+    typeof parseCsvDataSource
+  > | null>(null);
+  const [importProgress, setImportProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetState = useCallback(() => {
-    setStep("upload")
-    setUploadMode("file")
-    setDragActive(false)
-    setSourceName("")
-    setCsvFile(null)
-    setCsvUrl("")
-    setUrlLoading(false)
-    setParseResult(null)
-    setImportProgress(0)
-  }, [])
+    setStep("upload");
+    setUploadMode("file");
+    setDragActive(false);
+    setSourceName("");
+    setCsvFile(null);
+    setCsvUrl("");
+    setUrlLoading(false);
+    setParseResult(null);
+    setImportProgress(0);
+  }, []);
 
-  const handleOpenChange = useCallback((newOpen: boolean) => {
-    if (!newOpen) {
-      resetState()
-    }
-    onOpenChange(newOpen)
-  }, [onOpenChange, resetState])
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => {
+      if (!newOpen) {
+        resetState();
+      }
+      onOpenChange(newOpen);
+    },
+    [onOpenChange, resetState],
+  );
 
   const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
+      setDragActive(true);
     } else if (e.type === "dragleave") {
-      setDragActive(false)
+      setDragActive(false);
     }
-  }, [])
+  }, []);
 
   const processFile = useCallback(async (file: File) => {
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-      toast.error("Please upload a CSV file")
-      return
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      toast.error("Please upload a CSV file");
+      return;
     }
 
-    setCsvFile(file)
-    setSourceName(file.name.replace(/\.csv$/i, ''))
+    setCsvFile(file);
+    setSourceName(file.name.replace(/\.csv$/i, ""));
 
     try {
-      const text = await file.text()
-      const result = parseCsvDataSource(text)
-      setParseResult(result)
-      setStep("preview")
+      const text = await file.text();
+      const result = parseCsvDataSource(text);
+      setParseResult(result);
+      setStep("preview");
     } catch (error) {
-      toast.error("Failed to parse CSV file")
-      console.error("CSV parse error:", error)
+      toast.error("Failed to parse CSV file");
+      console.error("CSV parse error:", error);
     }
-  }, [])
+  }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0]
-      processFile(file)
-    }
-  }, [processFile])
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        processFile(file);
+      }
+    },
+    [processFile],
+  );
 
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      processFile(e.target.files[0])
-    }
-  }, [processFile])
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files.length > 0) {
+        processFile(e.target.files[0]);
+      }
+    },
+    [processFile],
+  );
 
   const handleUrlFetch = useCallback(async () => {
     if (!csvUrl.trim()) {
-      toast.error("Please enter a URL")
-      return
+      toast.error("Please enter a URL");
+      return;
     }
 
-    setUrlLoading(true)
+    setUrlLoading(true);
     try {
       const response = await fetch(csvUrl, {
-        referrerPolicy: 'no-referrer',
-        credentials: 'omit',
-        mode: 'cors',
-      })
+        referrerPolicy: "no-referrer",
+        credentials: "omit",
+        mode: "cors",
+      });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.status}`)
+        throw new Error(`Failed to fetch: ${response.status}`);
       }
 
-      const text = await response.text()
-      const result = parseCsvDataSource(text)
+      const text = await response.text();
+      const result = parseCsvDataSource(text);
 
       // Extract filename from URL for source name
-      const urlPath = new URL(csvUrl).pathname
-      const fileName = urlPath.split('/').pop() || 'remote-source'
-      setSourceName(fileName.replace(/\.csv$/i, ''))
+      const urlPath = new URL(csvUrl).pathname;
+      const fileName = urlPath.split("/").pop() || "remote-source";
+      setSourceName(fileName.replace(/\.csv$/i, ""));
 
-      setParseResult(result)
-      setStep("preview")
+      setParseResult(result);
+      setStep("preview");
     } catch (error) {
-      console.error("URL fetch error:", error)
+      console.error("URL fetch error:", error);
       toast.error("Failed to fetch CSV", {
-        description: error instanceof Error ? error.message : "Check the URL and try again"
-      })
+        description:
+          error instanceof Error
+            ? error.message
+            : "Check the URL and try again",
+      });
     } finally {
-      setUrlLoading(false)
+      setUrlLoading(false);
     }
-  }, [csvUrl])
+  }, [csvUrl]);
 
   const handleImport = useCallback(async () => {
-    if (!parseResult || parseResult.issues.length === 0) return
+    if (!parseResult || parseResult.issues.length === 0) return;
 
-    setStep("importing")
-    const toastId = toast.loading("Importing data source...")
+    setStep("importing");
+    const toastId = toast.loading("Importing data source...");
 
     try {
       // Create source record
-      const sourceId = crypto.randomUUID()
+      const sourceId = crypto.randomUUID();
       const source: ComicSource = {
         id: sourceId,
         name: sourceName || "Imported Source",
         importedAt: new Date(),
         comicCount: parseResult.issues.length,
         fileName: csvFile?.name,
-      }
+      };
 
-      await saveSource(source)
+      await saveSource(source);
 
       // Convert and save comics
-      const { comics, remotePages } = convertToStorageFormat(parseResult.issues, sourceId)
+      const { comics, remotePages } = convertToStorageFormat(
+        parseResult.issues,
+        sourceId,
+      );
 
       for (let i = 0; i < comics.length; i++) {
-        await saveComic(comics[i])
-        await saveRemotePages(remotePages[i])
-        setImportProgress(Math.round(((i + 1) / comics.length) * 100))
+        await saveComic(comics[i]);
+        await saveRemotePages(remotePages[i]);
+        setImportProgress(Math.round(((i + 1) / comics.length) * 100));
       }
 
-      toast.dismiss(toastId)
-      toast.success(`Imported ${comics.length} comics`)
-      setStep("complete")
-      onImportComplete()
+      toast.dismiss(toastId);
+      toast.success(`Imported ${comics.length} comics`);
+      setStep("complete");
+      onImportComplete();
     } catch (error) {
-      toast.dismiss(toastId)
-      toast.error("Failed to import data source")
-      console.error("Import error:", error)
-      setStep("preview")
+      toast.dismiss(toastId);
+      toast.error("Failed to import data source");
+      console.error("Import error:", error);
+      setStep("preview");
     }
-  }, [parseResult, sourceName, csvFile, onImportComplete])
+  }, [parseResult, sourceName, csvFile, onImportComplete]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -207,7 +237,10 @@ export function ImportDataSourceDialog({
               className="hidden"
             />
 
-            <Tabs value={uploadMode} onValueChange={(v) => setUploadMode(v as UploadMode)}>
+            <Tabs
+              value={uploadMode}
+              onValueChange={(v) => setUploadMode(v as UploadMode)}
+            >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="file" className="gap-2">
                   <Upload className="w-4 h-4" />
@@ -239,7 +272,9 @@ export function ImportDataSourceDialog({
                     }`}
                   />
                   <p className="text-sm font-medium">
-                    {dragActive ? "Drop CSV file here" : "Drop CSV file or click to browse"}
+                    {dragActive
+                      ? "Drop CSV file here"
+                      : "Drop CSV file or click to browse"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Required: series_title, issue_number, page_number, image_url
@@ -257,9 +292,9 @@ export function ImportDataSourceDialog({
                     value={csvUrl}
                     onChange={(e) => setCsvUrl(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        handleUrlFetch()
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleUrlFetch();
                       }
                     }}
                   />
@@ -290,7 +325,9 @@ export function ImportDataSourceDialog({
               <code className="block text-[10px] font-mono">
                 series_title,issue_number,page_number,image_url
               </code>
-              <p className="mt-2">Optional: cover_url, publisher, release_date, author, tags</p>
+              <p className="mt-2">
+                Optional: cover_url, publisher, release_date, author, tags
+              </p>
             </div>
           </div>
         )}
@@ -311,12 +348,17 @@ export function ImportDataSourceDialog({
             {/* Preview stats */}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-lg bg-muted/50 text-center">
-                <p className="text-2xl font-bold">{parseResult.issues.length}</p>
+                <p className="text-2xl font-bold">
+                  {parseResult.issues.length}
+                </p>
                 <p className="text-xs text-muted-foreground">Issues</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/50 text-center">
                 <p className="text-2xl font-bold">
-                  {parseResult.issues.reduce((sum, i) => sum + i.pages.length, 0)}
+                  {parseResult.issues.reduce(
+                    (sum, i) => sum + i.pages.length,
+                    0,
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground">Pages</p>
               </div>
@@ -326,14 +368,23 @@ export function ImportDataSourceDialog({
             <div className="space-y-2">
               <p className="text-sm font-medium">Series:</p>
               <ScrollArea className="h-32 rounded-lg border p-2">
-                {Array.from(new Set(parseResult.issues.map(i => i.seriesTitle))).map(series => {
-                  const count = parseResult.issues.filter(i => i.seriesTitle === series).length
+                {Array.from(
+                  new Set(parseResult.issues.map((i) => i.seriesTitle)),
+                ).map((series) => {
+                  const count = parseResult.issues.filter(
+                    (i) => i.seriesTitle === series,
+                  ).length;
                   return (
-                    <div key={series} className="flex justify-between text-sm py-1">
+                    <div
+                      key={series}
+                      className="flex justify-between text-sm py-1"
+                    >
                       <span className="truncate">{series}</span>
-                      <span className="text-muted-foreground">{count} issues</span>
+                      <span className="text-muted-foreground">
+                        {count} issues
+                      </span>
                     </div>
-                  )
+                  );
                 })}
               </ScrollArea>
             </div>
@@ -347,7 +398,9 @@ export function ImportDataSourceDialog({
                 </p>
                 <ScrollArea className="h-20 rounded-lg border border-destructive/50 p-2">
                   {parseResult.errors.map((error, i) => (
-                    <p key={i} className="text-xs text-destructive">{error}</p>
+                    <p key={i} className="text-xs text-destructive">
+                      {error}
+                    </p>
                   ))}
                 </ScrollArea>
               </div>
@@ -405,5 +458,5 @@ export function ImportDataSourceDialog({
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }

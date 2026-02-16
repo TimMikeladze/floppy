@@ -1,87 +1,94 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { X, Plus, Sparkles } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Plus, Sparkles, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import type { ComicList, SmartListRule, Comic } from "@/lib/types"
-import { toast } from "sonner"
+} from "@/components/ui/select";
+import type { Comic, ComicList, SmartListRule } from "@/lib/types";
 
-const PRESET_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316"]
+const PRESET_COLORS = [
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+];
 
 interface SmartListDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSave: (list: Omit<ComicList, 'id' | 'createdAt' | 'comicIds'>) => void
-  existingList?: ComicList
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (list: Omit<ComicList, "id" | "createdAt" | "comicIds">) => void;
+  existingList?: ComicList;
 }
 
 const RULE_TYPES = [
-  { value: 'series', label: 'Series' },
-  { value: 'author', label: 'Author' },
-  { value: 'publisher', label: 'Publisher' },
-  { value: 'status', label: 'Reading Status' },
-  { value: 'progress', label: 'Progress %' },
-]
+  { value: "series", label: "Series" },
+  { value: "author", label: "Author" },
+  { value: "publisher", label: "Publisher" },
+  { value: "status", label: "Reading Status" },
+  { value: "progress", label: "Progress %" },
+];
 
 const OPERATORS: Record<string, { value: string; label: string }[]> = {
   series: [
-    { value: 'equals', label: 'is exactly' },
-    { value: 'contains', label: 'contains' },
+    { value: "equals", label: "is exactly" },
+    { value: "contains", label: "contains" },
   ],
   author: [
-    { value: 'equals', label: 'is exactly' },
-    { value: 'contains', label: 'contains' },
+    { value: "equals", label: "is exactly" },
+    { value: "contains", label: "contains" },
   ],
   publisher: [
-    { value: 'equals', label: 'is exactly' },
-    { value: 'contains', label: 'contains' },
+    { value: "equals", label: "is exactly" },
+    { value: "contains", label: "contains" },
   ],
-  status: [
-    { value: 'equals', label: 'is' },
-  ],
+  status: [{ value: "equals", label: "is" }],
   progress: [
-    { value: 'equals', label: 'equals' },
-    { value: 'lessThan', label: 'less than' },
-    { value: 'greaterThan', label: 'greater than' },
+    { value: "equals", label: "equals" },
+    { value: "lessThan", label: "less than" },
+    { value: "greaterThan", label: "greater than" },
   ],
-}
+};
 
 const STATUS_VALUES = [
-  { value: 'reading', label: 'Reading' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'want', label: 'Want to Read' },
-]
+  { value: "reading", label: "Reading" },
+  { value: "completed", label: "Completed" },
+  { value: "want", label: "Want to Read" },
+];
 
 function RuleRow({
   rule,
-  index,
+  index: _index,
   onUpdate,
   onRemove,
 }: {
-  rule: SmartListRule
-  index: number
-  onUpdate: (rule: SmartListRule) => void
-  onRemove: () => void
+  rule: SmartListRule;
+  index: number;
+  onUpdate: (rule: SmartListRule) => void;
+  onRemove: () => void;
 }) {
-  const operators = OPERATORS[rule.type] || []
+  const operators = OPERATORS[rule.type] || [];
 
   const renderValueInput = () => {
-    if (rule.type === 'status') {
+    if (rule.type === "status") {
       return (
         <Select
           value={String(rule.value)}
@@ -98,10 +105,10 @@ function RuleRow({
             ))}
           </SelectContent>
         </Select>
-      )
+      );
     }
 
-    if (rule.type === 'progress') {
+    if (rule.type === "progress") {
       return (
         <div className="flex items-center gap-1">
           <Input
@@ -109,12 +116,14 @@ function RuleRow({
             min={0}
             max={100}
             value={String(rule.value)}
-            onChange={(e) => onUpdate({ ...rule, value: parseInt(e.target.value) || 0 })}
+            onChange={(e) =>
+              onUpdate({ ...rule, value: parseInt(e.target.value, 10) || 0 })
+            }
             className="w-20 h-9"
           />
           <span className="text-sm text-muted-foreground">%</span>
         </div>
-      )
+      );
     }
 
     return (
@@ -125,8 +134,8 @@ function RuleRow({
         placeholder="Enter value..."
         className="flex-1 h-9"
       />
-    )
-  }
+    );
+  };
 
   return (
     <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border/50">
@@ -135,9 +144,9 @@ function RuleRow({
         onValueChange={(value) =>
           onUpdate({
             ...rule,
-            type: value as SmartListRule['type'],
-            operator: 'equals',
-            value: '',
+            type: value as SmartListRule["type"],
+            operator: "equals",
+            value: "",
           })
         }
       >
@@ -156,7 +165,7 @@ function RuleRow({
       <Select
         value={rule.operator}
         onValueChange={(value) =>
-          onUpdate({ ...rule, operator: value as SmartListRule['operator'] })
+          onUpdate({ ...rule, operator: value as SmartListRule["operator"] })
         }
       >
         <SelectTrigger className="w-28 h-9">
@@ -182,7 +191,7 @@ function RuleRow({
         <X className="h-4 w-4" />
       </Button>
     </div>
-  )
+  );
 }
 
 export function SmartListDialog({
@@ -191,44 +200,43 @@ export function SmartListDialog({
   onSave,
   existingList,
 }: SmartListDialogProps) {
-  const [name, setName] = useState(existingList?.name || "")
-  const [description, setDescription] = useState(existingList?.description || "")
-  const [color, setColor] = useState(existingList?.color || PRESET_COLORS[4])
-  const [icon, setIcon] = useState(existingList?.icon || "")
+  const [name, setName] = useState(existingList?.name || "");
+  const [description, setDescription] = useState(
+    existingList?.description || "",
+  );
+  const [color, setColor] = useState(existingList?.color || PRESET_COLORS[4]);
+  const [icon, setIcon] = useState(existingList?.icon || "");
   const [rules, setRules] = useState<SmartListRule[]>(
-    existingList?.smartListRules || []
-  )
+    existingList?.smartListRules || [],
+  );
 
   const addRule = () => {
-    setRules([
-      ...rules,
-      { type: 'series', operator: 'contains', value: '' },
-    ])
-  }
+    setRules([...rules, { type: "series", operator: "contains", value: "" }]);
+  };
 
   const updateRule = (index: number, rule: SmartListRule) => {
-    const newRules = [...rules]
-    newRules[index] = rule
-    setRules(newRules)
-  }
+    const newRules = [...rules];
+    newRules[index] = rule;
+    setRules(newRules);
+  };
 
   const removeRule = (index: number) => {
-    setRules(rules.filter((_, i) => i !== index))
-  }
+    setRules(rules.filter((_, i) => i !== index));
+  };
 
   const handleSave = () => {
     if (!name.trim()) {
-      toast.error("Please enter a list name")
-      return
+      toast.error("Please enter a list name");
+      return;
     }
     if (rules.length === 0) {
-      toast.error("Add at least one rule")
-      return
+      toast.error("Add at least one rule");
+      return;
     }
-    const validRules = rules.filter(r => r.value !== '')
+    const validRules = rules.filter((r) => r.value !== "");
     if (validRules.length === 0) {
-      toast.error("All rules need values")
-      return
+      toast.error("All rules need values");
+      return;
     }
 
     onSave({
@@ -238,9 +246,9 @@ export function SmartListDialog({
       icon: icon || undefined,
       isSmartList: true,
       smartListRules: validRules,
-    })
-    onOpenChange(false)
-  }
+    });
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -248,7 +256,7 @@ export function SmartListDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            {existingList ? 'Edit Smart List' : 'Create Smart List'}
+            {existingList ? "Edit Smart List" : "Create Smart List"}
           </DialogTitle>
           <DialogDescription>
             Smart lists automatically update based on your rules
@@ -269,7 +277,8 @@ export function SmartListDialog({
           {/* Description */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              Description <span className="text-muted-foreground">(optional)</span>
+              Description{" "}
+              <span className="text-muted-foreground">(optional)</span>
             </label>
             <Input
               value={description}
@@ -285,6 +294,7 @@ export function SmartListDialog({
               <div className="flex gap-2">
                 {PRESET_COLORS.map((c) => (
                   <button
+                    type="button"
                     key={c}
                     onClick={() => setColor(c)}
                     className={`h-7 w-7 rounded-full transition-all ${
@@ -318,9 +328,15 @@ export function SmartListDialog({
             {rules.length === 0 ? (
               <div className="p-6 text-center border border-dashed rounded-lg">
                 <p className="text-sm text-muted-foreground mb-3">
-                  No rules yet. Add a rule to define what comics belong in this list.
+                  No rules yet. Add a rule to define what comics belong in this
+                  list.
                 </p>
-                <Button variant="outline" size="sm" onClick={addRule} className="gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addRule}
+                  className="gap-2"
+                >
                   <Plus className="h-4 w-4" />
                   Add Rule
                 </Button>
@@ -356,66 +372,72 @@ export function SmartListDialog({
             Cancel
           </Button>
           <Button onClick={handleSave}>
-            {existingList ? 'Save Changes' : 'Create Smart List'}
+            {existingList ? "Save Changes" : "Create Smart List"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 /**
  * Apply smart list rules to filter comics.
  */
-export function applySmartListRules(comics: Comic[], rules: SmartListRule[]): Comic[] {
-  if (!rules || rules.length === 0) return []
+export function applySmartListRules(
+  comics: Comic[],
+  rules: SmartListRule[],
+): Comic[] {
+  if (!rules || rules.length === 0) return [];
 
   return comics.filter((comic) => {
     return rules.every((rule) => {
-      const { type, operator, value } = rule
+      const { type, operator, value } = rule;
 
       switch (type) {
-        case 'series': {
-          const seriesValue = (comic.series || '').toLowerCase()
-          const searchValue = String(value).toLowerCase()
-          if (operator === 'equals') return seriesValue === searchValue
-          if (operator === 'contains') return seriesValue.includes(searchValue)
-          return false
+        case "series": {
+          const seriesValue = (comic.series || "").toLowerCase();
+          const searchValue = String(value).toLowerCase();
+          if (operator === "equals") return seriesValue === searchValue;
+          if (operator === "contains") return seriesValue.includes(searchValue);
+          return false;
         }
-        case 'author': {
-          const authorValue = (comic.author || '').toLowerCase()
-          const searchValue = String(value).toLowerCase()
-          if (operator === 'equals') return authorValue === searchValue
-          if (operator === 'contains') return authorValue.includes(searchValue)
-          return false
+        case "author": {
+          const authorValue = (comic.author || "").toLowerCase();
+          const searchValue = String(value).toLowerCase();
+          if (operator === "equals") return authorValue === searchValue;
+          if (operator === "contains") return authorValue.includes(searchValue);
+          return false;
         }
-        case 'publisher': {
-          const publisherValue = (comic.publisher || '').toLowerCase()
-          const searchValue = String(value).toLowerCase()
-          if (operator === 'equals') return publisherValue === searchValue
-          if (operator === 'contains') return publisherValue.includes(searchValue)
-          return false
+        case "publisher": {
+          const publisherValue = (comic.publisher || "").toLowerCase();
+          const searchValue = String(value).toLowerCase();
+          if (operator === "equals") return publisherValue === searchValue;
+          if (operator === "contains")
+            return publisherValue.includes(searchValue);
+          return false;
         }
-        case 'status': {
-          if (!comic.totalPages) return value === 'want'
-          const progress = comic.currentPage / comic.totalPages
-          if (value === 'reading') return progress > 0 && progress < 1
-          if (value === 'completed') return progress >= 1
-          if (value === 'want') return progress === 0
-          return false
+        case "status": {
+          if (!comic.totalPages) return value === "want";
+          const progress = comic.currentPage / comic.totalPages;
+          if (value === "reading") return progress > 0 && progress < 1;
+          if (value === "completed") return progress >= 1;
+          if (value === "want") return progress === 0;
+          return false;
         }
-        case 'progress': {
-          if (!comic.totalPages) return false
-          const progress = Math.round((comic.currentPage / comic.totalPages) * 100)
-          const targetValue = Number(value)
-          if (operator === 'equals') return progress === targetValue
-          if (operator === 'lessThan') return progress < targetValue
-          if (operator === 'greaterThan') return progress > targetValue
-          return false
+        case "progress": {
+          if (!comic.totalPages) return false;
+          const progress = Math.round(
+            (comic.currentPage / comic.totalPages) * 100,
+          );
+          const targetValue = Number(value);
+          if (operator === "equals") return progress === targetValue;
+          if (operator === "lessThan") return progress < targetValue;
+          if (operator === "greaterThan") return progress > targetValue;
+          return false;
         }
         default:
-          return false
+          return false;
       }
-    })
-  })
+    });
+  });
 }

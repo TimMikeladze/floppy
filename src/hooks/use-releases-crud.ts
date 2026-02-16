@@ -1,65 +1,73 @@
-import { useState, useEffect, useCallback } from "react"
-import { stringify } from "yaml"
-import type { Release, Series, Publisher, Genre, Format, ReleasesConfig } from "@/lib/releases-types"
+import { useCallback, useEffect, useState } from "react";
+import { parse, stringify } from "yaml";
 import {
-  getMergedReleases,
-  getReleasesConfig,
   getAllSeries,
+  getMergedReleases,
   getNewReleases,
-  getUpcomingReleases,
-  getReleasesByDate,
-  getReleasesForMonth,
   getReleaseById,
+  getReleasesByDate,
+  getReleasesConfig,
+  getReleasesForMonth,
+  getUpcomingReleases,
   searchReleases,
-} from "@/lib/releases-merge"
+} from "@/lib/releases-merge";
+import type {
+  Format,
+  Genre,
+  Publisher,
+  Release,
+  ReleasesConfig,
+  Series,
+} from "@/lib/releases-types";
 import {
-  saveReleaseOverride,
-  deleteReleaseOverride,
-  saveCustomRelease,
-  updateCustomRelease,
+  clearAllReleaseUserData,
   deleteCustomRelease,
+  deleteReleaseOverride,
   getCustomReleases,
   getReleaseOverrides,
   markReleaseDeleted,
+  saveCustomRelease,
+  saveReleaseOverride,
   unmarkReleaseDeleted,
-  clearAllReleaseUserData,
-} from "@/lib/storage"
-import { parse } from "yaml"
+  updateCustomRelease,
+} from "@/lib/storage";
 
 export function useReleasesCrud() {
-  const [releases, setReleases] = useState<Release[]>([])
-  const [series, setSeries] = useState<Series[]>([])
+  const [releases, setReleases] = useState<Release[]>([]);
+  const [series, setSeries] = useState<Series[]>([]);
   const [config, setConfig] = useState<{
-    publishers: Publisher[]
-    genres: Genre[]
-    formats: Format[]
-    settings: ReleasesConfig
-  } | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
+    publishers: Publisher[];
+    genres: Genre[];
+    formats: Format[];
+    settings: ReleasesConfig;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const refresh = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
       const [releasesData, seriesData, configData] = await Promise.all([
         getMergedReleases(),
         getAllSeries(),
         getReleasesConfig(),
-      ])
-      setReleases(releasesData)
-      setSeries(seriesData)
-      setConfig(configData)
+      ]);
+      setReleases(releasesData);
+      setSeries(seriesData);
+      setConfig(configData);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to load releases"))
+      setError(
+        err instanceof Error ? err : new Error("Failed to load releases"),
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    refresh()
-  }, [refresh])
+    refresh();
+  }, [refresh]);
 
   const createRelease = useCallback(
     async (release: Omit<Release, "id" | "isCustom" | "isModified">) => {
@@ -67,97 +75,106 @@ export function useReleasesCrud() {
         await saveCustomRelease({
           ...release,
           isCustom: true,
-        })
-        await refresh()
+        });
+        await refresh();
       } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to create release"))
-        throw err
+        setError(
+          err instanceof Error ? err : new Error("Failed to create release"),
+        );
+        throw err;
       }
     },
-    [refresh]
-  )
+    [refresh],
+  );
 
   const updateRelease = useCallback(
     async (id: string, updates: Partial<Release>) => {
       try {
-        const existing = releases.find((r) => r.id === id)
+        const existing = releases.find((r) => r.id === id);
         if (!existing) {
-          throw new Error("Release not found")
+          throw new Error("Release not found");
         }
 
         if (existing.isCustom) {
-          await updateCustomRelease(id, updates)
+          await updateCustomRelease(id, updates);
         } else {
-          await saveReleaseOverride(id, updates)
+          await saveReleaseOverride(id, updates);
         }
-        await refresh()
+        await refresh();
       } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to update release"))
-        throw err
+        setError(
+          err instanceof Error ? err : new Error("Failed to update release"),
+        );
+        throw err;
       }
     },
-    [releases, refresh]
-  )
+    [releases, refresh],
+  );
 
   const deleteRelease = useCallback(
     async (id: string) => {
       try {
-        const existing = releases.find((r) => r.id === id)
+        const existing = releases.find((r) => r.id === id);
         if (!existing) {
-          throw new Error("Release not found")
+          throw new Error("Release not found");
         }
 
         if (existing.isCustom) {
-          await deleteCustomRelease(id)
+          await deleteCustomRelease(id);
         } else {
-          await markReleaseDeleted(id)
+          await markReleaseDeleted(id);
         }
-        await refresh()
+        await refresh();
       } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to delete release"))
-        throw err
+        setError(
+          err instanceof Error ? err : new Error("Failed to delete release"),
+        );
+        throw err;
       }
     },
-    [releases, refresh]
-  )
+    [releases, refresh],
+  );
 
   const resetRelease = useCallback(
     async (id: string) => {
       try {
-        await deleteReleaseOverride(id)
-        await unmarkReleaseDeleted(id)
-        await refresh()
+        await deleteReleaseOverride(id);
+        await unmarkReleaseDeleted(id);
+        await refresh();
       } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to reset release"))
-        throw err
+        setError(
+          err instanceof Error ? err : new Error("Failed to reset release"),
+        );
+        throw err;
       }
     },
-    [refresh]
-  )
+    [refresh],
+  );
 
   const resetAllUserData = useCallback(async () => {
     try {
-      await clearAllReleaseUserData()
-      await refresh()
+      await clearAllReleaseUserData();
+      await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to reset user data"))
-      throw err
+      setError(
+        err instanceof Error ? err : new Error("Failed to reset user data"),
+      );
+      throw err;
     }
-  }, [refresh])
+  }, [refresh]);
 
   const exportAsYaml = useCallback(async () => {
     try {
-      const customReleases = await getCustomReleases()
-      const overrides = await getReleaseOverrides()
+      const customReleases = await getCustomReleases();
+      const overrides = await getReleaseOverrides();
 
       const exportData = {
         customReleases: customReleases.map((r) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { isCustom, createdAt, modifiedAt, ...releaseData } = r
+          const { isCustom, createdAt, modifiedAt, ...releaseData } = r;
           return {
             ...releaseData,
             releaseDate: r.releaseDate.toISOString().split("T")[0],
-          }
+          };
         }),
         overrides: overrides.map((o) => ({
           releaseId: o.releaseId,
@@ -168,22 +185,24 @@ export function useReleasesCrud() {
               : undefined,
           },
         })),
-      }
+      };
 
-      return stringify(exportData)
+      return stringify(exportData);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to export data"))
-      throw err
+      setError(err instanceof Error ? err : new Error("Failed to export data"));
+      throw err;
     }
-  }, [])
+  }, []);
 
   const importFromYaml = useCallback(
     async (yamlText: string) => {
       try {
         const data = parse(yamlText) as {
-          customReleases?: Array<Omit<Release, "id" | "isCustom" | "isModified">>
-          overrides?: Array<{ releaseId: string; overrides: Partial<Release> }>
-        }
+          customReleases?: Array<
+            Omit<Release, "id" | "isCustom" | "isModified">
+          >;
+          overrides?: Array<{ releaseId: string; overrides: Partial<Release> }>;
+        };
 
         // Import custom releases
         if (data.customReleases) {
@@ -192,50 +211,52 @@ export function useReleasesCrud() {
               ...release,
               releaseDate: new Date(release.releaseDate),
               isCustom: true,
-            })
+            });
           }
         }
 
         // Import overrides
         if (data.overrides) {
           for (const override of data.overrides) {
-            await saveReleaseOverride(override.releaseId, override.overrides)
+            await saveReleaseOverride(override.releaseId, override.overrides);
           }
         }
 
-        await refresh()
+        await refresh();
       } catch (err) {
-        setError(err instanceof Error ? err : new Error("Failed to import data"))
-        throw err
+        setError(
+          err instanceof Error ? err : new Error("Failed to import data"),
+        );
+        throw err;
       }
     },
-    [refresh]
-  )
+    [refresh],
+  );
 
   // Helper functions that use the merge layer
   const getNew = useCallback(async (days?: number) => {
-    return getNewReleases(days)
-  }, [])
+    return getNewReleases(days);
+  }, []);
 
   const getUpcoming = useCallback(async (days?: number) => {
-    return getUpcomingReleases(days)
-  }, [])
+    return getUpcomingReleases(days);
+  }, []);
 
   const getByDate = useCallback(async (date: Date) => {
-    return getReleasesByDate(date)
-  }, [])
+    return getReleasesByDate(date);
+  }, []);
 
   const getForMonth = useCallback(async (year: number, month: number) => {
-    return getReleasesForMonth(year, month)
-  }, [])
+    return getReleasesForMonth(year, month);
+  }, []);
 
   const getById = useCallback(async (id: string) => {
-    return getReleaseById(id)
-  }, [])
+    return getReleaseById(id);
+  }, []);
 
   const search = useCallback(async (query: string) => {
-    return searchReleases(query)
-  }, [])
+    return searchReleases(query);
+  }, []);
 
   return {
     // Data
@@ -264,5 +285,5 @@ export function useReleasesCrud() {
     getForMonth,
     getById,
     search,
-  }
+  };
 }

@@ -1,44 +1,46 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
+import { useEffect } from "react";
 
 export default function GlobalError({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[global-error] Caught critical error:", error)
-  }, [error])
+    console.error("[global-error] Caught critical error:", error);
+  }, [error]);
 
   const handleHardReset = async () => {
     try {
       // Clear service worker caches
       if ("caches" in window) {
-        const cacheNames = await caches.keys()
+        const cacheNames = await caches.keys();
         await Promise.all(
-          cacheNames.filter(name => name.startsWith("floppy-")).map(name => caches.delete(name))
-        )
+          cacheNames
+            .filter((name) => name.startsWith("floppy-"))
+            .map((name) => caches.delete(name)),
+        );
       }
 
       // Unregister service worker
       if ("serviceWorker" in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations()
-        await Promise.all(registrations.map(reg => reg.unregister()))
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((reg) => reg.unregister()));
       }
 
       // Force reload
-      window.location.reload()
+      window.location.reload();
     } catch (e) {
-      console.error("[global-error] Failed to perform hard reset:", e)
-      window.location.reload()
+      console.error("[global-error] Failed to perform hard reset:", e);
+      window.location.reload();
     }
-  }
+  };
 
   return (
-    <html>
+    <html lang="en">
       <body>
         <div
           style={{
@@ -66,6 +68,8 @@ export default function GlobalError({
               }}
             >
               <svg
+                role="img"
+                aria-label="Error"
                 width="32"
                 height="32"
                 viewBox="0 0 24 24"
@@ -81,15 +85,28 @@ export default function GlobalError({
               </svg>
             </div>
 
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+            <h1
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: 600,
+                marginBottom: "0.5rem",
+              }}
+            >
               Something went wrong
             </h1>
             <p style={{ color: "#a1a1aa", marginBottom: "1.5rem" }}>
               A critical error occurred. Please try resetting the app.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.75rem",
+              }}
+            >
               <button
+                type="button"
                 onClick={() => reset()}
                 style={{
                   padding: "0.75rem 1rem",
@@ -105,6 +122,7 @@ export default function GlobalError({
               </button>
 
               <button
+                type="button"
                 onClick={handleHardReset}
                 style={{
                   padding: "0.75rem 1rem",
@@ -122,5 +140,5 @@ export default function GlobalError({
         </div>
       </body>
     </html>
-  )
+  );
 }

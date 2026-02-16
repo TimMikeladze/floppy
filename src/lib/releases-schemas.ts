@@ -1,10 +1,10 @@
-import { z } from "zod"
+import { z } from "zod";
 
 export const variantCoverSchema = z.object({
   name: z.string().min(1, "Variant name is required"),
   coverUrl: z.string().url("Must be a valid URL").or(z.literal("")),
   artist: z.string().optional(),
-})
+});
 
 export const releaseSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -31,7 +31,7 @@ export const releaseSchema = z.object({
   upc: z.string().optional(),
   ageRating: z.string().optional(),
   tags: z.array(z.string()).optional(),
-})
+});
 
 export const seriesSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -59,14 +59,14 @@ export const seriesSchema = z.object({
   typicalReleaseDay: z.string().optional(),
   relatedSeries: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
-})
+});
 
-export type ReleaseFormData = z.infer<typeof releaseSchema>
-export type SeriesFormData = z.infer<typeof seriesSchema>
-export type VariantCoverFormData = z.infer<typeof variantCoverSchema>
+export type ReleaseFormData = z.infer<typeof releaseSchema>;
+export type SeriesFormData = z.infer<typeof seriesSchema>;
+export type VariantCoverFormData = z.infer<typeof variantCoverSchema>;
 
 // Input type for form (before Zod transforms)
-export type ReleaseFormInput = z.input<typeof releaseSchema>
+export type ReleaseFormInput = z.input<typeof releaseSchema>;
 
 // Helper to create a default release form data
 export function getDefaultReleaseFormData(): ReleaseFormInput {
@@ -85,7 +85,7 @@ export function getDefaultReleaseFormData(): ReleaseFormInput {
     genres: [],
     status: "upcoming",
     tags: [],
-  }
+  };
 }
 
 // Helper to create a default series form data
@@ -103,5 +103,5 @@ export function getDefaultSeriesFormData(): Partial<SeriesFormData> {
     currentArtists: [],
     releaseSchedule: "monthly",
     tags: [],
-  }
+  };
 }

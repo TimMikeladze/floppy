@@ -1,26 +1,43 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Star, Coffee, Share2, Users, Copy, Check, Info } from "lucide-react"
-import { Twitter, Linkedin, Github } from "lucide-react"
+import {
+  Check,
+  Coffee,
+  Copy,
+  Github,
+  Info,
+  Linkedin,
+  Share2,
+  Star,
+  Twitter,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface SupportDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
-  const [shareExpanded, setShareExpanded] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const [shareText, setShareText] = useState("Check out floppy - open source comic book reader\nhttps://floppy.sh")
+  const [shareExpanded, setShareExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [shareText, setShareText] = useState(
+    "Check out floppy - open source comic book reader\nhttps://floppy.sh",
+  );
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(shareText)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    await navigator.clipboard.writeText(shareText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -31,7 +48,8 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
 
         <div className="space-y-3 mt-3">
           <p className="text-xs text-muted-foreground">
-            floppy is free and open source. here are some ways you can support it:
+            floppy is free and open source. here are some ways you can support
+            it:
           </p>
 
           {/* 1. Star on GitHub */}
@@ -45,7 +63,9 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
               <Star className="w-4 h-4 mt-0.5 text-muted-foreground" />
               <div>
                 <div className="text-sm font-medium">star on github</div>
-                <div className="text-xs text-muted-foreground">help others discover floppy</div>
+                <div className="text-xs text-muted-foreground">
+                  help others discover floppy
+                </div>
               </div>
             </div>
           </a>
@@ -56,7 +76,9 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
               <Users className="w-4 h-4 mt-0.5 text-muted-foreground" />
               <div>
                 <div className="text-sm font-medium">follow the developer</div>
-                <div className="text-xs text-muted-foreground">stay updated on new features</div>
+                <div className="text-xs text-muted-foreground">
+                  stay updated on new features
+                </div>
               </div>
             </div>
 
@@ -76,7 +98,11 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs"
               >
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M12 3c-2.444 0-4.5 2.056-4.5 4.5 0 1.445.682 2.73 1.745 3.55C7.945 12.07 6.5 13.89 6.5 16c0 2.444 2.056 4.5 4.5 4.5s4.5-2.056 4.5-4.5c0-2.11-1.445-3.93-2.745-5.05C13.818 10.23 14.5 8.945 14.5 7.5 14.5 5.056 12.444 3 12 3z" />
                 </svg>
                 Bluesky
@@ -104,14 +130,18 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
 
           {/* 3. Sponsor */}
           <a
-            href="#"
+            href="https://github.com/sponsors/TimMikeladze"
+            target="_blank"
+            rel="noopener noreferrer"
             className="block p-3 rounded-lg border border-border/50 hover:border-border transition-colors"
           >
             <div className="flex items-start gap-2.5">
               <Coffee className="w-4 h-4 mt-0.5 text-muted-foreground" />
               <div>
                 <div className="text-sm font-medium">sponsor</div>
-                <div className="text-xs text-muted-foreground">support ongoing development</div>
+                <div className="text-xs text-muted-foreground">
+                  support ongoing development
+                </div>
               </div>
             </div>
           </a>
@@ -119,6 +149,7 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
           {/* 4. Share us - Expandable */}
           <div className="rounded-lg border border-border/50">
             <button
+              type="button"
               onClick={() => setShareExpanded(!shareExpanded)}
               className="w-full p-3 flex items-start justify-between hover:bg-accent/5 transition-colors"
             >
@@ -126,7 +157,9 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
                 <Share2 className="w-4 h-4 mt-0.5 text-muted-foreground" />
                 <div className="text-left">
                   <div className="text-sm font-medium">share us</div>
-                  <div className="text-xs text-muted-foreground">spread the word on social media</div>
+                  <div className="text-xs text-muted-foreground">
+                    spread the word on social media
+                  </div>
                 </div>
               </div>
               <svg
@@ -135,7 +168,12 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
@@ -150,11 +188,16 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
                     rows={2}
                   />
                   <button
+                    type="button"
                     onClick={handleCopy}
                     className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
                     aria-label="Copy share text"
                   >
-                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? (
+                      <Check className="w-3.5 h-3.5" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 </div>
 
@@ -175,7 +218,11 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-border/50 hover:bg-accent/5 transition-colors text-xs"
                   >
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path d="M12 3c-2.444 0-4.5 2.056-4.5 4.5 0 1.445.682 2.73 1.745 3.55C7.945 12.07 6.5 13.89 6.5 16c0 2.444 2.056 4.5 4.5 4.5s4.5-2.056 4.5-4.5c0-2.11-1.445-3.93-2.745-5.05C13.818 10.23 14.5 8.945 14.5 7.5 14.5 5.056 12.444 3 12 3z" />
                     </svg>
                     Bluesky
@@ -213,5 +260,5 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

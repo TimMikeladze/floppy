@@ -1,53 +1,69 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { toast } from "sonner"
-import { parseComicFile, generateCoverImage, SUPPORTED_FORMATS } from "@/lib/comic-parser"
-import { saveComic, deleteComic, exportLibrary, importLibrary, clearAllData, savePagesForComic } from "@/lib/storage"
-import type { FileWithHandle } from "@/components/library/upload-dialog"
-import type { Comic } from "@/lib/types"
+import { useState } from "react";
+import { toast } from "sonner";
+import type { FileWithHandle } from "@/components/library/upload-dialog";
+import {
+  generateCoverImage,
+  parseComicFile,
+  SUPPORTED_FORMATS,
+} from "@/lib/comic-parser";
+import {
+  clearAllData,
+  exportLibrary,
+  importLibrary,
+  saveComic,
+  savePagesForComic,
+} from "@/lib/storage";
+import type { Comic } from "@/lib/types";
 
 export function useAppActions(onDataChange?: () => Promise<void>) {
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
-  const [addComicDialogOpen, setAddComicDialogOpen] = useState(false)
-  const [importDataSourceDialogOpen, setImportDataSourceDialogOpen] = useState(false)
-  const [listsSheetOpen, setListsSheetOpen] = useState(false)
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [addComicDialogOpen, setAddComicDialogOpen] = useState(false);
+  const [importDataSourceDialogOpen, setImportDataSourceDialogOpen] =
+    useState(false);
+  const [listsSheetOpen, setListsSheetOpen] = useState(false);
 
   async function handleUploadClick() {
-    setUploadDialogOpen(true)
+    setUploadDialogOpen(true);
   }
 
   async function handleFilesSelected(filesWithHandles: FileWithHandle[]) {
-    if (!filesWithHandles || filesWithHandles.length === 0) return
+    if (!filesWithHandles || filesWithHandles.length === 0) return;
 
-    const validExtensions = SUPPORTED_FORMATS.extensions
+    const validExtensions = SUPPORTED_FORMATS.extensions;
     const validFiles = filesWithHandles.filter(({ file }) => {
-      const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."))
-      return validExtensions.includes(ext)
-    })
+      const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+      return validExtensions.includes(ext);
+    });
 
     if (validFiles.length === 0) {
-      toast.error(`Please upload ${SUPPORTED_FORMATS.description} files`)
-      return
+      toast.error(`Please upload ${SUPPORTED_FORMATS.description} files`);
+      return;
     }
 
-    const total = validFiles.length
-    let completed = 0
-    let successCount = 0
-    let failCount = 0
+    const total = validFiles.length;
+    let completed = 0;
+    let successCount = 0;
+    let failCount = 0;
 
-    const toastId = toast.loading(`Importing comics: 0/${total} complete`)
+    const toastId = toast.loading(`Importing comics: 0/${total} complete`);
 
     const updateProgress = () => {
-      toast.loading(`Importing comics: ${completed}/${total} complete`, { id: toastId })
-    }
+      toast.loading(`Importing comics: ${completed}/${total} complete`, {
+        id: toastId,
+      });
+    };
 
-    async function processFile({ file, handle }: FileWithHandle): Promise<boolean> {
+    async function processFile({
+      file,
+      handle,
+    }: FileWithHandle): Promise<boolean> {
       try {
-        const { pages, metadata } = await parseComicFile(file)
-        const coverImage = await generateCoverImage(pages[0])
+        const { pages, metadata } = await parseComicFile(file);
+        const coverImage = await generateCoverImage(pages[0]);
 
-        const comicId = crypto.randomUUID()
+        const comicId = crypto.randomUUID();
 
         const comic: Comic = {
           id: comicId,
@@ -60,103 +76,104 @@ export function useAppActions(onDataChange?: () => Promise<void>) {
           hasFile: true,
           format: metadata.format,
           fileHandle: handle,
-          sourceType: 'local',
+          sourceType: "local",
           addedAt: new Date(),
-        }
+        };
 
-        await saveComic(comic)
+        await saveComic(comic);
 
         if (!handle || metadata.format === "pdf") {
-          await savePagesForComic(comicId, pages)
+          await savePagesForComic(comicId, pages);
         }
 
-        return true
+        return true;
       } catch (error) {
-        console.error(`Error uploading ${file.name}:`, error)
-        return false
+        console.error(`Error uploading ${file.name}:`, error);
+        return false;
       }
     }
 
     // Process files sequentially for reliability (prevents browser crashes)
     for (const fileWithHandle of validFiles) {
-      const success = await processFile(fileWithHandle)
+      const success = await processFile(fileWithHandle);
       if (success) {
-        successCount++
+        successCount++;
       } else {
-        failCount++
+        failCount++;
       }
-      completed++
-      updateProgress()
+      completed++;
+      updateProgress();
 
       // Small delay between files to allow browser to garbage collect
       if (completed < total) {
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
-    await onDataChange?.()
+    await onDataChange?.();
 
-    toast.dismiss(toastId)
+    toast.dismiss(toastId);
     if (successCount > 0) {
       toast.success(
         `${successCount} comic${successCount > 1 ? "s" : ""} imported`,
         failCount > 0 ? { description: `${failCount} failed` } : undefined,
-      )
+      );
     } else {
-      toast.error("Failed to import comics")
+      toast.error("Failed to import comics");
     }
   }
 
   async function handleExport() {
-    const toastId = toast.loading("Exporting library...")
+    const toastId = toast.loading("Exporting library...");
     try {
-      const blob = await exportLibrary()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `floppy-library-${new Date().toISOString().split("T")[0]}.json`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      toast.dismiss(toastId)
-      toast.success("Library exported successfully")
+      const blob = await exportLibrary();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `floppy-library-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.dismiss(toastId);
+      toast.success("Library exported successfully");
     } catch (error) {
-      console.error("Error exporting library:", error)
-      toast.dismiss(toastId)
-      toast.error("Failed to export library")
+      console.error("Error exporting library:", error);
+      toast.dismiss(toastId);
+      toast.error("Failed to export library");
     }
   }
 
   async function handleImport(file: File) {
-    const toastId = toast.loading("Importing library...")
+    const toastId = toast.loading("Importing library...");
     try {
-      const result = await importLibrary(file, { merge: true })
-      await onDataChange?.()
-      toast.dismiss(toastId)
+      const result = await importLibrary(file, { merge: true });
+      await onDataChange?.();
+      toast.dismiss(toastId);
       toast.success("Library imported", {
         description: `${result.comics} comics, ${result.bookmarks} bookmarks, ${result.notes} notes`,
-      })
+      });
     } catch (error) {
-      console.error("Error importing library:", error)
-      toast.dismiss(toastId)
+      console.error("Error importing library:", error);
+      toast.dismiss(toastId);
       toast.error("Failed to import library", {
-        description: error instanceof Error ? error.message : "Invalid file format",
-      })
+        description:
+          error instanceof Error ? error.message : "Invalid file format",
+      });
     }
   }
 
   async function handleClearData() {
-    const toastId = toast.loading("Clearing all data...")
+    const toastId = toast.loading("Clearing all data...");
     try {
-      await clearAllData()
-      await onDataChange?.()
-      toast.dismiss(toastId)
-      toast.success("All data cleared")
+      await clearAllData();
+      await onDataChange?.();
+      toast.dismiss(toastId);
+      toast.success("All data cleared");
     } catch (error) {
-      console.error("Error clearing data:", error)
-      toast.dismiss(toastId)
-      toast.error("Failed to clear data")
+      console.error("Error clearing data:", error);
+      toast.dismiss(toastId);
+      toast.error("Failed to clear data");
     }
   }
 
@@ -177,5 +194,5 @@ export function useAppActions(onDataChange?: () => Promise<void>) {
     handleExport,
     handleImport,
     handleClearData,
-  }
+  };
 }

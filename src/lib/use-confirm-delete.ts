@@ -1,23 +1,26 @@
-"use client"
+"use client";
 
-import { useCallback } from "react"
+import { useCallback } from "react";
 
 interface UseConfirmDeleteOptions {
-  message?: string
-  skipConfirmation?: boolean
+  message?: string;
+  skipConfirmation?: boolean;
 }
 
 export function useConfirmDelete(
   onDelete: () => void,
-  options: UseConfirmDeleteOptions = {}
+  options: UseConfirmDeleteOptions = {},
 ) {
-  const { message = "Are you sure you want to delete this comic?", skipConfirmation = false } = options
+  const {
+    message = "Are you sure you want to delete this comic?",
+    skipConfirmation = false,
+  } = options;
 
   const handleDelete = useCallback(() => {
     if (skipConfirmation || confirm(message)) {
-      onDelete()
+      onDelete();
     }
-  }, [onDelete, message, skipConfirmation])
+  }, [onDelete, message, skipConfirmation]);
 
-  return handleDelete
+  return handleDelete;
 }

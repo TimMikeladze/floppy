@@ -1,211 +1,270 @@
-"use client"
+"use client";
 
-import { useState, useCallback, useEffect } from "react"
-import { X, Check, AlertCircle, Loader2, Pause, Play, FileArchive, Copy, SkipForward } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Progress } from "@/components/ui/progress"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { parseComicFile, generateCoverImage, SUPPORTED_FORMATS } from "@/lib/comic-parser"
-import { saveComic, savePagesForComic, getAllComics } from "@/lib/storage"
-import { parseComicTitle } from "@/lib/series-utils"
-import { findDuplicates, type DuplicateMatch } from "@/lib/duplicate-detection"
-import type { FileWithHandle } from "./upload-dialog"
-import type { Comic } from "@/lib/types"
-import { cn } from "@/lib/utils"
+import {
+  AlertCircle,
+  Check,
+  Copy,
+  FileArchive,
+  Loader2,
+  Pause,
+  Play,
+  SkipForward,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { generateCoverImage, parseComicFile } from "@/lib/comic-parser";
+import { type DuplicateMatch, findDuplicates } from "@/lib/duplicate-detection";
+import { parseComicTitle } from "@/lib/series-utils";
+import { getAllComics, saveComic, savePagesForComic } from "@/lib/storage";
+import type { Comic } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import type { FileWithHandle } from "./upload-dialog";
 
 interface FileStatus {
-  file: File
-  handle?: FileSystemFileHandle
-  status: 'pending' | 'processing' | 'success' | 'error' | 'skipped' | 'duplicate'
-  error?: string
-  progress?: number
+  file: File;
+  handle?: FileSystemFileHandle;
+  status:
+    | "pending"
+    | "processing"
+    | "success"
+    | "error"
+    | "skipped"
+    | "duplicate";
+  error?: string;
+  progress?: number;
   parsedTitle?: {
-    seriesName: string
-    issueNumber: number | null
-  }
-  duplicateMatch?: DuplicateMatch
+    seriesName: string;
+    issueNumber: number | null;
+  };
+  duplicateMatch?: DuplicateMatch;
 }
 
 interface BatchUploadManagerProps {
-  files: FileWithHandle[]
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onComplete: () => void
+  files: FileWithHandle[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onComplete: () => void;
 }
 
-export function BatchUploadManager({ files, open, onOpenChange, onComplete }: BatchUploadManagerProps) {
+export function BatchUploadManager({
+  files,
+  open,
+  onOpenChange,
+  onComplete,
+}: BatchUploadManagerProps) {
   const [fileStatuses, setFileStatuses] = useState<FileStatus[]>(() =>
     files.map(({ file, handle }) => {
-      const parsed = parseComicTitle(file.name)
+      const parsed = parseComicTitle(file.name);
       return {
         file,
         handle,
-        status: 'pending' as const,
+        status: "pending" as const,
         parsedTitle: parsed,
-      }
-    })
-  )
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(true)
+      };
+    }),
+  );
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(true);
 
   // Check for duplicates on mount
   useEffect(() => {
     async function checkDuplicates() {
-      setIsCheckingDuplicates(true)
+      setIsCheckingDuplicates(true);
       try {
-        const existingComics = await getAllComics()
+        const existingComics = await getAllComics();
 
-        setFileStatuses(prev => prev.map(fileStatus => {
-          const matches = findDuplicates(fileStatus.file, existingComics)
-          if (matches.length > 0 && matches[0].confidence > 0.8) {
-            return {
-              ...fileStatus,
-              status: 'duplicate' as const,
-              duplicateMatch: matches[0],
+        setFileStatuses((prev) =>
+          prev.map((fileStatus) => {
+            const matches = findDuplicates(fileStatus.file, existingComics);
+            if (matches.length > 0 && matches[0].confidence > 0.8) {
+              return {
+                ...fileStatus,
+                status: "duplicate" as const,
+                duplicateMatch: matches[0],
+              };
             }
-          }
-          return fileStatus
-        }))
+            return fileStatus;
+          }),
+        );
       } catch (error) {
-        console.error('Error checking duplicates:', error)
+        console.error("Error checking duplicates:", error);
       } finally {
-        setIsCheckingDuplicates(false)
+        setIsCheckingDuplicates(false);
       }
     }
 
-    checkDuplicates()
-  }, [])
+    checkDuplicates();
+  }, []);
 
-  const completedCount = fileStatuses.filter(f => f.status === 'success').length
-  const errorCount = fileStatuses.filter(f => f.status === 'error').length
-  const skippedCount = fileStatuses.filter(f => f.status === 'skipped').length
-  const duplicateCount = fileStatuses.filter(f => f.status === 'duplicate').length
-  const totalCount = fileStatuses.length
-  const processedCount = completedCount + errorCount + skippedCount
-  const progress = totalCount > 0 ? processedCount / totalCount * 100 : 0
+  const completedCount = fileStatuses.filter(
+    (f) => f.status === "success",
+  ).length;
+  const errorCount = fileStatuses.filter((f) => f.status === "error").length;
+  const skippedCount = fileStatuses.filter(
+    (f) => f.status === "skipped",
+  ).length;
+  const duplicateCount = fileStatuses.filter(
+    (f) => f.status === "duplicate",
+  ).length;
+  const totalCount = fileStatuses.length;
+  const processedCount = completedCount + errorCount + skippedCount;
+  const progress = totalCount > 0 ? (processedCount / totalCount) * 100 : 0;
 
-  const processFile = useCallback(async (fileStatus: FileStatus, index: number) => {
-    const { file, handle } = fileStatus
+  const processFile = useCallback(
+    async (fileStatus: FileStatus, index: number) => {
+      const { file, handle } = fileStatus;
 
-    setFileStatuses(prev => prev.map((f, i) =>
-      i === index ? { ...f, status: 'processing' as const, progress: 0 } : f
-    ))
+      setFileStatuses((prev) =>
+        prev.map((f, i) =>
+          i === index
+            ? { ...f, status: "processing" as const, progress: 0 }
+            : f,
+        ),
+      );
 
-    try {
-      const { pages, metadata } = await parseComicFile(file)
+      try {
+        const { pages, metadata } = await parseComicFile(file);
 
-      setFileStatuses(prev => prev.map((f, i) =>
-        i === index ? { ...f, progress: 50 } : f
-      ))
+        setFileStatuses((prev) =>
+          prev.map((f, i) => (i === index ? { ...f, progress: 50 } : f)),
+        );
 
-      const coverImage = await generateCoverImage(pages[0])
+        const coverImage = await generateCoverImage(pages[0]);
 
-      setFileStatuses(prev => prev.map((f, i) =>
-        i === index ? { ...f, progress: 75 } : f
-      ))
+        setFileStatuses((prev) =>
+          prev.map((f, i) => (i === index ? { ...f, progress: 75 } : f)),
+        );
 
-      const comicId = crypto.randomUUID()
-      const parsed = parseComicTitle(metadata.title)
+        const comicId = crypto.randomUUID();
+        const parsed = parseComicTitle(metadata.title);
 
-      const comic: Comic = {
-        id: comicId,
-        title: metadata.title,
-        coverImage,
-        totalPages: metadata.totalPages,
-        currentPage: 0,
-        fileName: metadata.fileName,
-        fileSize: metadata.fileSize,
-        hasFile: true,
-        format: metadata.format,
-        fileHandle: handle,
-        sourceType: 'local',
-        series: parsed.seriesName,
-        issue: parsed.issueNumber?.toString(),
-        addedAt: new Date(),
+        const comic: Comic = {
+          id: comicId,
+          title: metadata.title,
+          coverImage,
+          totalPages: metadata.totalPages,
+          currentPage: 0,
+          fileName: metadata.fileName,
+          fileSize: metadata.fileSize,
+          hasFile: true,
+          format: metadata.format,
+          fileHandle: handle,
+          sourceType: "local",
+          series: parsed.seriesName,
+          issue: parsed.issueNumber?.toString(),
+          addedAt: new Date(),
+        };
+
+        await saveComic(comic);
+
+        if (!handle || metadata.format === "pdf") {
+          await savePagesForComic(comicId, pages);
+        }
+
+        setFileStatuses((prev) =>
+          prev.map((f, i) =>
+            i === index
+              ? { ...f, status: "success" as const, progress: 100 }
+              : f,
+          ),
+        );
+
+        return true;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        setFileStatuses((prev) =>
+          prev.map((f, i) =>
+            i === index
+              ? { ...f, status: "error" as const, error: errorMessage }
+              : f,
+          ),
+        );
+        return false;
       }
-
-      await saveComic(comic)
-
-      if (!handle || metadata.format === "pdf") {
-        await savePagesForComic(comicId, pages)
-      }
-
-      setFileStatuses(prev => prev.map((f, i) =>
-        i === index ? { ...f, status: 'success' as const, progress: 100 } : f
-      ))
-
-      return true
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      setFileStatuses(prev => prev.map((f, i) =>
-        i === index ? { ...f, status: 'error' as const, error: errorMessage } : f
-      ))
-      return false
-    }
-  }, [])
+    },
+    [],
+  );
 
   const skipDuplicate = useCallback((index: number) => {
-    setFileStatuses(prev => prev.map((f, i) =>
-      i === index ? { ...f, status: 'skipped' as const } : f
-    ))
-  }, [])
+    setFileStatuses((prev) =>
+      prev.map((f, i) =>
+        i === index ? { ...f, status: "skipped" as const } : f,
+      ),
+    );
+  }, []);
 
   const importAnyway = useCallback((index: number) => {
-    setFileStatuses(prev => prev.map((f, i) =>
-      i === index ? { ...f, status: 'pending' as const, duplicateMatch: undefined } : f
-    ))
-  }, [])
+    setFileStatuses((prev) =>
+      prev.map((f, i) =>
+        i === index
+          ? { ...f, status: "pending" as const, duplicateMatch: undefined }
+          : f,
+      ),
+    );
+  }, []);
 
   const startProcessing = useCallback(async () => {
-    setIsProcessing(true)
-    setIsPaused(false)
+    setIsProcessing(true);
+    setIsPaused(false);
 
     for (let i = currentIndex; i < fileStatuses.length; i++) {
       if (isPaused) {
-        setCurrentIndex(i)
-        return
+        setCurrentIndex(i);
+        return;
       }
 
-      const fileStatus = fileStatuses[i]
-      if (fileStatus.status === 'pending') {
-        await processFile(fileStatus, i)
+      const fileStatus = fileStatuses[i];
+      if (fileStatus.status === "pending") {
+        await processFile(fileStatus, i);
         // Small delay to prevent browser from freezing
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
-    setIsProcessing(false)
-    setCurrentIndex(0)
-  }, [currentIndex, fileStatuses, isPaused, processFile])
+    setIsProcessing(false);
+    setCurrentIndex(0);
+  }, [currentIndex, fileStatuses, isPaused, processFile]);
 
   const handlePauseResume = () => {
     if (isPaused) {
-      setIsPaused(false)
-      startProcessing()
+      setIsPaused(false);
+      startProcessing();
     } else {
-      setIsPaused(true)
+      setIsPaused(true);
     }
-  }
+  };
 
   const handleClose = () => {
     if (completedCount > 0) {
-      onComplete()
+      onComplete();
     }
-    onOpenChange(false)
-  }
+    onOpenChange(false);
+  };
 
   const handleStart = () => {
-    startProcessing()
-  }
+    startProcessing();
+  };
 
-  const pendingCount = fileStatuses.filter(f => f.status === 'pending').length
-  const allComplete = (completedCount + errorCount + skippedCount === totalCount - duplicateCount) &&
-                      duplicateCount === 0 &&
-                      totalCount > 0
-  const hasUnresolvedDuplicates = duplicateCount > 0 && !isProcessing
+  const _pendingCount = fileStatuses.filter(
+    (f) => f.status === "pending",
+  ).length;
+  const allComplete =
+    completedCount + errorCount + skippedCount ===
+      totalCount - duplicateCount &&
+    duplicateCount === 0 &&
+    totalCount > 0;
+  const hasUnresolvedDuplicates = duplicateCount > 0 && !isProcessing;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -218,11 +277,10 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
                 : allComplete
                   ? `Import Complete`
                   : hasUnresolvedDuplicates
-                    ? `${duplicateCount} Potential Duplicate${duplicateCount > 1 ? 's' : ''}`
+                    ? `${duplicateCount} Potential Duplicate${duplicateCount > 1 ? "s" : ""}`
                     : isProcessing
                       ? `Importing Comics...`
-                      : `Import ${totalCount} Comics`
-              }
+                      : `Import ${totalCount} Comics`}
             </span>
             {allComplete && (
               <span className="text-xs sm:text-sm font-normal text-muted-foreground">
@@ -253,42 +311,48 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
                 key={index}
                 className={cn(
                   "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border transition-colors",
-                  fileStatus.status === 'success' && "bg-green-500/5 border-green-500/20",
-                  fileStatus.status === 'error' && "bg-red-500/5 border-red-500/20",
-                  fileStatus.status === 'processing' && "bg-primary/5 border-primary/20",
-                  fileStatus.status === 'pending' && "bg-secondary/50 border-border/50",
-                  fileStatus.status === 'duplicate' && "bg-amber-500/5 border-amber-500/20",
-                  fileStatus.status === 'skipped' && "bg-muted/50 border-border/30 opacity-60"
+                  fileStatus.status === "success" &&
+                    "bg-green-500/5 border-green-500/20",
+                  fileStatus.status === "error" &&
+                    "bg-red-500/5 border-red-500/20",
+                  fileStatus.status === "processing" &&
+                    "bg-primary/5 border-primary/20",
+                  fileStatus.status === "pending" &&
+                    "bg-secondary/50 border-border/50",
+                  fileStatus.status === "duplicate" &&
+                    "bg-amber-500/5 border-amber-500/20",
+                  fileStatus.status === "skipped" &&
+                    "bg-muted/50 border-border/30 opacity-60",
                 )}
               >
                 {/* Status icon */}
                 <div className="flex-shrink-0">
-                  {fileStatus.status === 'success' && (
+                  {fileStatus.status === "success" && (
                     <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-500/10 flex items-center justify-center">
                       <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                     </div>
                   )}
-                  {fileStatus.status === 'error' && (
+                  {fileStatus.status === "error" && (
                     <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-500/10 flex items-center justify-center">
                       <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                     </div>
                   )}
-                  {fileStatus.status === 'processing' && (
+                  {fileStatus.status === "processing" && (
                     <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center">
                       <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 text-primary animate-spin" />
                     </div>
                   )}
-                  {fileStatus.status === 'pending' && (
+                  {fileStatus.status === "pending" && (
                     <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-secondary flex items-center justify-center">
                       <FileArchive className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                     </div>
                   )}
-                  {fileStatus.status === 'duplicate' && (
+                  {fileStatus.status === "duplicate" && (
                     <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
                       <Copy className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500" />
                     </div>
                   )}
-                  {fileStatus.status === 'skipped' && (
+                  {fileStatus.status === "skipped" && (
                     <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-muted flex items-center justify-center">
                       <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                     </div>
@@ -301,32 +365,41 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
                     {fileStatus.parsedTitle?.seriesName || fileStatus.file.name}
                   </p>
                   <p className="text-[10px] sm:text-xs text-muted-foreground">
-                    {fileStatus.parsedTitle?.issueNumber && `#${fileStatus.parsedTitle.issueNumber} · `}
+                    {fileStatus.parsedTitle?.issueNumber &&
+                      `#${fileStatus.parsedTitle.issueNumber} · `}
                     {(fileStatus.file.size / 1024 / 1024).toFixed(1)} MB
                   </p>
                   {fileStatus.error && (
-                    <p className="text-[10px] sm:text-xs text-red-500 mt-0.5 sm:mt-1 line-clamp-1">{fileStatus.error}</p>
-                  )}
-                  {fileStatus.status === 'duplicate' && fileStatus.duplicateMatch && (
-                    <p className="text-[10px] sm:text-xs text-amber-600 mt-0.5 sm:mt-1 line-clamp-1">
-                      Matches: {fileStatus.duplicateMatch.existingComic.title}
-                      {' '}({Math.round(fileStatus.duplicateMatch.confidence * 100)}%)
+                    <p className="text-[10px] sm:text-xs text-red-500 mt-0.5 sm:mt-1 line-clamp-1">
+                      {fileStatus.error}
                     </p>
                   )}
-                  {fileStatus.status === 'skipped' && (
-                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Skipped</p>
+                  {fileStatus.status === "duplicate" &&
+                    fileStatus.duplicateMatch && (
+                      <p className="text-[10px] sm:text-xs text-amber-600 mt-0.5 sm:mt-1 line-clamp-1">
+                        Matches: {fileStatus.duplicateMatch.existingComic.title}{" "}
+                        (
+                        {Math.round(fileStatus.duplicateMatch.confidence * 100)}
+                        %)
+                      </p>
+                    )}
+                  {fileStatus.status === "skipped" && (
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
+                      Skipped
+                    </p>
                   )}
                 </div>
 
                 {/* Progress for processing items */}
-                {fileStatus.status === 'processing' && fileStatus.progress !== undefined && (
-                  <div className="flex-shrink-0 w-8 sm:w-12 text-[10px] sm:text-xs text-muted-foreground text-right">
-                    {fileStatus.progress}%
-                  </div>
-                )}
+                {fileStatus.status === "processing" &&
+                  fileStatus.progress !== undefined && (
+                    <div className="flex-shrink-0 w-8 sm:w-12 text-[10px] sm:text-xs text-muted-foreground text-right">
+                      {fileStatus.progress}%
+                    </div>
+                  )}
 
                 {/* Duplicate action buttons */}
-                {fileStatus.status === 'duplicate' && !isProcessing && (
+                {fileStatus.status === "duplicate" && !isProcessing && (
                   <div className="flex-shrink-0 flex items-center gap-1">
                     <Button
                       variant="ghost"
@@ -355,10 +428,17 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
         <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-t bg-background flex items-center justify-between gap-2 sm:gap-3 relative z-10">
           {!isProcessing && !allComplete && (
             <>
-              <Button variant="outline" onClick={handleClose} className="text-sm sm:text-base">
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                className="text-sm sm:text-base"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleStart} className="gap-1.5 sm:gap-2 text-sm sm:text-base">
+              <Button
+                onClick={handleStart}
+                className="gap-1.5 sm:gap-2 text-sm sm:text-base"
+              >
                 <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Start Import
               </Button>
@@ -367,7 +447,11 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
 
           {isProcessing && !allComplete && (
             <>
-              <Button variant="outline" onClick={handlePauseResume} className="gap-1.5 sm:gap-2 text-sm sm:text-base">
+              <Button
+                variant="outline"
+                onClick={handlePauseResume}
+                className="gap-1.5 sm:gap-2 text-sm sm:text-base"
+              >
                 {isPaused ? (
                   <>
                     <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -387,12 +471,15 @@ export function BatchUploadManager({ files, open, onOpenChange, onComplete }: Ba
           )}
 
           {allComplete && (
-            <Button onClick={handleClose} className="ml-auto text-sm sm:text-base">
+            <Button
+              onClick={handleClose}
+              className="ml-auto text-sm sm:text-base"
+            >
               Done
             </Button>
           )}
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

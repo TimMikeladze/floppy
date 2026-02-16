@@ -1,36 +1,47 @@
-"use client"
+"use client";
 
-import { AppBar } from "./app-bar"
-import { UploadDialog, type FileWithHandle } from "@/components/library/upload-dialog"
-import { AddComicDialogControlled } from "@/components/library/add-comic-dialog"
-import { ListManager } from "@/components/library/list-manager"
-import { BatchUploadManager } from "@/components/library/batch-upload-manager"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useAppActions } from "@/hooks/use-app-actions"
-import type { ReactNode } from "react"
-import { useState } from "react"
+import type { ReactNode } from "react";
+import { useState } from "react";
+import { AddComicDialogControlled } from "@/components/library/add-comic-dialog";
+import { BatchUploadManager } from "@/components/library/batch-upload-manager";
+import { ListManager } from "@/components/library/list-manager";
+import {
+  type FileWithHandle,
+  UploadDialog,
+} from "@/components/library/upload-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAppActions } from "@/hooks/use-app-actions";
+import { AppBar } from "./app-bar";
 
 interface AppLayoutProps {
   // AppBar props
-  searchQuery: string
-  onSearchChange: (query: string) => void
-  sortBy: "title-asc" | "title-desc" | "recent" | "added" | "progress"
-  onSortChange: (sort: "title-asc" | "title-desc" | "recent" | "added" | "progress") => void
-  viewMode: "grid" | "table" | "series"
-  onViewModeChange: (mode: "grid" | "table" | "series") => void
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  sortBy: "title-asc" | "title-desc" | "recent" | "added" | "progress";
+  onSortChange: (
+    sort: "title-asc" | "title-desc" | "recent" | "added" | "progress",
+  ) => void;
+  viewMode: "grid" | "table" | "series";
+  onViewModeChange: (mode: "grid" | "table" | "series") => void;
 
   // Callbacks
-  onDataChange?: () => Promise<void>
-  onListsChange?: () => Promise<void>
+  onDataChange?: () => Promise<void>;
+  onListsChange?: () => Promise<void>;
 
   // Feature flags
-  releasesEnabled?: boolean
+  releasesEnabled?: boolean;
 
   // Layout slots
-  filterPills?: ReactNode
-  renderContent?: (props: { onUpload: () => void }) => ReactNode
-  children?: ReactNode
+  filterPills?: ReactNode;
+  renderContent?: (props: { onUpload: () => void }) => ReactNode;
+  children?: ReactNode;
 }
 
 export function AppLayout({
@@ -47,8 +58,10 @@ export function AppLayout({
   renderContent,
   children,
 }: AppLayoutProps) {
-  const [batchUploadFiles, setBatchUploadFiles] = useState<FileWithHandle[]>([])
-  const [batchUploadOpen, setBatchUploadOpen] = useState(false)
+  const [batchUploadFiles, setBatchUploadFiles] = useState<FileWithHandle[]>(
+    [],
+  );
+  const [batchUploadOpen, setBatchUploadOpen] = useState(false);
 
   const {
     uploadDialogOpen,
@@ -62,27 +75,27 @@ export function AppLayout({
     handleExport,
     handleImport,
     handleClearData,
-  } = useAppActions(onDataChange)
+  } = useAppActions(onDataChange);
 
   const handleFilesSelectedWithBatch = (files: FileWithHandle[]) => {
     if (files.length > 3) {
       // Use batch manager for multiple files
-      setBatchUploadFiles(files)
-      setBatchUploadOpen(true)
+      setBatchUploadFiles(files);
+      setBatchUploadOpen(true);
     } else {
       // Use existing toast-based flow for small batches
-      handleFilesSelected(files)
+      handleFilesSelected(files);
     }
-  }
+  };
 
   const handleBatchComplete = async () => {
-    await onDataChange?.()
-    setBatchUploadFiles([])
-  }
+    await onDataChange?.();
+    setBatchUploadFiles([]);
+  };
 
   return (
     <>
-      <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+      <div className="min-h-screen" style={{ background: "var(--background)" }}>
         <AppBar
           onUpload={handleUploadClick}
           onAddComic={() => setAddComicDialogOpen(true)}
@@ -108,7 +121,9 @@ export function AppLayout({
 
         {/* Main Content */}
         <main className="px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8 mx-auto w-full max-w-screen-2xl">
-          {renderContent ? renderContent({ onUpload: handleUploadClick }) : children}
+          {renderContent
+            ? renderContent({ onUpload: handleUploadClick })
+            : children}
         </main>
       </div>
 
@@ -138,7 +153,9 @@ export function AppLayout({
         <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Manage Lists</DialogTitle>
-            <DialogDescription>Create and organize your comic lists</DialogDescription>
+            <DialogDescription>
+              Create and organize your comic lists
+            </DialogDescription>
           </DialogHeader>
           <ScrollArea className="flex-1 -mx-6 px-6">
             <ListManager onListsChange={onListsChange} />
@@ -146,5 +163,5 @@ export function AppLayout({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

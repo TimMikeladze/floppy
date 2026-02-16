@@ -1,37 +1,46 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { ChevronRight, X } from "lucide-react"
-import type { Comic } from "@/lib/types"
-import { getSeriesName, getIssueNumber, isSameSeries } from "@/lib/series-utils"
-import Link from "next/link"
+import { ChevronRight, X } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  getIssueNumber,
+  getSeriesName,
+  isSameSeries,
+} from "@/lib/series-utils";
+import type { Comic } from "@/lib/types";
 
 interface NextIssueOverlayProps {
-  currentComic: Comic
-  nextIssue: Comic
-  isVisible: boolean
-  onDismiss: () => void
+  currentComic: Comic;
+  nextIssue: Comic;
+  isVisible: boolean;
+  onDismiss: () => void;
 }
 
-export function NextIssueOverlay({ currentComic, nextIssue, isVisible, onDismiss }: NextIssueOverlayProps) {
-  const [show, setShow] = useState(false)
+export function NextIssueOverlay({
+  currentComic,
+  nextIssue,
+  isVisible,
+  onDismiss,
+}: NextIssueOverlayProps) {
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (isVisible) {
       // Small delay for animation
-      const timer = setTimeout(() => setShow(true), 100)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setShow(true), 100);
+      return () => clearTimeout(timer);
     } else {
-      setShow(false)
+      setShow(false);
     }
-  }, [isVisible])
+  }, [isVisible]);
 
-  if (!isVisible) return null
+  if (!isVisible) return null;
 
-  const isNextInSeries = isSameSeries(currentComic, nextIssue)
-  const seriesName = getSeriesName(nextIssue)
-  const issueNum = getIssueNumber(nextIssue)
+  const isNextInSeries = isSameSeries(currentComic, nextIssue);
+  const seriesName = getSeriesName(nextIssue);
+  const issueNum = getIssueNumber(nextIssue);
 
   return (
     <div
@@ -44,12 +53,16 @@ export function NextIssueOverlay({ currentComic, nextIssue, isVisible, onDismiss
         paddingRight: "var(--safe-area-right)",
       }}
     >
-      <div className="mx-4 rounded-2xl overflow-hidden" style={{
-        background: "oklch(from var(--card) l c h / 0.95)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        boxShadow: "0 -4px 30px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1 1 1 / 0.1) inset",
-      }}>
+      <div
+        className="mx-4 rounded-2xl overflow-hidden"
+        style={{
+          background: "oklch(from var(--card) l c h / 0.95)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          boxShadow:
+            "0 -4px 30px oklch(0 0 0 / 0.3), 0 0 0 1px oklch(1 1 1 / 0.1) inset",
+        }}
+      >
         <div className="p-4">
           <div className="flex items-center justify-between gap-4">
             {/* Cover Image */}
@@ -77,7 +90,12 @@ export function NextIssueOverlay({ currentComic, nextIssue, isVisible, onDismiss
                 {isNextInSeries ? (
                   <>
                     {seriesName}
-                    {issueNum !== null && <span className="text-muted-foreground"> #{issueNum}</span>}
+                    {issueNum !== null && (
+                      <span className="text-muted-foreground">
+                        {" "}
+                        #{issueNum}
+                      </span>
+                    )}
                   </>
                 ) : (
                   nextIssue.title
@@ -105,5 +123,5 @@ export function NextIssueOverlay({ currentComic, nextIssue, isVisible, onDismiss
         </div>
       </div>
     </div>
-  )
+  );
 }

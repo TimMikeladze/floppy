@@ -1,112 +1,113 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { X, Plus, Filter, Save, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Filter, Plus, Save, Trash2, X } from "lucide-react";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import type { Comic } from "@/lib/types"
+} from "@/components/ui/select";
+import type { Comic } from "@/lib/types";
 
 export interface FilterRule {
-  id: string
-  field: 'series' | 'author' | 'publisher' | 'status' | 'progress' | 'format' | 'hasFile'
-  operator: 'equals' | 'contains' | 'lessThan' | 'greaterThan'
-  value: string | number | boolean
+  id: string;
+  field:
+    | "series"
+    | "author"
+    | "publisher"
+    | "status"
+    | "progress"
+    | "format"
+    | "hasFile";
+  operator: "equals" | "contains" | "lessThan" | "greaterThan";
+  value: string | number | boolean;
 }
 
 export interface FilterPreset {
-  id: string
-  name: string
-  rules: FilterRule[]
+  id: string;
+  name: string;
+  rules: FilterRule[];
 }
 
 interface FilterBuilderProps {
-  onFilterChange: (rules: FilterRule[]) => void
-  activeRules: FilterRule[]
-  presets?: FilterPreset[]
-  onSavePreset?: (name: string, rules: FilterRule[]) => void
-  onDeletePreset?: (id: string) => void
+  onFilterChange: (rules: FilterRule[]) => void;
+  activeRules: FilterRule[];
+  presets?: FilterPreset[];
+  onSavePreset?: (name: string, rules: FilterRule[]) => void;
+  onDeletePreset?: (id: string) => void;
 }
 
 const FIELD_OPTIONS = [
-  { value: 'series', label: 'Series' },
-  { value: 'author', label: 'Author' },
-  { value: 'publisher', label: 'Publisher' },
-  { value: 'status', label: 'Status' },
-  { value: 'progress', label: 'Progress %' },
-  { value: 'format', label: 'Format' },
-  { value: 'hasFile', label: 'Has File' },
-]
+  { value: "series", label: "Series" },
+  { value: "author", label: "Author" },
+  { value: "publisher", label: "Publisher" },
+  { value: "status", label: "Status" },
+  { value: "progress", label: "Progress %" },
+  { value: "format", label: "Format" },
+  { value: "hasFile", label: "Has File" },
+];
 
 const OPERATOR_OPTIONS: Record<string, { value: string; label: string }[]> = {
   series: [
-    { value: 'equals', label: 'is' },
-    { value: 'contains', label: 'contains' },
+    { value: "equals", label: "is" },
+    { value: "contains", label: "contains" },
   ],
   author: [
-    { value: 'equals', label: 'is' },
-    { value: 'contains', label: 'contains' },
+    { value: "equals", label: "is" },
+    { value: "contains", label: "contains" },
   ],
   publisher: [
-    { value: 'equals', label: 'is' },
-    { value: 'contains', label: 'contains' },
+    { value: "equals", label: "is" },
+    { value: "contains", label: "contains" },
   ],
-  status: [
-    { value: 'equals', label: 'is' },
-  ],
+  status: [{ value: "equals", label: "is" }],
   progress: [
-    { value: 'equals', label: 'equals' },
-    { value: 'lessThan', label: 'less than' },
-    { value: 'greaterThan', label: 'greater than' },
+    { value: "equals", label: "equals" },
+    { value: "lessThan", label: "less than" },
+    { value: "greaterThan", label: "greater than" },
   ],
-  format: [
-    { value: 'equals', label: 'is' },
-  ],
-  hasFile: [
-    { value: 'equals', label: 'is' },
-  ],
-}
+  format: [{ value: "equals", label: "is" }],
+  hasFile: [{ value: "equals", label: "is" }],
+};
 
 const STATUS_VALUES = [
-  { value: 'reading', label: 'Reading' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'want', label: 'Want to Read' },
-]
+  { value: "reading", label: "Reading" },
+  { value: "completed", label: "Completed" },
+  { value: "want", label: "Want to Read" },
+];
 
 const FORMAT_VALUES = [
-  { value: 'cbz', label: 'CBZ' },
-  { value: 'cbr', label: 'CBR' },
-  { value: 'pdf', label: 'PDF' },
-  { value: 'epub', label: 'EPUB' },
-]
+  { value: "cbz", label: "CBZ" },
+  { value: "cbr", label: "CBR" },
+  { value: "pdf", label: "PDF" },
+  { value: "epub", label: "EPUB" },
+];
 
 function FilterRuleRow({
   rule,
   onUpdate,
   onRemove,
 }: {
-  rule: FilterRule
-  onUpdate: (rule: FilterRule) => void
-  onRemove: () => void
+  rule: FilterRule;
+  onUpdate: (rule: FilterRule) => void;
+  onRemove: () => void;
 }) {
-  const operators = OPERATOR_OPTIONS[rule.field] || []
+  const operators = OPERATOR_OPTIONS[rule.field] || [];
 
   const renderValueInput = () => {
-    if (rule.field === 'status') {
+    if (rule.field === "status") {
       return (
         <Select
           value={String(rule.value)}
@@ -123,10 +124,10 @@ function FilterRuleRow({
             ))}
           </SelectContent>
         </Select>
-      )
+      );
     }
 
-    if (rule.field === 'format') {
+    if (rule.field === "format") {
       return (
         <Select
           value={String(rule.value)}
@@ -143,14 +144,16 @@ function FilterRuleRow({
             ))}
           </SelectContent>
         </Select>
-      )
+      );
     }
 
-    if (rule.field === 'hasFile') {
+    if (rule.field === "hasFile") {
       return (
         <Select
           value={String(rule.value)}
-          onValueChange={(value) => onUpdate({ ...rule, value: value === 'true' })}
+          onValueChange={(value) =>
+            onUpdate({ ...rule, value: value === "true" })
+          }
         >
           <SelectTrigger className="w-32 h-8">
             <SelectValue />
@@ -160,20 +163,22 @@ function FilterRuleRow({
             <SelectItem value="false">No</SelectItem>
           </SelectContent>
         </Select>
-      )
+      );
     }
 
-    if (rule.field === 'progress') {
+    if (rule.field === "progress") {
       return (
         <Input
           type="number"
           min={0}
           max={100}
           value={String(rule.value)}
-          onChange={(e) => onUpdate({ ...rule, value: parseInt(e.target.value) || 0 })}
+          onChange={(e) =>
+            onUpdate({ ...rule, value: parseInt(e.target.value, 10) || 0 })
+          }
           className="w-20 h-8"
         />
-      )
+      );
     }
 
     return (
@@ -184,8 +189,8 @@ function FilterRuleRow({
         placeholder="Value..."
         className="w-32 h-8"
       />
-    )
-  }
+    );
+  };
 
   return (
     <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border border-border/50">
@@ -194,9 +199,9 @@ function FilterRuleRow({
         onValueChange={(value) =>
           onUpdate({
             ...rule,
-            field: value as FilterRule['field'],
-            operator: 'equals',
-            value: '',
+            field: value as FilterRule["field"],
+            operator: "equals",
+            value: "",
           })
         }
       >
@@ -215,7 +220,7 @@ function FilterRuleRow({
       <Select
         value={rule.operator}
         onValueChange={(value) =>
-          onUpdate({ ...rule, operator: value as FilterRule['operator'] })
+          onUpdate({ ...rule, operator: value as FilterRule["operator"] })
         }
       >
         <SelectTrigger className="w-28 h-8">
@@ -241,7 +246,7 @@ function FilterRuleRow({
         <X className="h-4 w-4" />
       </Button>
     </div>
-  )
+  );
 }
 
 export function FilterBuilder({
@@ -251,52 +256,52 @@ export function FilterBuilder({
   onSavePreset,
   onDeletePreset,
 }: FilterBuilderProps) {
-  const [open, setOpen] = useState(false)
-  const [rules, setRules] = useState<FilterRule[]>(activeRules)
-  const [presetName, setPresetName] = useState("")
-  const [showSavePreset, setShowSavePreset] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [rules, setRules] = useState<FilterRule[]>(activeRules);
+  const [presetName, setPresetName] = useState("");
+  const [showSavePreset, setShowSavePreset] = useState(false);
 
   const addRule = () => {
     const newRule: FilterRule = {
       id: crypto.randomUUID(),
-      field: 'series',
-      operator: 'contains',
-      value: '',
-    }
-    setRules([...rules, newRule])
-  }
+      field: "series",
+      operator: "contains",
+      value: "",
+    };
+    setRules([...rules, newRule]);
+  };
 
   const updateRule = (index: number, rule: FilterRule) => {
-    const newRules = [...rules]
-    newRules[index] = rule
-    setRules(newRules)
-  }
+    const newRules = [...rules];
+    newRules[index] = rule;
+    setRules(newRules);
+  };
 
   const removeRule = (index: number) => {
-    setRules(rules.filter((_, i) => i !== index))
-  }
+    setRules(rules.filter((_, i) => i !== index));
+  };
 
   const applyFilters = () => {
-    onFilterChange(rules)
-    setOpen(false)
-  }
+    onFilterChange(rules);
+    setOpen(false);
+  };
 
   const clearFilters = () => {
-    setRules([])
-    onFilterChange([])
-  }
+    setRules([]);
+    onFilterChange([]);
+  };
 
   const handleSavePreset = () => {
     if (presetName.trim() && onSavePreset) {
-      onSavePreset(presetName.trim(), rules)
-      setPresetName("")
-      setShowSavePreset(false)
+      onSavePreset(presetName.trim(), rules);
+      setPresetName("");
+      setShowSavePreset(false);
     }
-  }
+  };
 
   const loadPreset = (preset: FilterPreset) => {
-    setRules(preset.rules)
-  }
+    setRules(preset.rules);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -394,7 +399,7 @@ export function FilterBuilder({
                     onChange={(e) => setPresetName(e.target.value)}
                     placeholder="Preset name..."
                     className="h-8"
-                    onKeyDown={(e) => e.key === 'Enter' && handleSavePreset()}
+                    onKeyDown={(e) => e.key === "Enter" && handleSavePreset()}
                   />
                   <Button size="sm" onClick={handleSavePreset}>
                     Save
@@ -431,67 +436,73 @@ export function FilterBuilder({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 /**
  * Apply filter rules to a list of comics.
  */
-export function applyFilterRules(comics: Comic[], rules: FilterRule[]): Comic[] {
-  if (rules.length === 0) return comics
+export function applyFilterRules(
+  comics: Comic[],
+  rules: FilterRule[],
+): Comic[] {
+  if (rules.length === 0) return comics;
 
   return comics.filter((comic) => {
     return rules.every((rule) => {
-      const { field, operator, value } = rule
+      const { field, operator, value } = rule;
 
       switch (field) {
-        case 'series': {
-          const seriesValue = comic.series?.toLowerCase() || ''
-          const searchValue = String(value).toLowerCase()
-          if (operator === 'equals') return seriesValue === searchValue
-          if (operator === 'contains') return seriesValue.includes(searchValue)
-          return true
+        case "series": {
+          const seriesValue = comic.series?.toLowerCase() || "";
+          const searchValue = String(value).toLowerCase();
+          if (operator === "equals") return seriesValue === searchValue;
+          if (operator === "contains") return seriesValue.includes(searchValue);
+          return true;
         }
-        case 'author': {
-          const authorValue = comic.author?.toLowerCase() || ''
-          const searchValue = String(value).toLowerCase()
-          if (operator === 'equals') return authorValue === searchValue
-          if (operator === 'contains') return authorValue.includes(searchValue)
-          return true
+        case "author": {
+          const authorValue = comic.author?.toLowerCase() || "";
+          const searchValue = String(value).toLowerCase();
+          if (operator === "equals") return authorValue === searchValue;
+          if (operator === "contains") return authorValue.includes(searchValue);
+          return true;
         }
-        case 'publisher': {
-          const publisherValue = comic.publisher?.toLowerCase() || ''
-          const searchValue = String(value).toLowerCase()
-          if (operator === 'equals') return publisherValue === searchValue
-          if (operator === 'contains') return publisherValue.includes(searchValue)
-          return true
+        case "publisher": {
+          const publisherValue = comic.publisher?.toLowerCase() || "";
+          const searchValue = String(value).toLowerCase();
+          if (operator === "equals") return publisherValue === searchValue;
+          if (operator === "contains")
+            return publisherValue.includes(searchValue);
+          return true;
         }
-        case 'status': {
-          if (!comic.totalPages) return value === 'want'
-          const progress = comic.currentPage / comic.totalPages
-          if (value === 'reading') return progress > 0 && progress < 1
-          if (value === 'completed') return progress >= 1
-          if (value === 'want') return progress === 0
-          return true
+        case "status": {
+          if (!comic.totalPages) return value === "want";
+          const progress = comic.currentPage / comic.totalPages;
+          if (value === "reading") return progress > 0 && progress < 1;
+          if (value === "completed") return progress >= 1;
+          if (value === "want") return progress === 0;
+          return true;
         }
-        case 'progress': {
-          if (!comic.totalPages) return false
-          const progress = Math.round((comic.currentPage / comic.totalPages) * 100)
-          const targetValue = Number(value)
-          if (operator === 'equals') return progress === targetValue
-          if (operator === 'lessThan') return progress < targetValue
-          if (operator === 'greaterThan') return progress > targetValue
-          return true
+        case "progress": {
+          if (!comic.totalPages) return false;
+          const progress = Math.round(
+            (comic.currentPage / comic.totalPages) * 100,
+          );
+          const targetValue = Number(value);
+          if (operator === "equals") return progress === targetValue;
+          if (operator === "lessThan") return progress < targetValue;
+          if (operator === "greaterThan") return progress > targetValue;
+          return true;
         }
-        case 'format': {
-          return comic.format === value
+        case "format": {
+          return comic.format === value;
         }
-        case 'hasFile': {
-          return comic.hasFile === value
+        case "hasFile": {
+          return comic.hasFile === value;
         }
         default:
-          return true
+          return true;
       }
-    })
-  })
+    });
+  });
 }

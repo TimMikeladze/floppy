@@ -7,13 +7,13 @@
 
 export interface FreeComicSource {
   /** Display name of the source */
-  name: string
+  name: string;
   /** URL to the source */
-  url: string
+  url: string;
   /** Brief description of what's available */
-  description: string
+  description: string;
   /** Category of content */
-  category: "public-domain" | "drm-free"
+  category: "public-domain" | "drm-free";
 }
 
 export const FREE_COMICS_SOURCES: FreeComicSource[] = [
@@ -125,20 +125,22 @@ export const FREE_COMICS_SOURCES: FreeComicSource[] = [
     description: "Self-published free comics (PDF)",
     category: "drm-free",
   },
-]
+];
 
 /**
  * Get sources filtered by category
  */
-export function getSourcesByCategory(category: FreeComicSource["category"]): FreeComicSource[] {
-  return FREE_COMICS_SOURCES.filter((source) => source.category === category)
+export function getSourcesByCategory(
+  category: FreeComicSource["category"],
+): FreeComicSource[] {
+  return FREE_COMICS_SOURCES.filter((source) => source.category === category);
 }
 
 /**
  * Get all unique categories
  */
 export function getCategories(): FreeComicSource["category"][] {
-  return [...new Set(FREE_COMICS_SOURCES.map((source) => source.category))]
+  return [...new Set(FREE_COMICS_SOURCES.map((source) => source.category))];
 }
 
 /**
@@ -147,4 +149,4 @@ export function getCategories(): FreeComicSource["category"][] {
 export const CATEGORY_LABELS: Record<FreeComicSource["category"], string> = {
   "public-domain": "Public Domain",
   "drm-free": "DRM-Free",
-}
+};

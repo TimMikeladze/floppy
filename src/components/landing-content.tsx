@@ -1,36 +1,36 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef, ReactNode } from "react"
 import {
-  Github,
-  Heart,
-  BookOpen,
-  Library,
   ArrowRight,
-  Code,
-  Shield,
-  Zap,
-  Users,
-  Smartphone,
-  WifiOff,
-  Layers,
-  Hand,
-  Bookmark,
-  Search,
-  FolderOpen,
   Bell,
-  Download,
-  Monitor,
-  Tablet,
+  Bookmark,
+  BookOpen,
   ChevronDown,
-  Twitter,
-  Star,
-  MousePointer,
-  Upload,
+  Code,
+  Download,
   Eye,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { SupportDialog } from "@/components/layout/support-dialog"
+  FolderOpen,
+  Github,
+  Hand,
+  Heart,
+  Layers,
+  Library,
+  Monitor,
+  MousePointer,
+  Search,
+  Shield,
+  Smartphone,
+  Star,
+  Tablet,
+  Twitter,
+  Upload,
+  Users,
+  WifiOff,
+  Zap,
+} from "lucide-react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { SupportDialog } from "@/components/layout/support-dialog";
+import { Button } from "@/components/ui/button";
 
 // Scroll animation component using Intersection Observer
 function ScrollAnimatedSection({
@@ -38,40 +38,42 @@ function ScrollAnimatedSection({
   className = "",
   animation = "fade-in-up",
 }: {
-  children: ReactNode
-  className?: string
-  animation?: "fade-in" | "fade-in-up" | "fade-in-down"
+  children: ReactNode;
+  className?: string;
+  animation?: "fade-in" | "fade-in-up" | "fade-in-down";
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [isVisible, setIsVisible] = useState(false)
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true)
-          observer.unobserve(entry.target)
+          setIsVisible(true);
+          observer.unobserve(entry.target);
         }
       },
-      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
-    )
+      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
+    );
 
     if (ref.current) {
-      observer.observe(ref.current)
+      observer.observe(ref.current);
     }
 
     return () => {
       if (ref.current) {
-        observer.unobserve(ref.current)
+        observer.unobserve(ref.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const animationClasses = {
     "fade-in": isVisible ? "animate-fade-in" : "opacity-0",
     "fade-in-up": isVisible ? "animate-fade-in-up" : "opacity-0 translate-y-4",
-    "fade-in-down": isVisible ? "animate-fade-in-down" : "opacity-0 -translate-y-4",
-  }
+    "fade-in-down": isVisible
+      ? "animate-fade-in-down"
+      : "opacity-0 -translate-y-4",
+  };
 
   return (
     <div
@@ -80,7 +82,7 @@ function ScrollAnimatedSection({
     >
       {children}
     </div>
-  )
+  );
 }
 
 const features = [
@@ -99,55 +101,62 @@ const features = [
     title: "Your Collection",
     description: "Filter, organize, pick up where you left off",
   },
-]
+];
 
 const readerFeatures = [
   {
     icon: Hand,
     title: "Gesture Controls",
-    description: "Swipe to turn pages, pinch to zoom, double-tap to fit. Natural controls that feel right.",
+    description:
+      "Swipe to turn pages, pinch to zoom, double-tap to fit. Natural controls that feel right.",
   },
   {
     icon: Layers,
     title: "Reading Modes",
-    description: "Single page, double page spread, or continuous scroll. Switch layouts mid-read.",
+    description:
+      "Single page, double page spread, or continuous scroll. Switch layouts mid-read.",
   },
   {
     icon: Bookmark,
     title: "Bookmarks & Progress",
-    description: "Mark pages, add notes, and always pick up exactly where you left off.",
+    description:
+      "Mark pages, add notes, and always pick up exactly where you left off.",
   },
   {
     icon: Search,
     title: "Quick Navigation",
-    description: "Jump to any page instantly. Thumbnail previews make finding your spot easy.",
+    description:
+      "Jump to any page instantly. Thumbnail previews make finding your spot easy.",
   },
-]
+];
 
 const libraryFeatures = [
   {
     icon: FolderOpen,
     title: "Smart Organization",
-    description: "Issues automatically group by series. Filter by reading status, publisher, or create custom collections.",
+    description:
+      "Issues automatically group by series. Filter by reading status, publisher, or create custom collections.",
   },
   {
     icon: Bookmark,
     title: "Reading Progress",
-    description: "Track where you left off. Pick up any series right where you stopped reading.",
+    description:
+      "Track where you left off. Pick up any series right where you stopped reading.",
   },
   {
     icon: Download,
     title: "Multiple Sources",
-    description: "Drag files from your device, paste URLs, or import from cloud storage. Your comics, your way.",
+    description:
+      "Drag files from your device, paste URLs, or import from cloud storage. Your comics, your way.",
   },
-]
+];
 
 const formats = [
   { name: "CBZ", description: "Comic Book ZIP archives" },
   { name: "CBR", description: "Comic Book RAR archives" },
   { name: "PDF", description: "Portable Document Format" },
   { name: "EPUB", description: "Digital publications" },
-]
+];
 
 const values = [
   {
@@ -165,8 +174,7 @@ const values = [
   {
     icon: Zap,
     title: "Performance",
-    description:
-      "Fast load times, smooth scrolling, instant navigation.",
+    description: "Fast load times, smooth scrolling, instant navigation.",
   },
   {
     icon: Users,
@@ -174,28 +182,31 @@ const values = [
     description:
       "Features shaped by readers. Bug reports and pull requests welcome.",
   },
-]
+];
 
 const steps = [
   {
     number: "01",
     icon: Upload,
     title: "Drop in your comics",
-    description: "Drag files from your device, paste a URL, or import from cloud storage. CBZ, CBR, PDF, EPUB—all supported.",
+    description:
+      "Drag files from your device, paste a URL, or import from cloud storage. CBZ, CBR, PDF, EPUB—all supported.",
   },
   {
     number: "02",
     icon: Eye,
     title: "Read your way",
-    description: "Single page, double spread, or continuous scroll. Swipe, pinch, tap—gesture controls that feel natural.",
+    description:
+      "Single page, double spread, or continuous scroll. Swipe, pinch, tap—gesture controls that feel natural.",
   },
   {
     number: "03",
     icon: Library,
     title: "Build your collection",
-    description: "Issues auto-organize by series. Follow your favorites, track your progress, never lose your place.",
+    description:
+      "Issues auto-organize by series. Follow your favorites, track your progress, never lose your place.",
   },
-]
+];
 
 const faqs = [
   {
@@ -222,45 +233,53 @@ const faqs = [
     q: "How is this different from a PDF reader?",
     a: "Floppy is purpose-built for comics—gesture controls, automatic progress tracking, smart library organization. Not a document viewer with comic support.",
   },
-]
+];
 
 function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   return (
     <div
       className="border border-border overflow-hidden opacity-0 animate-fade-in"
-      style={{ animationDelay: `${index * 75}ms`, animationFillMode: "forwards" }}
+      style={{
+        animationDelay: `${index * 75}ms`,
+        animationFillMode: "forwards",
+      }}
     >
       <button
+        type="button"
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-secondary/30 transition-colors"
       >
         <span className="font-medium text-sm sm:text-base pr-4">{q}</span>
-        <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
       </button>
-      <div className={`overflow-hidden transition-all duration-200 ${open ? "max-h-40" : "max-h-0"}`}>
+      <div
+        className={`overflow-hidden transition-all duration-200 ${open ? "max-h-40" : "max-h-0"}`}
+      >
         <p className="px-4 sm:px-5 pb-4 sm:pb-5 text-sm text-muted-foreground leading-relaxed">
           {a}
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 interface LandingContentProps {
-  onGetStarted?: () => void
+  onGetStarted?: () => void;
 }
 
 export function LandingContent({ onGetStarted }: LandingContentProps) {
-  const [supportOpen, setSupportOpen] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(false);
 
   const handleGetStarted = () => {
     if (onGetStarted) {
-      onGetStarted()
+      onGetStarted();
     } else {
-      window.location.href = "/library"
+      window.location.href = "/library";
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -297,11 +316,26 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
         {/* Hero */}
         <section className="px-4 sm:px-6 md:px-8 mx-auto w-full max-w-screen-xl relative overflow-hidden">
           {/* Subtle radial gradient glow */}
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] opacity-[0.03] rounded-full" style={{ background: "radial-gradient(circle, currentColor 0%, transparent 70%)" }} />
+          <div
+            className="absolute top-0 right-0 w-[600px] h-[600px] opacity-[0.03] rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle, currentColor 0%, transparent 70%)",
+            }}
+          />
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 py-16 sm:py-24 lg:py-32">
             {/* Copy */}
-            <ScrollAnimatedSection className="flex flex-col justify-center" animation="fade-in-up">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-border rounded-full text-xs text-muted-foreground mb-6 w-fit opacity-0 animate-fade-in" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
+            <ScrollAnimatedSection
+              className="flex flex-col justify-center"
+              animation="fade-in-up"
+            >
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5 border border-border rounded-full text-xs text-muted-foreground mb-6 w-fit opacity-0 animate-fade-in"
+                style={{
+                  animationDelay: "200ms",
+                  animationFillMode: "forwards",
+                }}
+              >
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                 <span>Free &amp; open source — no account required</span>
               </div>
@@ -311,7 +345,9 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                 Everywhere.
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-lg">
-                The free, open-source comic book app that works offline, respects your privacy, and runs on every device. No sign-up. No tracking. Just reading.
+                The free, open-source comic book app that works offline,
+                respects your privacy, and runs on every device. No sign-up. No
+                tracking. Just reading.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
                 <Button onClick={handleGetStarted} size="lg" className="gap-2">
@@ -325,7 +361,10 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
             </ScrollAnimatedSection>
 
             {/* Comic Book Visual */}
-            <ScrollAnimatedSection className="hidden lg:flex items-center justify-center" animation="fade-in">
+            <ScrollAnimatedSection
+              className="hidden lg:flex items-center justify-center"
+              animation="fade-in"
+            >
               <div className="relative w-[340px] h-[440px] animate-float-slow">
                 {/* Back comic cover - offset */}
                 <div className="absolute top-4 left-8 w-[220px] h-[340px] border-2 border-border/40 bg-secondary/20 rounded-sm transform rotate-6">
@@ -337,7 +376,9 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                           <div
                             key={`back-line-${i}`}
                             className="absolute top-1/2 left-1/2 w-[200%] h-px bg-border/20"
-                            style={{ transform: `translate(-50%, -50%) rotate(${i * 22.5}deg)` }}
+                            style={{
+                              transform: `translate(-50%, -50%) rotate(${i * 22.5}deg)`,
+                            }}
                           />
                         ))}
                       </div>
@@ -366,7 +407,7 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                                 transform: `scale(${0.5 + Math.random() * 0.8})`,
                               }}
                             />
-                          ))
+                          )),
                         )}
                       </div>
                     </div>
@@ -406,7 +447,9 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                     </div>
                     {/* Issue number badge */}
                     <div className="absolute top-3 left-3 w-7 h-7 border border-border bg-background flex items-center justify-center">
-                      <span className="text-[9px] font-mono font-bold text-muted-foreground">#1</span>
+                      <span className="text-[9px] font-mono font-bold text-muted-foreground">
+                        #1
+                      </span>
                     </div>
                   </div>
                   {/* Title block */}
@@ -432,7 +475,10 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                           <div
                             key={`panel-line-${i}`}
                             className="absolute w-px h-full bg-border/20"
-                            style={{ left: `${20 + i * 15}%`, transform: "rotate(-15deg)" }}
+                            style={{
+                              left: `${20 + i * 15}%`,
+                              transform: "rotate(-15deg)",
+                            }}
                           />
                         ))}
                       </div>
@@ -450,13 +496,19 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
 
         {/* Quick Features */}
         <section className="border-t border-border/40 px-4 sm:px-6 md:px-8">
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-20" animation="fade-in-up">
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-16 sm:py-20"
+            animation="fade-in-up"
+          >
             <div className="grid sm:grid-cols-3 gap-12 lg:gap-16">
               {features.map((feature, index) => (
                 <div
                   key={feature.title}
                   className="opacity-0 animate-fade-in"
-                  style={{ animationDelay: `${index * 100}ms`, animationFillMode: "forwards" }}
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                    animationFillMode: "forwards",
+                  }}
                 >
                   <feature.icon className="w-5 h-5 mb-3 text-muted-foreground" />
                   <h3 className="font-medium mb-1">{feature.title}</h3>
@@ -475,26 +527,53 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
           <div
             className="absolute inset-0 opacity-[0.03]"
             style={{
-              backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
+              backgroundImage:
+                "radial-gradient(circle, currentColor 1px, transparent 1px)",
               backgroundSize: "16px 16px",
             }}
           />
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-10 sm:py-12 relative" animation="fade-in">
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-10 sm:py-12 relative"
+            animation="fade-in"
+          >
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
               {[
-                { value: "100%", label: "Free forever", sublabel: "No hidden costs" },
-                { value: "4", label: "Formats supported", sublabel: "CBZ · CBR · PDF · EPUB" },
-                { value: "0", label: "Data collected", sublabel: "Privacy by design" },
-                { value: "∞", label: "Works offline", sublabel: "No internet needed" },
+                {
+                  value: "100%",
+                  label: "Free forever",
+                  sublabel: "No hidden costs",
+                },
+                {
+                  value: "4",
+                  label: "Formats supported",
+                  sublabel: "CBZ · CBR · PDF · EPUB",
+                },
+                {
+                  value: "0",
+                  label: "Data collected",
+                  sublabel: "Privacy by design",
+                },
+                {
+                  value: "∞",
+                  label: "Works offline",
+                  sublabel: "No internet needed",
+                },
               ].map((stat, i) => (
                 <div
                   key={stat.label}
                   className="text-center opacity-0 animate-fade-in"
-                  style={{ animationDelay: `${i * 100}ms`, animationFillMode: "forwards" }}
+                  style={{
+                    animationDelay: `${i * 100}ms`,
+                    animationFillMode: "forwards",
+                  }}
                 >
-                  <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight mb-1">{stat.value}</div>
+                  <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight mb-1">
+                    {stat.value}
+                  </div>
                   <div className="text-sm font-medium mb-0.5">{stat.label}</div>
-                  <div className="text-xs text-muted-foreground">{stat.sublabel}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {stat.sublabel}
+                  </div>
                 </div>
               ))}
             </div>
@@ -507,10 +586,14 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
           <div
             className="absolute inset-0 opacity-[0.02]"
             style={{
-              backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 60px, currentColor 60px, currentColor 61px)",
+              backgroundImage:
+                "repeating-linear-gradient(0deg, transparent, transparent 60px, currentColor 60px, currentColor 61px)",
             }}
           />
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative" animation="fade-in-up">
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative"
+            animation="fade-in-up"
+          >
             <div className="max-w-2xl mb-12">
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
                 Three steps. That&apos;s it.
@@ -525,14 +608,22 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                 <div
                   key={step.title}
                   className="relative opacity-0 animate-fade-in"
-                  style={{ animationDelay: `${index * 150}ms`, animationFillMode: "forwards" }}
+                  style={{
+                    animationDelay: `${index * 150}ms`,
+                    animationFillMode: "forwards",
+                  }}
                 >
                   {/* Comic panel card */}
                   <div className="border-2 border-border bg-background p-6 relative overflow-hidden h-full hover-lift">
                     {/* Panel number - comic style */}
                     <div className="absolute top-0 right-0 w-12 h-12 flex items-center justify-center">
-                      <div className="absolute inset-0 bg-foreground" style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }} />
-                      <span className="relative text-background text-xs font-mono font-bold translate-x-1 -translate-y-1">{step.number}</span>
+                      <div
+                        className="absolute inset-0 bg-foreground"
+                        style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
+                      />
+                      <span className="relative text-background text-xs font-mono font-bold translate-x-1 -translate-y-1">
+                        {step.number}
+                      </span>
                     </div>
                     {/* Speed lines behind icon */}
                     <div className="relative w-12 h-12 mb-4">
@@ -541,7 +632,9 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                           <div
                             key={i}
                             className="absolute top-1/2 left-1/2 w-[180%] h-px bg-border/40"
-                            style={{ transform: `translate(-50%, -50%) rotate(${i * 30}deg)` }}
+                            style={{
+                              transform: `translate(-50%, -50%) rotate(${i * 30}deg)`,
+                            }}
                           />
                         ))}
                       </div>
@@ -576,7 +669,10 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                 "repeating-linear-gradient(45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px), repeating-linear-gradient(-45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px)",
             }}
           />
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative" animation="fade-in-up">
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative"
+            animation="fade-in-up"
+          >
             <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
               <div className="lg:col-span-3">
                 <div className="max-w-2xl mb-12">
@@ -584,7 +680,8 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                     A reader built for comics
                   </h2>
                   <p className="text-muted-foreground">
-                    Not a PDF viewer with comic support. A purpose-built reading experience designed around how you actually read comics.
+                    Not a PDF viewer with comic support. A purpose-built reading
+                    experience designed around how you actually read comics.
                   </p>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-8 lg:gap-10">
@@ -592,7 +689,10 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                     <div
                       key={feature.title}
                       className="flex gap-4 opacity-0 animate-fade-in"
-                      style={{ animationDelay: `${index * 100}ms`, animationFillMode: "forwards" }}
+                      style={{
+                        animationDelay: `${index * 100}ms`,
+                        animationFillMode: "forwards",
+                      }}
                     >
                       <div className="flex-shrink-0 w-10 h-10 border border-border bg-background flex items-center justify-center">
                         <feature.icon className="w-5 h-5 text-muted-foreground" />
@@ -620,7 +720,11 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                           <div
                             key={`rl-${i}`}
                             className="absolute w-px h-[200%] bg-border/15"
-                            style={{ left: `${10 + i * 11}%`, top: "-50%", transform: "rotate(-20deg)" }}
+                            style={{
+                              left: `${10 + i * 11}%`,
+                              top: "-50%",
+                              transform: "rotate(-20deg)",
+                            }}
                           />
                         ))}
                         <div className="absolute bottom-0 left-[15%] w-[30%] h-[80%] bg-secondary/40 rounded-t-full" />
@@ -641,7 +745,9 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                           <div
                             key={`rl2-${i}`}
                             className="absolute top-1/2 left-1/2 w-[200%] h-px bg-border/20"
-                            style={{ transform: `translate(-50%, -50%) rotate(${i * 45}deg)` }}
+                            style={{
+                              transform: `translate(-50%, -50%) rotate(${i * 45}deg)`,
+                            }}
                           />
                         ))}
                       </div>
@@ -649,7 +755,9 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                       <div className="row-span-2 border border-border/40 bg-secondary/25 relative overflow-hidden">
                         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[70%] h-[85%] bg-secondary/40 rounded-t-lg" />
                         {/* Action text */}
-                        <div className="absolute top-2 left-2 font-mono text-[8px] font-bold text-border/40 tracking-wider">POW</div>
+                        <div className="absolute top-2 left-2 font-mono text-[8px] font-bold text-border/40 tracking-wider">
+                          POW
+                        </div>
                       </div>
                       <div className="border border-border/40 bg-secondary/35 relative overflow-hidden">
                         <div className="absolute top-1 left-1 right-1 bottom-1 flex items-end justify-center">
@@ -674,7 +782,9 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                   {/* Gesture hint overlay */}
                   <div className="absolute -bottom-6 -right-6 flex items-center gap-1.5 px-2.5 py-1.5 border border-border bg-background rounded-full shadow-lg animate-float">
                     <MousePointer className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground font-mono">swipe to turn</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      swipe to turn
+                    </span>
                   </div>
                   {/* Stacked page behind */}
                   <div className="absolute -right-2 top-2 bottom-2 w-2 border-r border-t border-b border-border/30 bg-secondary/10 rounded-r-sm" />
@@ -687,7 +797,10 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
 
         {/* Library Deep Dive */}
         <section className="border-t border-border/40 px-4 sm:px-6 md:px-8">
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-24" animation="fade-in-up">
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-16 sm:py-24"
+            animation="fade-in-up"
+          >
             <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
               {/* Library shelf visual */}
               <div className="hidden lg:flex lg:col-span-2 items-center justify-center order-last lg:order-first">
@@ -715,10 +828,17 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                       {/* Comic grid */}
                       <div className="grid grid-cols-4 gap-1.5 mb-3">
                         {[...Array(4)].map((_, i) => (
-                          <div key={`shelf-1-${i}`} className="aspect-[2/3] border border-border/40 bg-secondary/20 relative overflow-hidden">
+                          <div
+                            key={`shelf-1-${i}`}
+                            className="aspect-[2/3] border border-border/40 bg-secondary/20 relative overflow-hidden"
+                          >
                             <div
                               className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-secondary/50"
-                              style={{ width: `${45 + (i % 3) * 12}%`, height: `${50 + (i % 2) * 15}%`, borderRadius: "30% 30% 0 0" }}
+                              style={{
+                                width: `${45 + (i % 3) * 12}%`,
+                                height: `${50 + (i % 2) * 15}%`,
+                                borderRadius: "30% 30% 0 0",
+                              }}
                             />
                             <div className="absolute bottom-0.5 left-0.5 right-0.5 h-2 bg-background/50">
                               <div className="w-2/3 h-0.5 bg-border/40 rounded-sm mt-0.5 ml-0.5" />
@@ -739,10 +859,17 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                       </div>
                       <div className="grid grid-cols-4 gap-1.5">
                         {[...Array(4)].map((_, i) => (
-                          <div key={`shelf-2-${i}`} className="aspect-[2/3] border border-border/30 bg-secondary/15 relative overflow-hidden">
+                          <div
+                            key={`shelf-2-${i}`}
+                            className="aspect-[2/3] border border-border/30 bg-secondary/15 relative overflow-hidden"
+                          >
                             <div
                               className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-secondary/35"
-                              style={{ width: `${40 + (i % 2) * 15}%`, height: `${45 + (i % 3) * 10}%`, borderRadius: "25% 25% 0 0" }}
+                              style={{
+                                width: `${40 + (i % 2) * 15}%`,
+                                height: `${45 + (i % 3) * 10}%`,
+                                borderRadius: "25% 25% 0 0",
+                              }}
                             />
                           </div>
                         ))}
@@ -752,7 +879,9 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                   {/* Floating filter tag */}
                   <div className="absolute -top-3 -right-3 flex items-center gap-1.5 px-2.5 py-1.5 border border-border bg-background rounded-full shadow-lg animate-float">
                     <FolderOpen className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground font-mono">by series</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      by series
+                    </span>
                   </div>
                 </div>
               </div>
@@ -762,7 +891,8 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                     Your collection, organized
                   </h2>
                   <p className="text-muted-foreground">
-                    Whether you have 10 comics or 10,000, keep everything in one place. Filter, sort, and find what you want to read next.
+                    Whether you have 10 comics or 10,000, keep everything in one
+                    place. Filter, sort, and find what you want to read next.
                   </p>
                 </div>
                 <div className="grid sm:grid-cols-3 gap-8 lg:gap-10">
@@ -770,7 +900,10 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                     <div
                       key={feature.title}
                       className="opacity-0 animate-fade-in"
-                      style={{ animationDelay: `${index * 100}ms`, animationFillMode: "forwards" }}
+                      style={{
+                        animationDelay: `${index * 100}ms`,
+                        animationFillMode: "forwards",
+                      }}
                     >
                       <div className="w-10 h-10 border border-border bg-secondary/50 flex items-center justify-center mb-4">
                         <feature.icon className="w-5 h-5 text-muted-foreground" />
@@ -798,21 +931,26 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
               backgroundSize: "40px 40px",
             }}
           />
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative" animation="fade-in-up">
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative"
+            animation="fade-in-up"
+          >
             <div className="text-center max-w-2xl mx-auto mb-12">
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
                 Built for every reader
               </h2>
               <div className="w-12 h-0.5 bg-foreground/20 mx-auto mb-4 animate-draw-line" />
               <p className="text-muted-foreground">
-                Whether you&apos;re reading your first comic or managing a massive digital collection.
+                Whether you&apos;re reading your first comic or managing a
+                massive digital collection.
               </p>
             </div>
             <div className="grid sm:grid-cols-3 gap-6">
               {[
                 {
                   label: "Casual Reader",
-                  description: "Stumble across a new series? Drop it in, read on your commute, pick up where you left off. Zero friction.",
+                  description:
+                    "Stumble across a new series? Drop it in, read on your commute, pick up where you left off. Zero friction.",
                   visual: (
                     <div className="relative h-32 mb-4 overflow-hidden">
                       {/* Single comic being read on phone shape */}
@@ -833,7 +971,8 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                 },
                 {
                   label: "Collector",
-                  description: "Thousands of issues? Auto-organized by series. Filter by publisher, status, or build custom collections.",
+                  description:
+                    "Thousands of issues? Auto-organized by series. Filter by publisher, status, or build custom collections.",
                   visual: (
                     <div className="relative h-32 mb-4 overflow-hidden">
                       {/* Library grid */}
@@ -865,7 +1004,8 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                 },
                 {
                   label: "Manga Fan",
-                  description: "Right-to-left reading, vertical scroll, continuous mode. All the features manga readers demand. Free, forever.",
+                  description:
+                    "Right-to-left reading, vertical scroll, continuous mode. All the features manga readers demand. Free, forever.",
                   visual: (
                     <div className="relative h-32 mb-4 overflow-hidden">
                       {/* Manga page - vertical scroll style */}
@@ -874,14 +1014,18 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                         <div className="absolute inset-1 flex flex-col gap-0.5">
                           <div className="h-[35%] border border-border/30 bg-secondary/20 relative overflow-hidden">
                             <div className="absolute bottom-0 right-[20%] w-[40%] h-[90%] bg-secondary/40 rounded-t-full" />
-                            <div className="absolute top-1 left-1 font-mono text-[5px] font-bold text-border/30">ドーン</div>
+                            <div className="absolute top-1 left-1 font-mono text-[5px] font-bold text-border/30">
+                              ドーン
+                            </div>
                           </div>
                           <div className="h-[25%] border border-border/30 bg-secondary/30 relative overflow-hidden">
                             {[...Array(5)].map((_, i) => (
                               <div
                                 key={i}
                                 className="absolute top-1/2 left-1/2 w-[200%] h-px bg-border/20"
-                                style={{ transform: `translate(-50%, -50%) rotate(${i * 36}deg)` }}
+                                style={{
+                                  transform: `translate(-50%, -50%) rotate(${i * 36}deg)`,
+                                }}
                               />
                             ))}
                           </div>
@@ -897,7 +1041,9 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                       {/* R-to-L indicator */}
                       <div className="absolute right-[10%] bottom-2 flex items-center gap-1 px-2 py-1 border border-border bg-background rounded-sm">
                         <ArrowRight className="w-2.5 h-2.5 text-muted-foreground rotate-180" />
-                        <span className="text-[8px] font-mono text-muted-foreground">RTL</span>
+                        <span className="text-[8px] font-mono text-muted-foreground">
+                          RTL
+                        </span>
                       </div>
                     </div>
                   ),
@@ -906,7 +1052,10 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                 <div
                   key={useCase.label}
                   className="border border-border bg-background overflow-hidden opacity-0 animate-fade-in hover-lift"
-                  style={{ animationDelay: `${i * 120}ms`, animationFillMode: "forwards" }}
+                  style={{
+                    animationDelay: `${i * 120}ms`,
+                    animationFillMode: "forwards",
+                  }}
                 >
                   <div className="bg-secondary/20 border-b border-border/40">
                     {useCase.visual}
@@ -925,22 +1074,40 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
 
         {/* Formats */}
         <section className="border-t border-border/40 px-4 sm:px-6 md:px-8">
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-20" animation="fade-in-up">
-            <h2 className="text-lg font-medium mb-2">Every format. One reader.</h2>
-            <p className="text-sm text-muted-foreground mb-8">Comics, manga, graphic novels—if you can download it, you can read it.</p>
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-16 sm:py-20"
+            animation="fade-in-up"
+          >
+            <h2 className="text-lg font-medium mb-2">
+              Every format. One reader.
+            </h2>
+            <p className="text-sm text-muted-foreground mb-8">
+              Comics, manga, graphic novels—if you can download it, you can read
+              it.
+            </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {formats.map((format, index) => (
                 <div
                   key={format.name}
                   className="p-4 border border-border relative overflow-hidden opacity-0 animate-fade-in hover-lift group hover:border-foreground/20 transition-colors"
-                  style={{ animationDelay: `${index * 75}ms`, animationFillMode: "forwards" }}
+                  style={{
+                    animationDelay: `${index * 75}ms`,
+                    animationFillMode: "forwards",
+                  }}
                 >
                   {/* Corner fold effect */}
                   <div className="absolute top-0 right-0 w-4 h-4">
-                    <div className="absolute top-0 right-0 w-full h-full bg-secondary/40" style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }} />
+                    <div
+                      className="absolute top-0 right-0 w-full h-full bg-secondary/40"
+                      style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
+                    />
                   </div>
-                  <div className="font-mono text-xl font-bold mb-1">{format.name}</div>
-                  <div className="text-xs text-muted-foreground">{format.description}</div>
+                  <div className="font-mono text-xl font-bold mb-1">
+                    {format.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {format.description}
+                  </div>
                 </div>
               ))}
             </div>
@@ -953,17 +1120,23 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
           <div
             className="absolute inset-0 opacity-[0.025]"
             style={{
-              backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 24px, currentColor 24px, currentColor 25px)",
+              backgroundImage:
+                "repeating-linear-gradient(135deg, transparent, transparent 24px, currentColor 24px, currentColor 25px)",
             }}
           />
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative" animation="fade-in-up">
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative"
+            animation="fade-in-up"
+          >
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
                   Works everywhere
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  A progressive web app that runs in any browser. Install it on your phone, tablet, or desktop. Read offline. No app store required.
+                  A progressive web app that runs in any browser. Install it on
+                  your phone, tablet, or desktop. Read offline. No app store
+                  required.
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-3">
@@ -986,19 +1159,38 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
               </div>
               <div className="hidden lg:flex items-end justify-center gap-6">
                 {/* Phone */}
-                <div className="w-[72px] h-[128px] border-2 border-border bg-background rounded-lg opacity-0 animate-fade-in relative overflow-hidden" style={{ animationDelay: "0ms", animationFillMode: "forwards" }}>
+                <div
+                  className="w-[72px] h-[128px] border-2 border-border bg-background rounded-lg opacity-0 animate-fade-in relative overflow-hidden"
+                  style={{
+                    animationDelay: "0ms",
+                    animationFillMode: "forwards",
+                  }}
+                >
                   <div className="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1 bg-border/30 rounded-full" />
                   <div className="absolute inset-1.5 top-3 border border-border/30 overflow-hidden">
                     <div className="w-full h-full bg-secondary/20 relative">
                       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[60%] h-[65%] bg-secondary/40 rounded-t-full" />
                       {[...Array(3)].map((_, i) => (
-                        <div key={i} className="absolute w-px h-full bg-border/15" style={{ left: `${25 + i * 25}%`, transform: "rotate(-20deg)" }} />
+                        <div
+                          key={i}
+                          className="absolute w-px h-full bg-border/15"
+                          style={{
+                            left: `${25 + i * 25}%`,
+                            transform: "rotate(-20deg)",
+                          }}
+                        />
                       ))}
                     </div>
                   </div>
                 </div>
                 {/* Tablet */}
-                <div className="w-[160px] h-[200px] border-2 border-border bg-background rounded-lg opacity-0 animate-fade-in relative overflow-hidden" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
+                <div
+                  className="w-[160px] h-[200px] border-2 border-border bg-background rounded-lg opacity-0 animate-fade-in relative overflow-hidden"
+                  style={{
+                    animationDelay: "100ms",
+                    animationFillMode: "forwards",
+                  }}
+                >
                   <div className="absolute inset-2 border border-border/30 overflow-hidden">
                     {/* Double page spread */}
                     <div className="absolute inset-0 grid grid-cols-2 gap-px">
@@ -1029,13 +1221,22 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                   </div>
                 </div>
                 {/* Desktop */}
-                <div className="opacity-0 animate-fade-in flex flex-col items-center" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
+                <div
+                  className="opacity-0 animate-fade-in flex flex-col items-center"
+                  style={{
+                    animationDelay: "200ms",
+                    animationFillMode: "forwards",
+                  }}
+                >
                   <div className="w-[200px] h-[130px] border-2 border-border bg-background rounded-t-lg relative overflow-hidden">
                     <div className="absolute inset-2 border border-border/30 overflow-hidden">
                       {/* Library grid view */}
                       <div className="absolute inset-1 grid grid-cols-4 grid-rows-2 gap-0.5">
                         {[...Array(8)].map((_, i) => (
-                          <div key={i} className="border border-border/20 bg-secondary/20 relative overflow-hidden">
+                          <div
+                            key={i}
+                            className="border border-border/20 bg-secondary/20 relative overflow-hidden"
+                          >
                             <div
                               className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-secondary/40"
                               style={{
@@ -1064,16 +1265,23 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
           <div
             className="absolute inset-0 opacity-[0.03]"
             style={{
-              backgroundImage: "radial-gradient(circle, currentColor 0.75px, transparent 0.75px)",
+              backgroundImage:
+                "radial-gradient(circle, currentColor 0.75px, transparent 0.75px)",
               backgroundSize: "8px 8px",
             }}
           />
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative" animation="fade-in-up">
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative"
+            animation="fade-in-up"
+          >
             <div className="text-center max-w-2xl mx-auto mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Why floppy stays different</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
+                Why floppy stays different
+              </h2>
               <div className="w-12 h-0.5 bg-foreground/20 mx-auto mb-4 animate-draw-line" />
               <p className="text-muted-foreground">
-                Open source from day one. Community-built, community-driven. A comic book app that puts you first.
+                Open source from day one. Community-built, community-driven. A
+                comic book app that puts you first.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1081,7 +1289,10 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                 <div
                   key={value.title}
                   className="p-5 border border-border relative overflow-hidden opacity-0 animate-fade-in hover-lift group hover:border-foreground/20 transition-colors"
-                  style={{ animationDelay: `${index * 100}ms`, animationFillMode: "forwards" }}
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                    animationFillMode: "forwards",
+                  }}
                 >
                   {/* Subtle corner accent */}
                   <div className="absolute top-0 left-0 w-8 h-8 overflow-hidden">
@@ -1102,7 +1313,10 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
 
         {/* Tech */}
         <section className="border-t border-border/40 px-4 sm:px-6 md:px-8">
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-20" animation="fade-in-up">
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-16 sm:py-20"
+            animation="fade-in-up"
+          >
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <span className="text-sm text-muted-foreground">Built with</span>
               <div className="flex flex-wrap gap-2">
@@ -1111,11 +1325,14 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                     <span
                       key={tech}
                       className="px-3 py-1 text-sm font-mono border border-border rounded opacity-0 animate-fade-in"
-                      style={{ animationDelay: `${index * 75}ms`, animationFillMode: "forwards" }}
+                      style={{
+                        animationDelay: `${index * 75}ms`,
+                        animationFillMode: "forwards",
+                      }}
                     >
                       {tech}
                     </span>
-                  )
+                  ),
                 )}
               </div>
             </div>
@@ -1128,18 +1345,23 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
           <div
             className="absolute inset-0 opacity-[0.04]"
             style={{
-              backgroundImage: "radial-gradient(circle, currentColor 0.5px, transparent 0.5px)",
+              backgroundImage:
+                "radial-gradient(circle, currentColor 0.5px, transparent 0.5px)",
               backgroundSize: "24px 24px",
             }}
           />
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative" animation="fade-in-up">
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-16 sm:py-24 relative"
+            animation="fade-in-up"
+          >
             <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
               <div className="lg:col-span-2">
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
                   Common questions
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Everything you need to know about floppy. Can&apos;t find your answer?
+                  Everything you need to know about floppy. Can&apos;t find your
+                  answer?
                 </p>
                 <a
                   href="https://github.com/TimMikeladze/floppy/issues"
@@ -1167,7 +1389,8 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
           <div
             className="absolute inset-0 opacity-[0.03]"
             style={{
-              backgroundImage: "radial-gradient(circle, currentColor 1.5px, transparent 1.5px)",
+              backgroundImage:
+                "radial-gradient(circle, currentColor 1.5px, transparent 1.5px)",
               backgroundSize: "20px 20px",
             }}
           />
@@ -1186,11 +1409,23 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
             ))}
             {/* Corner comic panels - decorative */}
             <div className="absolute -top-8 -left-8 w-32 h-32 border-2 border-border/10 rotate-12 bg-secondary/10 animate-float-slow" />
-            <div className="absolute -bottom-6 -right-6 w-40 h-40 border-2 border-border/10 -rotate-6 bg-secondary/10 animate-float-slow" style={{ animationDelay: "1s" }} />
-            <div className="absolute top-8 -right-4 w-20 h-20 border border-border/5 rotate-[20deg] animate-float" style={{ animationDelay: "0.5s" }} />
+            <div
+              className="absolute -bottom-6 -right-6 w-40 h-40 border-2 border-border/10 -rotate-6 bg-secondary/10 animate-float-slow"
+              style={{ animationDelay: "1s" }}
+            />
+            <div
+              className="absolute top-8 -right-4 w-20 h-20 border border-border/5 rotate-[20deg] animate-float"
+              style={{ animationDelay: "0.5s" }}
+            />
           </div>
-          <ScrollAnimatedSection className="mx-auto w-full max-w-screen-xl py-20 sm:py-28 text-center relative" animation="fade-in-up">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-border rounded-full text-xs text-muted-foreground mb-6 animate-float" style={{ animationDuration: "4s" }}>
+          <ScrollAnimatedSection
+            className="mx-auto w-full max-w-screen-xl py-20 sm:py-28 text-center relative"
+            animation="fade-in-up"
+          >
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 border border-border rounded-full text-xs text-muted-foreground mb-6 animate-float"
+              style={{ animationDuration: "4s" }}
+            >
               <Star className="w-3 h-3 animate-pulse-subtle" />
               <span>No sign-up required</span>
             </div>
@@ -1198,7 +1433,8 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
               Start reading now
             </h2>
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              Open the app, drop in your first comic, and experience what a reader should feel like.
+              Open the app, drop in your first comic, and experience what a
+              reader should feel like.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button onClick={handleGetStarted} size="lg" className="gap-2">
@@ -1218,7 +1454,6 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
             </div>
           </ScrollAnimatedSection>
         </section>
-
       </main>
 
       {/* Footer */}
@@ -1235,8 +1470,12 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                 <div className="w-3 h-3 bg-background rounded-[1px]" />
               </div>
               <div>
-                <div className="text-sm font-semibold tracking-tight">floppy</div>
-                <div className="text-xs text-muted-foreground/60">The open-source comic book app</div>
+                <div className="text-sm font-semibold tracking-tight">
+                  floppy
+                </div>
+                <div className="text-xs text-muted-foreground/60">
+                  The open-source comic book app
+                </div>
               </div>
             </div>
 
@@ -1266,12 +1505,17 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                 rel="noopener noreferrer"
                 className="hover:text-foreground transition-colors inline-flex items-center gap-1.5"
               >
-                <svg className="w-3.5 h-3.5 opacity-60" viewBox="0 0 568 501" fill="currentColor">
-                  <path d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.333 453.32c-119.86 122.992-172.272-30.859-185.702-70.281-2.462-7.227-3.614-10.608-3.631-7.733-.017-2.875-1.169.506-3.631 7.733-13.43 39.422-65.842 193.273-185.702 70.281-63.111-64.76-33.89-129.52 80.986-149.071-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.659 0 75.291 0 57.946 0-28.906 76.135-1.612 123.121 33.664Z"/>
+                <svg
+                  className="w-3.5 h-3.5 opacity-60"
+                  viewBox="0 0 568 501"
+                  fill="currentColor"
+                >
+                  <path d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.333 453.32c-119.86 122.992-172.272-30.859-185.702-70.281-2.462-7.227-3.614-10.608-3.631-7.733-.017-2.875-1.169.506-3.631 7.733-13.43 39.422-65.842 193.273-185.702 70.281-63.111-64.76-33.89-129.52 80.986-149.071-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.659 0 75.291 0 57.946 0-28.906 76.135-1.612 123.121 33.664Z" />
                 </svg>
                 Bluesky
               </a>
               <button
+                type="button"
                 onClick={() => setSupportOpen(true)}
                 className="hover:text-foreground transition-colors inline-flex items-center gap-1.5 group"
               >
@@ -1308,5 +1552,5 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
 
       <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
     </div>
-  )
+  );
 }

@@ -1,17 +1,18 @@
-"use client"
+"use client";
 
-import { WifiOff } from "lucide-react"
-import { useOnlineStatus } from "@/hooks/use-online-status"
-import { cn } from "@/lib/utils"
+import { WifiOff } from "lucide-react";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { cn } from "@/lib/utils";
 
 export function OfflineBanner() {
-  const isOnline = useOnlineStatus()
+  const isOnline = useOnlineStatus();
 
   if (isOnline) {
-    return null
+    return null;
   }
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: status banner with aria-live
     <div
       role="status"
       aria-live="polite"
@@ -20,11 +21,11 @@ export function OfflineBanner() {
         "bg-amber-500/90 dark:bg-amber-600/90 backdrop-blur-sm",
         "px-4 py-2 text-center text-sm font-medium text-white",
         "flex items-center justify-center gap-2",
-        "shadow-sm"
+        "shadow-sm",
       )}
     >
       <WifiOff className="h-4 w-4" />
       <span>You're offline. Some features may be unavailable.</span>
     </div>
-  )
+  );
 }

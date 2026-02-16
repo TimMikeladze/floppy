@@ -1,16 +1,34 @@
-"use client"
+"use client";
 
-import { Search, Upload, Moon, Sun, Settings, SortAsc, ListFilter, X, Monitor, Plus, Download, FolderUp, LayoutGrid, TableProperties, Trash2, Database, Library, Sparkles, Info, HardDrive, Layers, Heart, Settings2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu"
+  Database,
+  Download,
+  FolderUp,
+  HardDrive,
+  Heart,
+  Info,
+  Layers,
+  LayoutGrid,
+  Library,
+  ListFilter,
+  Monitor,
+  Moon,
+  Plus,
+  Search,
+  Settings,
+  Settings2,
+  SortAsc,
+  Sparkles,
+  Sun,
+  TableProperties,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,32 +38,40 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { useTheme } from "next-themes"
-import { useState, useEffect, useRef, useCallback } from "react"
-import { useDebouncedCallback } from "@/hooks/use-debounced-callback"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { SupportDialog } from "./support-dialog"
-import { PreferencesDialog } from "./preferences-dialog"
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+import { PreferencesDialog } from "./preferences-dialog";
+import { SupportDialog } from "./support-dialog";
 
-type ViewMode = "grid" | "table" | "series"
+type ViewMode = "grid" | "table" | "series";
 
 interface AppBarProps {
-  onUpload: () => void
-  onAddComic: () => void
-  searchQuery: string
-  onSearchChange: (query: string) => void
-  sortBy: "title-asc" | "title-desc" | "recent" | "added" | "progress"
-  onSortChange: (sort: "title-asc" | "title-desc" | "recent" | "added" | "progress") => void
-  viewMode: ViewMode
-  onViewModeChange: (mode: ViewMode) => void
-  onManageLists?: () => void
-  onExport?: () => void
-  onImport?: (file: File) => void
-  onImportDataSource?: () => void
-  onClearData?: () => void
-  releasesEnabled?: boolean
+  onUpload: () => void;
+  onAddComic: () => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  sortBy: "title-asc" | "title-desc" | "recent" | "added" | "progress";
+  onSortChange: (
+    sort: "title-asc" | "title-desc" | "recent" | "added" | "progress",
+  ) => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
+  onManageLists?: () => void;
+  onExport?: () => void;
+  onImport?: (file: File) => void;
+  onImportDataSource?: () => void;
+  onClearData?: () => void;
+  releasesEnabled?: boolean;
 }
 
 export function AppBar({
@@ -64,44 +90,47 @@ export function AppBar({
   onClearData,
   releasesEnabled = false,
 }: AppBarProps) {
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const [searchExpanded, setSearchExpanded] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const [clearDialogOpen, setClearDialogOpen] = useState(false)
-  const [supportDialogOpen, setSupportDialogOpen] = useState(false)
-  const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false)
-  const importInputRef = useRef<HTMLInputElement>(null)
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [supportDialogOpen, setSupportDialogOpen] = useState(false);
+  const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // Local search state for responsive input, debounced propagation to parent
-  const [localSearch, setLocalSearch] = useState(searchQuery)
-  const debouncedSearchChange = useDebouncedCallback(onSearchChange, 300)
+  const [localSearch, setLocalSearch] = useState(searchQuery);
+  const debouncedSearchChange = useDebouncedCallback(onSearchChange, 300);
 
   // Sync local state when external searchQuery changes (e.g. cleared programmatically)
   useEffect(() => {
-    setLocalSearch(searchQuery)
-  }, [searchQuery])
+    setLocalSearch(searchQuery);
+  }, [searchQuery]);
 
-  const handleSearchInput = useCallback((value: string) => {
-    setLocalSearch(value)
-    debouncedSearchChange(value)
-  }, [debouncedSearchChange])
+  const handleSearchInput = useCallback(
+    (value: string) => {
+      setLocalSearch(value);
+      debouncedSearchChange(value);
+    },
+    [debouncedSearchChange],
+  );
 
   const handleImportClick = () => {
-    importInputRef.current?.click()
-  }
+    importInputRef.current?.click();
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file && onImport) {
-      onImport(file)
+      onImport(file);
     }
     // Reset input so same file can be selected again
-    e.target.value = ""
-  }
+    e.target.value = "";
+  };
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   const sortLabels = {
     "title-asc": "Title (A-Z)",
@@ -109,15 +138,19 @@ export function AppBar({
     recent: "Recently Read",
     added: "Recently Added",
     progress: "Progress",
-  }
+  };
 
-  const ThemeIcon = () => {
-    if (!mounted) return <Sun className="h-4 w-4" />
-    if (theme === "system") return <Monitor className="h-4 w-4" />
-    return resolvedTheme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />
-  }
+  const _ThemeIcon = () => {
+    if (!mounted) return <Sun className="h-4 w-4" />;
+    if (theme === "system") return <Monitor className="h-4 w-4" />;
+    return resolvedTheme === "dark" ? (
+      <Moon className="h-4 w-4" />
+    ) : (
+      <Sun className="h-4 w-4" />
+    );
+  };
 
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -129,7 +162,9 @@ export function AppBar({
             <Link
               href="/library"
               className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
-                pathname === '/library' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                pathname === "/library"
+                  ? "bg-secondary text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
               }`}
             >
               <Library className="h-4 w-4" />
@@ -139,7 +174,9 @@ export function AppBar({
               <Link
                 href="/releases"
                 className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
-                  pathname === '/releases' ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                  pathname === "/releases"
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 }`}
               >
                 <Sparkles className="h-4 w-4" />
@@ -150,7 +187,9 @@ export function AppBar({
         )}
 
         {/* Search - expandable on mobile */}
-        <div className={`flex-1 flex items-center ${searchExpanded ? "" : "justify-end"}`}>
+        <div
+          className={`flex-1 flex items-center ${searchExpanded ? "" : "justify-end"}`}
+        >
           {searchExpanded ? (
             <div className="flex items-center gap-2 w-full">
               <div className="relative flex-1">
@@ -168,9 +207,9 @@ export function AppBar({
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  setSearchExpanded(false)
-                  setLocalSearch("")
-                  onSearchChange("")
+                  setSearchExpanded(false);
+                  setLocalSearch("");
+                  onSearchChange("");
                 }}
                 className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
               >
@@ -209,8 +248,18 @@ export function AppBar({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">Sort by</DropdownMenuLabel>
-                  {(["recent", "added", "title-asc", "title-desc", "progress"] as const).map((sort) => (
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Sort by
+                  </DropdownMenuLabel>
+                  {(
+                    [
+                      "recent",
+                      "added",
+                      "title-asc",
+                      "title-desc",
+                      "progress",
+                    ] as const
+                  ).map((sort) => (
                     <DropdownMenuItem
                       key={sort}
                       onClick={() => onSortChange(sort)}
@@ -281,7 +330,11 @@ export function AppBar({
               {/* Settings menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-9 w-9 sm:w-auto sm:px-3 bg-transparent">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 sm:w-auto sm:px-3 bg-transparent"
+                  >
                     <Settings className="h-4 w-4" />
                     <span className="hidden sm:inline sm:ml-2">Settings</span>
                   </Button>
@@ -289,7 +342,9 @@ export function AppBar({
                 <DropdownMenuContent align="end" className="w-48">
                   {onManageLists && (
                     <>
-                      <DropdownMenuLabel className="text-xs text-muted-foreground">Lists</DropdownMenuLabel>
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">
+                        Lists
+                      </DropdownMenuLabel>
                       <DropdownMenuItem onClick={onManageLists}>
                         <ListFilter className="mr-2 h-4 w-4" />
                         Manage Lists
@@ -297,7 +352,9 @@ export function AppBar({
                       <DropdownMenuSeparator />
                     </>
                   )}
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">Library</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Library
+                  </DropdownMenuLabel>
                   {onExport && (
                     <DropdownMenuItem onClick={onExport}>
                       <Download className="mr-2 h-4 w-4" />
@@ -317,30 +374,44 @@ export function AppBar({
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Theme
+                  </DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => setTheme("light")}>
                     <Sun className="mr-2 h-4 w-4" />
                     Light
-                    {mounted && theme === "light" && <span className="ml-auto text-xs">✓</span>}
+                    {mounted && theme === "light" && (
+                      <span className="ml-auto text-xs">✓</span>
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTheme("dark")}>
                     <Moon className="mr-2 h-4 w-4" />
                     Dark
-                    {mounted && theme === "dark" && <span className="ml-auto text-xs">✓</span>}
+                    {mounted && theme === "dark" && (
+                      <span className="ml-auto text-xs">✓</span>
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTheme("system")}>
                     <Monitor className="mr-2 h-4 w-4" />
                     System
-                    {mounted && theme === "system" && <span className="ml-auto text-xs">✓</span>}
+                    {mounted && theme === "system" && (
+                      <span className="ml-auto text-xs">✓</span>
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">App</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => setPreferencesDialogOpen(true)}>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    App
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={() => setPreferencesDialogOpen(true)}
+                  >
                     <Settings2 className="mr-2 h-4 w-4" />
                     Preferences
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">Storage</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Storage
+                  </DropdownMenuLabel>
                   <Link href="/settings">
                     <DropdownMenuItem>
                       <HardDrive className="mr-2 h-4 w-4" />
@@ -357,7 +428,9 @@ export function AppBar({
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">Info</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Info
+                  </DropdownMenuLabel>
                   <Link href="/about">
                     <DropdownMenuItem>
                       <Info className="mr-2 h-4 w-4" />
@@ -370,7 +443,6 @@ export function AppBar({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
             </div>
           )}
         </div>
@@ -391,15 +463,16 @@ export function AppBar({
           <AlertDialogHeader>
             <AlertDialogTitle>Clear all data?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete all your comics, bookmarks, notes, and lists. This action cannot be undone.
+              This will permanently delete all your comics, bookmarks, notes,
+              and lists. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                onClearData?.()
-                setClearDialogOpen(false)
+                onClearData?.();
+                setClearDialogOpen(false);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
@@ -409,8 +482,14 @@ export function AppBar({
         </AlertDialogContent>
       </AlertDialog>
 
-      <SupportDialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen} />
-      <PreferencesDialog open={preferencesDialogOpen} onOpenChange={setPreferencesDialogOpen} />
+      <SupportDialog
+        open={supportDialogOpen}
+        onOpenChange={setSupportDialogOpen}
+      />
+      <PreferencesDialog
+        open={preferencesDialogOpen}
+        onOpenChange={setPreferencesDialogOpen}
+      />
     </header>
-  )
+  );
 }

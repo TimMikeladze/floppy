@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { AlertTriangle, RefreshCw, Home } from "lucide-react"
+import { AlertTriangle, Home, RefreshCw } from "lucide-react";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
   useEffect(() => {
     // Log the error for debugging
-    console.error("[app-error] Caught error:", error)
-  }, [error])
+    console.error("[app-error] Caught error:", error);
+  }, [error]);
 
   const handleReset = () => {
     // Clear any potentially corrupted state
@@ -23,44 +23,46 @@ export default function Error({
       // This helps recover from stale database connections
       if (typeof window !== "undefined") {
         // Clear any cached data that might be causing issues
-        sessionStorage.clear()
+        sessionStorage.clear();
       }
     } catch (e) {
-      console.error("[app-error] Failed to clear session storage:", e)
+      console.error("[app-error] Failed to clear session storage:", e);
     }
 
     // Attempt to recover by re-rendering
-    reset()
-  }
+    reset();
+  };
 
   const handleGoHome = () => {
     // Force a full page reload to clear all state
-    window.location.href = "/"
-  }
+    window.location.href = "/";
+  };
 
   const handleHardReset = async () => {
     try {
       // Clear service worker caches
       if ("caches" in window) {
-        const cacheNames = await caches.keys()
+        const cacheNames = await caches.keys();
         await Promise.all(
-          cacheNames.filter(name => name.startsWith("floppy-")).map(name => caches.delete(name))
-        )
+          cacheNames
+            .filter((name) => name.startsWith("floppy-"))
+            .map((name) => caches.delete(name)),
+        );
       }
 
       // Unregister service worker
       if ("serviceWorker" in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations()
-        await Promise.all(registrations.map(reg => reg.unregister()))
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((reg) => reg.unregister()));
       }
 
       // Force reload
-      window.location.reload()
+      window.location.reload();
     } catch (e) {
-      console.error("[app-error] Failed to perform hard reset:", e)
-      window.location.reload()
+      console.error("[app-error] Failed to perform hard reset:", e);
+      window.location.reload();
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -70,9 +72,12 @@ export default function Error({
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-foreground">Something went wrong</h1>
+          <h1 className="text-2xl font-semibold text-foreground">
+            Something went wrong
+          </h1>
           <p className="text-muted-foreground">
-            An unexpected error occurred. This can sometimes happen after an app update.
+            An unexpected error occurred. This can sometimes happen after an app
+            update.
           </p>
         </div>
 
@@ -105,5 +110,5 @@ export default function Error({
         )}
       </div>
     </div>
-  )
+  );
 }

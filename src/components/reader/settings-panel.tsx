@@ -1,68 +1,77 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useReading } from "@/lib/reading-context"
-import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
-  Settings,
-  Sun,
-  Moon,
-  Monitor,
-  BookOpen,
-  Scroll,
+  AlignVerticalJustifyCenter,
   ArrowLeftRight,
   ArrowRightLeft,
+  BookOpen,
   Maximize,
-  AlignVerticalJustifyCenter,
-  Square,
+  Monitor,
+  Moon,
+  PanelBottom,
   PanelLeft,
   PanelRight,
   PanelTop,
-  PanelBottom,
-} from "lucide-react"
+  Scroll,
+  Settings,
+  Square,
+  Sun,
+} from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { useReading } from "@/lib/reading-context";
 
 interface SettingsPanelProps {
-  variant?: "icon" | "menu"
+  variant?: "icon" | "menu";
 }
 
 export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
-  const [open, setOpen] = useState(false)
-  const { settings, updateSettings } = useReading()
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  const [isDesktop, setIsDesktop] = useState(false)
+  const [open, setOpen] = useState(false);
+  const { settings, updateSettings } = useReading();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768)
-    checkDesktop()
-    window.addEventListener("resize", checkDesktop)
-    return () => window.removeEventListener("resize", checkDesktop)
-  }, [])
+    setMounted(true);
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkDesktop();
+    window.addEventListener("resize", checkDesktop);
+    return () => window.removeEventListener("resize", checkDesktop);
+  }, []);
 
-  const trigger = variant === "menu" ? (
-    <Button variant="ghost" size="sm" className="flex-col gap-1 h-auto py-2 px-3">
-      <Settings className="h-5 w-5" />
-      <span className="text-xs">Settings</span>
-    </Button>
-  ) : (
-    <Button variant="ghost" size="icon">
-      <Settings className="h-5 w-5" />
-      <span className="sr-only">Settings</span>
-    </Button>
-  )
+  const trigger =
+    variant === "menu" ? (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="flex-col gap-1 h-auto py-2 px-3"
+      >
+        <Settings className="h-5 w-5" />
+        <span className="text-xs">Settings</span>
+      </Button>
+    ) : (
+      <Button variant="ghost" size="icon">
+        <Settings className="h-5 w-5" />
+        <span className="sr-only">Settings</span>
+      </Button>
+    );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
@@ -75,7 +84,9 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
               <h3 className="text-sm font-medium">Layout</h3>
               <div className="grid grid-cols-2 gap-2">
                 <Button
-                  variant={settings.layoutMode === "paged" ? "default" : "outline"}
+                  variant={
+                    settings.layoutMode === "paged" ? "default" : "outline"
+                  }
                   onClick={() => updateSettings({ layoutMode: "paged" })}
                   size="sm"
                   className="gap-2"
@@ -84,7 +95,9 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                   Paged
                 </Button>
                 <Button
-                  variant={settings.layoutMode === "scrolling" ? "default" : "outline"}
+                  variant={
+                    settings.layoutMode === "scrolling" ? "default" : "outline"
+                  }
                   onClick={() => updateSettings({ layoutMode: "scrolling" })}
                   size="sm"
                   className="gap-2"
@@ -102,14 +115,18 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                   <h3 className="text-sm font-medium">Pages</h3>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
-                      variant={settings.pageLayout === "single" ? "default" : "outline"}
+                      variant={
+                        settings.pageLayout === "single" ? "default" : "outline"
+                      }
                       onClick={() => updateSettings({ pageLayout: "single" })}
                       size="sm"
                     >
                       Single
                     </Button>
                     <Button
-                      variant={settings.pageLayout === "double" ? "default" : "outline"}
+                      variant={
+                        settings.pageLayout === "double" ? "default" : "outline"
+                      }
                       onClick={() => updateSettings({ pageLayout: "double" })}
                       size="sm"
                     >
@@ -123,8 +140,14 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                   <h3 className="text-sm font-medium">Direction</h3>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
-                      variant={settings.readingDirection === "ltr" ? "default" : "outline"}
-                      onClick={() => updateSettings({ readingDirection: "ltr" })}
+                      variant={
+                        settings.readingDirection === "ltr"
+                          ? "default"
+                          : "outline"
+                      }
+                      onClick={() =>
+                        updateSettings({ readingDirection: "ltr" })
+                      }
                       size="sm"
                       className="gap-2"
                     >
@@ -132,8 +155,14 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                       Left → Right
                     </Button>
                     <Button
-                      variant={settings.readingDirection === "rtl" ? "default" : "outline"}
-                      onClick={() => updateSettings({ readingDirection: "rtl" })}
+                      variant={
+                        settings.readingDirection === "rtl"
+                          ? "default"
+                          : "outline"
+                      }
+                      onClick={() =>
+                        updateSettings({ readingDirection: "rtl" })
+                      }
                       size="sm"
                       className="gap-2"
                     >
@@ -146,7 +175,10 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                 {/* Swipe Navigation */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="swipe-navigation" className="text-sm font-medium">
+                    <Label
+                      htmlFor="swipe-navigation"
+                      className="text-sm font-medium"
+                    >
                       Swipe to Turn Pages
                     </Label>
                     <p className="text-xs text-muted-foreground">
@@ -156,14 +188,19 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                   <Switch
                     id="swipe-navigation"
                     checked={settings.swipeToTurnPages ?? true}
-                    onCheckedChange={(checked) => updateSettings({ swipeToTurnPages: checked })}
+                    onCheckedChange={(checked) =>
+                      updateSettings({ swipeToTurnPages: checked })
+                    }
                   />
                 </div>
 
                 {/* Hide Navigation Arrows */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="hide-nav-arrows" className="text-sm font-medium">
+                    <Label
+                      htmlFor="hide-nav-arrows"
+                      className="text-sm font-medium"
+                    >
                       Hide Navigation Arrows
                     </Label>
                     <p className="text-xs text-muted-foreground">
@@ -173,7 +210,9 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                   <Switch
                     id="hide-nav-arrows"
                     checked={settings.hideNavigationArrows ?? true}
-                    onCheckedChange={(checked) => updateSettings({ hideNavigationArrows: checked })}
+                    onCheckedChange={(checked) =>
+                      updateSettings({ hideNavigationArrows: checked })
+                    }
                   />
                 </div>
               </>
@@ -202,7 +241,9 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                   Dark
                 </Button>
                 <Button
-                  variant={mounted && theme === "system" ? "default" : "outline"}
+                  variant={
+                    mounted && theme === "system" ? "default" : "outline"
+                  }
                   onClick={() => setTheme("system")}
                   size="sm"
                   className="gap-2"
@@ -217,14 +258,18 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium">Brightness</h3>
-                <span className="text-sm text-muted-foreground">{settings.brightness}%</span>
+                <span className="text-sm text-muted-foreground">
+                  {settings.brightness}%
+                </span>
               </div>
               <Slider
                 value={[settings.brightness]}
                 min={30}
                 max={150}
                 step={5}
-                onValueChange={([value]) => updateSettings({ brightness: value })}
+                onValueChange={([value]) =>
+                  updateSettings({ brightness: value })
+                }
               />
             </div>
 
@@ -233,7 +278,9 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
               <h3 className="text-sm font-medium">Fit Mode</h3>
               <div className="grid grid-cols-3 gap-2">
                 <Button
-                  variant={settings.fitMode === "fit-width" ? "default" : "outline"}
+                  variant={
+                    settings.fitMode === "fit-width" ? "default" : "outline"
+                  }
                   onClick={() => updateSettings({ fitMode: "fit-width" })}
                   size="sm"
                   className="gap-2"
@@ -242,7 +289,9 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                   Width
                 </Button>
                 <Button
-                  variant={settings.fitMode === "fit-height" ? "default" : "outline"}
+                  variant={
+                    settings.fitMode === "fit-height" ? "default" : "outline"
+                  }
                   onClick={() => updateSettings({ fitMode: "fit-height" })}
                   size="sm"
                   className="gap-2"
@@ -251,7 +300,9 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                   Height
                 </Button>
                 <Button
-                  variant={settings.fitMode === "original" ? "default" : "outline"}
+                  variant={
+                    settings.fitMode === "original" ? "default" : "outline"
+                  }
                   onClick={() => updateSettings({ fitMode: "original" })}
                   size="sm"
                   className="gap-2"
@@ -264,13 +315,18 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
 
             {/* Page Numbers */}
             <div className="flex items-center justify-between">
-              <Label htmlFor="show-page-numbers" className="text-sm font-medium">
+              <Label
+                htmlFor="show-page-numbers"
+                className="text-sm font-medium"
+              >
                 Show Page Numbers
               </Label>
               <Switch
                 id="show-page-numbers"
                 checked={settings.showPageNumbers ?? false}
-                onCheckedChange={(checked) => updateSettings({ showPageNumbers: checked })}
+                onCheckedChange={(checked) =>
+                  updateSettings({ showPageNumbers: checked })
+                }
               />
             </div>
 
@@ -280,7 +336,11 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                 <h3 className="text-sm font-medium">Menu Position</h3>
                 <div className="grid grid-cols-4 gap-2">
                   <Button
-                    variant={settings.toolbarPosition === "left" ? "default" : "outline"}
+                    variant={
+                      settings.toolbarPosition === "left"
+                        ? "default"
+                        : "outline"
+                    }
                     onClick={() => updateSettings({ toolbarPosition: "left" })}
                     size="sm"
                     className="gap-1"
@@ -289,7 +349,11 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                     Left
                   </Button>
                   <Button
-                    variant={settings.toolbarPosition === "right" ? "default" : "outline"}
+                    variant={
+                      settings.toolbarPosition === "right"
+                        ? "default"
+                        : "outline"
+                    }
                     onClick={() => updateSettings({ toolbarPosition: "right" })}
                     size="sm"
                     className="gap-1"
@@ -298,7 +362,9 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                     Right
                   </Button>
                   <Button
-                    variant={settings.toolbarPosition === "top" ? "default" : "outline"}
+                    variant={
+                      settings.toolbarPosition === "top" ? "default" : "outline"
+                    }
                     onClick={() => updateSettings({ toolbarPosition: "top" })}
                     size="sm"
                     className="gap-1"
@@ -307,8 +373,14 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
                     Top
                   </Button>
                   <Button
-                    variant={settings.toolbarPosition === "bottom" ? "default" : "outline"}
-                    onClick={() => updateSettings({ toolbarPosition: "bottom" })}
+                    variant={
+                      settings.toolbarPosition === "bottom"
+                        ? "default"
+                        : "outline"
+                    }
+                    onClick={() =>
+                      updateSettings({ toolbarPosition: "bottom" })
+                    }
                     size="sm"
                     className="gap-1"
                   >
@@ -322,5 +394,5 @@ export function SettingsPanel({ variant = "icon" }: SettingsPanelProps) {
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

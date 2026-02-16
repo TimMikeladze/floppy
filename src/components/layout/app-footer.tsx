@@ -1,19 +1,24 @@
-"use client"
+"use client";
 
-import { Heart } from "lucide-react"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
-import { useIsPwa } from "@/hooks/use-is-pwa"
-import { SupportDialog } from "./support-dialog"
+import { Heart } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { useIsPwa } from "@/hooks/use-is-pwa";
+import { SupportDialog } from "./support-dialog";
 
 export function AppFooter() {
-  const pathname = usePathname()
-  const [supportOpen, setSupportOpen] = useState(false)
-  const isPwa = useIsPwa()
+  const pathname = usePathname();
+  const [supportOpen, setSupportOpen] = useState(false);
+  const isPwa = useIsPwa();
 
   // Hide footer on reader pages, landing page, about page, or in PWA mode
-  if (pathname?.startsWith('/reader') || pathname === '/' || pathname === '/about' || isPwa) {
-    return null
+  if (
+    pathname?.startsWith("/reader") ||
+    pathname === "/" ||
+    pathname === "/about" ||
+    isPwa
+  ) {
+    return null;
   }
 
   return (
@@ -28,13 +33,16 @@ export function AppFooter() {
               </div>
               <div className="flex flex-col">
                 <span className="font-medium text-foreground">floppy.sh</span>
-                <span className="text-[10px] text-muted-foreground/80">the comic book app.</span>
+                <span className="text-[10px] text-muted-foreground/80">
+                  the comic book app.
+                </span>
               </div>
             </div>
 
             {/* Right side - Icon actions */}
             <div className="flex items-center gap-3">
               <button
+                type="button"
                 onClick={() => setSupportOpen(true)}
                 className="group relative"
                 aria-label="Support"
@@ -48,5 +56,5 @@ export function AppFooter() {
 
       <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
     </>
-  )
+  );
 }

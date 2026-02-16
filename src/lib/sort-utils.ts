@@ -11,5 +11,5 @@
  */
 export const naturalCollator = new Intl.Collator(undefined, {
   numeric: true,
-  sensitivity: 'base'
-})
+  sensitivity: "base",
+});

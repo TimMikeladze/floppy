@@ -1,7 +1,13 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import type { ReadingSettings } from "./types"
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import type { ReadingSettings } from "./types";
 
 const defaultSettings: Omit<ReadingSettings, "theme"> = {
   pageLayout: "single",
@@ -14,50 +20,56 @@ const defaultSettings: Omit<ReadingSettings, "theme"> = {
   toolbarPosition: "right",
   swipeToTurnPages: true,
   hideNavigationArrows: true,
-}
+};
 
-type ReadingSettingsWithoutTheme = Omit<ReadingSettings, "theme">
+type ReadingSettingsWithoutTheme = Omit<ReadingSettings, "theme">;
 
 const ReadingContext = createContext<{
-  settings: ReadingSettingsWithoutTheme
-  updateSettings: (settings: Partial<ReadingSettingsWithoutTheme>) => void
+  settings: ReadingSettingsWithoutTheme;
+  updateSettings: (settings: Partial<ReadingSettingsWithoutTheme>) => void;
 }>({
   settings: defaultSettings,
   updateSettings: () => {},
-})
+});
 
 export function ReadingProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<ReadingSettingsWithoutTheme>(defaultSettings)
+  const [settings, setSettings] =
+    useState<ReadingSettingsWithoutTheme>(defaultSettings);
 
   useEffect(() => {
-    const saved = localStorage.getItem("reading-settings")
+    const saved = localStorage.getItem("reading-settings");
     if (saved) {
       try {
-        const parsed = JSON.parse(saved)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { theme, ...rest } = parsed
-        setSettings({ ...defaultSettings, ...rest })
+        const parsed = JSON.parse(saved);
+        const { theme, ...rest } = parsed;
+        setSettings({ ...defaultSettings, ...rest });
       } catch (error) {
-        console.error("Failed to parse reading settings:", error)
+        console.error("Failed to parse reading settings:", error);
       }
     }
-  }, [])
+  }, []);
 
-  const updateSettings = (newSettings: Partial<ReadingSettingsWithoutTheme>) => {
+  const updateSettings = (
+    newSettings: Partial<ReadingSettingsWithoutTheme>,
+  ) => {
     setSettings((prev) => {
-      const updated = { ...prev, ...newSettings }
-      localStorage.setItem("reading-settings", JSON.stringify(updated))
-      return updated
-    })
-  }
+      const updated = { ...prev, ...newSettings };
+      localStorage.setItem("reading-settings", JSON.stringify(updated));
+      return updated;
+    });
+  };
 
-  return <ReadingContext.Provider value={{ settings, updateSettings }}>{children}</ReadingContext.Provider>
+  return (
+    <ReadingContext.Provider value={{ settings, updateSettings }}>
+      {children}
+    </ReadingContext.Provider>
+  );
 }
 
 export function useReading() {
-  const context = useContext(ReadingContext)
+  const context = useContext(ReadingContext);
   if (!context) {
-    throw new Error("useReading must be used within ReadingProvider")
+    throw new Error("useReading must be used within ReadingProvider");
   }
-  return context
+  return context;
 }

@@ -1,20 +1,27 @@
-"use client"
+"use client";
 
-import { ArrowLeft, MoreVertical, Bookmark, StickyNote, Maximize, Minimize } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import {
+  ArrowLeft,
+  Bookmark,
+  Maximize,
+  Minimize,
+  MoreVertical,
+  StickyNote,
+} from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 interface ReaderToolbarProps {
-  title: string
-  currentPage: number
-  totalPages: number
-  isVisible: boolean
-  onMenuClick: () => void
-  onBookmarkClick: () => void
-  onNoteClick: () => void
-  isBookmarked: boolean
-  isFullscreen?: boolean
-  onFullscreenToggle?: () => void
+  title: string;
+  currentPage: number;
+  totalPages: number;
+  isVisible: boolean;
+  onMenuClick: () => void;
+  onBookmarkClick: () => void;
+  onNoteClick: () => void;
+  isBookmarked: boolean;
+  isFullscreen?: boolean;
+  onFullscreenToggle?: () => void;
 }
 
 export function ReaderToolbar({
@@ -35,7 +42,6 @@ export function ReaderToolbar({
         isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
       }`}
     >
-
       <div className="relative flex items-center gap-1 px-2 py-3 safe-top safe-x">
         <Button
           asChild
@@ -64,7 +70,9 @@ export function ReaderToolbar({
           className={`shrink-0 hover:bg-white/20 ${isBookmarked ? "text-yellow-400" : "text-white"}`}
           onClick={onBookmarkClick}
         >
-          <Bookmark className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`} />
+          <Bookmark
+            className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`}
+          />
           <span className="sr-only">Bookmark page</span>
         </Button>
 
@@ -90,7 +98,9 @@ export function ReaderToolbar({
             ) : (
               <Maximize className="h-5 w-5" />
             )}
-            <span className="sr-only">{isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}</span>
+            <span className="sr-only">
+              {isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            </span>
           </Button>
         )}
 
@@ -105,5 +115,5 @@ export function ReaderToolbar({
         </Button>
       </div>
     </div>
-  )
+  );
 }

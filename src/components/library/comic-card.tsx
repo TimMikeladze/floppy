@@ -1,131 +1,144 @@
-"use client"
+"use client";
 
-import { formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow } from "date-fns";
 import {
-  MoreHorizontal,
-  Trash2,
-  FolderPlus,
-  Upload,
   BookOpen,
-  Globe,
-  Pencil,
-  CheckCircle2,
-  RotateCcw,
-  ExternalLink,
-  ChevronRight,
   Check,
-  Plus,
-  Image,
-  Download,
+  CheckCircle2,
+  ChevronRight,
   CloudOff,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
+  Download,
+  ExternalLink,
+  FolderPlus,
+  Globe,
+  Image,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import type { Comic } from "@/lib/types"
-import Link from "next/link"
-import { AddToListDialog } from "./add-to-list-dialog"
-import { useState, useEffect, useCallback } from "react"
-import { AttachFileDialog } from "./attach-file-dialog"
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import { EditComicDialog } from "./edit-comic-dialog"
-import { CoverManager, MissingCoverIndicator } from "./cover-manager"
-import { loadRemoteImage, revokeRemoteImage } from "@/lib/remote-loader"
-import { saveComic, getOfflineStatus, saveComicForOffline, removeOfflineCache, type OfflineStatus } from "@/lib/storage"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-import { useConfirmDelete } from "@/lib/use-confirm-delete"
+} from "@/components/ui/sheet";
+import { loadRemoteImage, revokeRemoteImage } from "@/lib/remote-loader";
+import {
+  getOfflineStatus,
+  type OfflineStatus,
+  removeOfflineCache,
+  saveComic,
+  saveComicForOffline,
+} from "@/lib/storage";
+import type { Comic } from "@/lib/types";
+import { useConfirmDelete } from "@/lib/use-confirm-delete";
+import { AddToListDialog } from "./add-to-list-dialog";
+import { AttachFileDialog } from "./attach-file-dialog";
+import { CoverManager, MissingCoverIndicator } from "./cover-manager";
+import { EditComicDialog } from "./edit-comic-dialog";
 
 interface ComicCardProps {
-  comic: Comic
-  onDelete: (id: string) => void
-  onUpdate?: () => void
-  onSelect?: (comic: Comic) => void
+  comic: Comic;
+  onDelete: (id: string) => void;
+  onUpdate?: () => void;
+  onSelect?: (comic: Comic) => void;
 }
 
 function ProgressDots({ current, total }: { current: number; total: number }) {
-  const progress = total > 0 ? current / total : 0
-  const dots = 5
+  const progress = total > 0 ? current / total : 0;
+  const dots = 5;
 
   return (
     <div className="progress-dots" title={`${Math.round(progress * 100)}%`}>
       {Array.from({ length: dots }).map((_, i) => {
-        const dotThreshold = (i + 1) / dots
-        const prevThreshold = i / dots
-        const isFilled = progress >= dotThreshold
-        const isPartial = progress > prevThreshold && progress < dotThreshold
+        const dotThreshold = (i + 1) / dots;
+        const prevThreshold = i / dots;
+        const isFilled = progress >= dotThreshold;
+        const isPartial = progress > prevThreshold && progress < dotThreshold;
 
         return (
           <span
             key={i}
             className={`progress-dot ${isFilled ? "filled" : ""} ${isPartial ? "partial" : ""}`}
-            style={isPartial ? { "--fill-percent": `${((progress - prevThreshold) / (1 / dots)) * 100}%` } as React.CSSProperties : undefined}
+            style={
+              isPartial
+                ? ({
+                    "--fill-percent": `${((progress - prevThreshold) / (1 / dots)) * 100}%`,
+                  } as React.CSSProperties)
+                : undefined
+            }
           />
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 interface QuickActionsProps {
-  comic: Comic
-  onUpdate: () => void
-  onOpenAddToList: () => void
+  comic: Comic;
+  onUpdate: () => void;
+  onOpenAddToList: () => void;
 }
 
 function QuickActions({ comic, onUpdate, onOpenAddToList }: QuickActionsProps) {
-  const router = useRouter()
-  const isComplete = comic.totalPages && comic.currentPage >= comic.totalPages
-  const canRead = comic.hasFile || comic.sourceType === 'remote'
+  const router = useRouter();
+  const isComplete = comic.totalPages && comic.currentPage >= comic.totalPages;
+  const canRead = comic.hasFile || comic.sourceType === "remote";
 
   const handleMarkAsRead = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     if (!comic.totalPages) {
-      toast.error("Cannot mark as read: page count unknown")
-      return
+      toast.error("Cannot mark as read: page count unknown");
+      return;
     }
     try {
       await saveComic({
         ...comic,
         currentPage: comic.totalPages,
         lastRead: new Date(),
-      })
-      toast.success("Marked as read")
-      onUpdate()
+      });
+      toast.success("Marked as read");
+      onUpdate();
     } catch (error) {
-      console.error("Failed to mark as read:", error)
-      toast.error("Failed to mark as read")
+      console.error("Failed to mark as read:", error);
+      toast.error("Failed to mark as read");
     }
-  }
+  };
 
   const handleAddToList = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    onOpenAddToList()
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    onOpenAddToList();
+  };
 
   const handleContinue = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    router.push(`/reader/${comic.id}`)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/reader/${comic.id}`);
+  };
 
   return (
     <div
       className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0 hidden [@media(hover:hover)]:flex"
       style={{
-        background: 'linear-gradient(to top, oklch(0 0 0 / 0.7) 0%, transparent 100%)',
+        background:
+          "linear-gradient(to top, oklch(0 0 0 / 0.7) 0%, transparent 100%)",
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -166,47 +179,56 @@ function QuickActions({ comic, onUpdate, onOpenAddToList }: QuickActionsProps) {
         </Button>
       )}
     </div>
-  )
+  );
 }
 
 interface CardContextMenuProps {
-  comic: Comic
-  onDelete: () => void
-  onAttach: () => void
-  onEdit: () => void
-  onUpdate: () => void
-  onManageCover: () => void
-  offlineStatus: OfflineStatus | null
-  onOfflineStatusChange: () => void
+  comic: Comic;
+  onDelete: () => void;
+  onAttach: () => void;
+  onEdit: () => void;
+  onUpdate: () => void;
+  onManageCover: () => void;
+  offlineStatus: OfflineStatus | null;
+  onOfflineStatusChange: () => void;
 }
 
-function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManageCover, offlineStatus, onOfflineStatusChange }: CardContextMenuProps) {
-  const router = useRouter()
-  const [saving, setSaving] = useState(false)
-  const handleDelete = useConfirmDelete(onDelete)
-  const isRemote = comic.sourceType === 'remote'
-  const canRead = comic.hasFile || isRemote
-  const hasProgress = comic.currentPage > 0
-  const isComplete = comic.totalPages && comic.currentPage >= comic.totalPages
+function CardContextMenu({
+  comic,
+  onDelete,
+  onAttach,
+  onEdit,
+  onUpdate,
+  onManageCover,
+  offlineStatus,
+  onOfflineStatusChange,
+}: CardContextMenuProps) {
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const handleDelete = useConfirmDelete(onDelete);
+  const isRemote = comic.sourceType === "remote";
+  const canRead = comic.hasFile || isRemote;
+  const hasProgress = comic.currentPage > 0;
+  const isComplete = comic.totalPages && comic.currentPage >= comic.totalPages;
 
   const handleMarkAsRead = async () => {
     if (!comic.totalPages) {
-      toast.error("Cannot mark as read: page count unknown")
-      return
+      toast.error("Cannot mark as read: page count unknown");
+      return;
     }
     try {
       await saveComic({
         ...comic,
         currentPage: comic.totalPages,
         lastRead: new Date(),
-      })
-      toast.success("Marked as read")
-      onUpdate()
+      });
+      toast.success("Marked as read");
+      onUpdate();
     } catch (error) {
-      console.error("Failed to mark as read:", error)
-      toast.error("Failed to mark as read")
+      console.error("Failed to mark as read:", error);
+      toast.error("Failed to mark as read");
     }
-  }
+  };
 
   const handleMarkAsUnread = async () => {
     try {
@@ -214,66 +236,66 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManage
         ...comic,
         currentPage: 0,
         lastRead: undefined,
-      })
-      toast.success("Marked as unread")
-      onUpdate()
+      });
+      toast.success("Marked as unread");
+      onUpdate();
     } catch (error) {
-      console.error("Failed to mark as unread:", error)
-      toast.error("Failed to mark as unread")
+      console.error("Failed to mark as unread:", error);
+      toast.error("Failed to mark as unread");
     }
-  }
+  };
 
   const handleSaveForOffline = async () => {
-    if (saving) return
-    setSaving(true)
-    toast.info("Saving for offline...")
+    if (saving) return;
+    setSaving(true);
+    toast.info("Saving for offline...");
 
     try {
       const success = await saveComicForOffline(comic.id, (prog) => {
         if (prog.status === "complete") {
-          toast.success("Saved for offline")
-          onOfflineStatusChange()
-          setSaving(false)
+          toast.success("Saved for offline");
+          onOfflineStatusChange();
+          setSaving(false);
         } else if (prog.status === "error") {
-          toast.error(prog.error || "Failed to save for offline")
-          setSaving(false)
+          toast.error(prog.error || "Failed to save for offline");
+          setSaving(false);
         }
-      })
+      });
 
       if (!success) {
-        setSaving(false)
+        setSaving(false);
       }
     } catch (error) {
-      console.error("Failed to save for offline:", error)
-      toast.error("Failed to save for offline")
-      setSaving(false)
+      console.error("Failed to save for offline:", error);
+      toast.error("Failed to save for offline");
+      setSaving(false);
     }
-  }
+  };
 
   const handleRemoveOffline = async () => {
     try {
-      await removeOfflineCache(comic.id)
-      toast.success("Offline cache removed")
-      onOfflineStatusChange()
+      await removeOfflineCache(comic.id);
+      toast.success("Offline cache removed");
+      onOfflineStatusChange();
     } catch (error) {
-      console.error("Failed to remove offline cache:", error)
-      toast.error("Failed to remove offline cache")
+      console.error("Failed to remove offline cache:", error);
+      toast.error("Failed to remove offline cache");
     }
-  }
+  };
 
-  const handleResetProgress = async () => {
+  const _handleResetProgress = async () => {
     try {
       await saveComic({
         ...comic,
         currentPage: 0,
-      })
-      toast.success("Progress reset")
-      onUpdate()
+      });
+      toast.success("Progress reset");
+      onUpdate();
     } catch (error) {
-      console.error("Failed to reset progress:", error)
-      toast.error("Failed to reset progress")
+      console.error("Failed to reset progress:", error);
+      toast.error("Failed to reset progress");
     }
-  }
+  };
 
   return (
     <div
@@ -288,10 +310,11 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManage
             size="icon"
             className="h-8 w-8 rounded-full shadow-lg border-0"
             style={{
-              background: 'var(--glass-bg)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              boxShadow: '0 2px 8px var(--glass-shadow), 0 0 0 1px var(--glass-border)'
+              background: "var(--glass-bg)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              boxShadow:
+                "0 2px 8px var(--glass-shadow), 0 0 0 1px var(--glass-border)",
             }}
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -302,7 +325,9 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManage
           {/* Open in reader */}
           {canRead && (
             <>
-              <DropdownMenuItem onClick={() => router.push(`/reader/${comic.id}`)}>
+              <DropdownMenuItem
+                onClick={() => router.push(`/reader/${comic.id}`)}
+              >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Open
               </DropdownMenuItem>
@@ -369,7 +394,10 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManage
                   Remove Offline Cache
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem onClick={handleSaveForOffline} disabled={saving}>
+                <DropdownMenuItem
+                  onClick={handleSaveForOffline}
+                  disabled={saving}
+                >
                   <Download className="mr-2 h-4 w-4" />
                   {saving ? "Saving..." : "Save for Offline"}
                 </DropdownMenuItem>
@@ -381,8 +409,8 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManage
           {/* Delete */}
           <DropdownMenuItem
             onClick={(e) => {
-              e.preventDefault()
-              handleDelete()
+              e.preventDefault();
+              handleDelete();
             }}
             className="text-destructive focus:text-destructive"
           >
@@ -392,20 +420,20 @@ function CardContextMenu({ comic, onDelete, onAttach, onEdit, onUpdate, onManage
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-  )
+  );
 }
 
 interface MobileActionsSheetProps {
-  comic: Comic
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onDelete: () => void
-  onEdit: () => void
-  onManageCover: () => void
-  onAddToList: () => void
-  onUpdate: () => void
-  offlineStatus: OfflineStatus | null
-  onOfflineStatusChange: () => void
+  comic: Comic;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDelete: () => void;
+  onEdit: () => void;
+  onManageCover: () => void;
+  onAddToList: () => void;
+  onUpdate: () => void;
+  offlineStatus: OfflineStatus | null;
+  onOfflineStatusChange: () => void;
 }
 
 function MobileActionsSheet({
@@ -420,81 +448,81 @@ function MobileActionsSheet({
   offlineStatus,
   onOfflineStatusChange,
 }: MobileActionsSheetProps) {
-  const router = useRouter()
-  const [saving, setSaving] = useState(false)
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
   const handleDelete = useConfirmDelete(() => {
-    onDelete()
-    onOpenChange(false)
-  })
-  const isRemote = comic.sourceType === 'remote'
-  const canRead = comic.hasFile || isRemote
-  const hasProgress = comic.currentPage > 0
-  const isComplete = comic.totalPages && comic.currentPage >= comic.totalPages
+    onDelete();
+    onOpenChange(false);
+  });
+  const isRemote = comic.sourceType === "remote";
+  const canRead = comic.hasFile || isRemote;
+  const hasProgress = comic.currentPage > 0;
+  const isComplete = comic.totalPages && comic.currentPage >= comic.totalPages;
 
   const handleAction = (action: () => void) => {
-    action()
-    onOpenChange(false)
-  }
+    action();
+    onOpenChange(false);
+  };
 
   const handleSaveForOffline = async () => {
-    if (saving) return
-    setSaving(true)
-    toast.info("Saving for offline...")
+    if (saving) return;
+    setSaving(true);
+    toast.info("Saving for offline...");
 
     try {
       const success = await saveComicForOffline(comic.id, (prog) => {
         if (prog.status === "complete") {
-          toast.success("Saved for offline")
-          onOfflineStatusChange()
-          setSaving(false)
-          onOpenChange(false)
+          toast.success("Saved for offline");
+          onOfflineStatusChange();
+          setSaving(false);
+          onOpenChange(false);
         } else if (prog.status === "error") {
-          toast.error(prog.error || "Failed to save for offline")
-          setSaving(false)
+          toast.error(prog.error || "Failed to save for offline");
+          setSaving(false);
         }
-      })
+      });
 
       if (!success) {
-        setSaving(false)
+        setSaving(false);
       }
     } catch (error) {
-      console.error("Failed to save for offline:", error)
-      toast.error("Failed to save for offline")
-      setSaving(false)
+      console.error("Failed to save for offline:", error);
+      toast.error("Failed to save for offline");
+      setSaving(false);
     }
-  }
+  };
 
   const handleRemoveOffline = async () => {
     try {
-      await removeOfflineCache(comic.id)
-      toast.success("Offline cache removed")
-      onOfflineStatusChange()
-      onOpenChange(false)
+      await removeOfflineCache(comic.id);
+      toast.success("Offline cache removed");
+      onOfflineStatusChange();
+      onOpenChange(false);
     } catch (error) {
-      console.error("Failed to remove offline cache:", error)
-      toast.error("Failed to remove offline cache")
+      console.error("Failed to remove offline cache:", error);
+      toast.error("Failed to remove offline cache");
     }
-  }
+  };
 
   const handleMarkAsRead = async () => {
     if (!comic.totalPages) {
-      toast.error("Cannot mark as read: page count unknown")
-      return
+      toast.error("Cannot mark as read: page count unknown");
+      return;
     }
     try {
       await saveComic({
         ...comic,
         currentPage: comic.totalPages,
         lastRead: new Date(),
-      })
-      toast.success("Marked as read")
-      onUpdate()
-      onOpenChange(false)
+      });
+      toast.success("Marked as read");
+      onUpdate();
+      onOpenChange(false);
     } catch (error) {
-      console.error("Failed to mark as read:", error)
-      toast.error("Failed to mark as read")
+      console.error("Failed to mark as read:", error);
+      toast.error("Failed to mark as read");
     }
-  }
+  };
 
   const handleMarkAsUnread = async () => {
     try {
@@ -502,28 +530,32 @@ function MobileActionsSheet({
         ...comic,
         currentPage: 0,
         lastRead: undefined,
-      })
-      toast.success("Marked as unread")
-      onUpdate()
-      onOpenChange(false)
+      });
+      toast.success("Marked as unread");
+      onUpdate();
+      onOpenChange(false);
     } catch (error) {
-      console.error("Failed to mark as unread:", error)
-      toast.error("Failed to mark as unread")
+      console.error("Failed to mark as unread:", error);
+      toast.error("Failed to mark as unread");
     }
-  }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-2xl">
         <SheetHeader className="pb-2">
-          <SheetTitle className="text-left line-clamp-1">{comic.title}</SheetTitle>
+          <SheetTitle className="text-left line-clamp-1">
+            {comic.title}
+          </SheetTitle>
         </SheetHeader>
         <div className="grid gap-1 pb-4">
           {canRead && (
             <Button
               variant="ghost"
               className="w-full justify-start h-12 text-base"
-              onClick={() => handleAction(() => router.push(`/reader/${comic.id}`))}
+              onClick={() =>
+                handleAction(() => router.push(`/reader/${comic.id}`))
+              }
             >
               <ChevronRight className="mr-3 h-5 w-5" />
               Open
@@ -580,8 +612,8 @@ function MobileActionsSheet({
           </Button>
 
           {/* Offline actions */}
-          {canRead && (
-            offlineStatus?.isAvailableOffline ? (
+          {canRead &&
+            (offlineStatus?.isAvailableOffline ? (
               <Button
                 variant="ghost"
                 className="w-full justify-start h-12 text-base"
@@ -600,8 +632,7 @@ function MobileActionsSheet({
                 <Download className="mr-3 h-5 w-5" />
                 {saving ? "Saving..." : "Save for Offline"}
               </Button>
-            )
-          )}
+            ))}
 
           <Button
             variant="ghost"
@@ -614,73 +645,80 @@ function MobileActionsSheet({
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }
 
-export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProps) {
-  const [attachDialogOpen, setAttachDialogOpen] = useState(false)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [addToListDialogOpen, setAddToListDialogOpen] = useState(false)
-  const [coverManagerOpen, setCoverManagerOpen] = useState(false)
-  const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
-  const [remoteCoverUrl, setRemoteCoverUrl] = useState<string | null>(null)
-  const [coverLoading, setCoverLoading] = useState(false)
-  const [offlineStatus, setOfflineStatus] = useState<OfflineStatus | null>(null)
-  const hasProgress = comic.currentPage > 0 && comic.totalPages
-  const isRemote = comic.sourceType === 'remote'
-  const hasCover = !!comic.coverImage || !!remoteCoverUrl
+export function ComicCard({
+  comic,
+  onDelete,
+  onUpdate,
+  onSelect,
+}: ComicCardProps) {
+  const [attachDialogOpen, setAttachDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addToListDialogOpen, setAddToListDialogOpen] = useState(false);
+  const [coverManagerOpen, setCoverManagerOpen] = useState(false);
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
+  const [remoteCoverUrl, setRemoteCoverUrl] = useState<string | null>(null);
+  const [coverLoading, setCoverLoading] = useState(false);
+  const [offlineStatus, setOfflineStatus] = useState<OfflineStatus | null>(
+    null,
+  );
+  const hasProgress = comic.currentPage > 0 && comic.totalPages;
+  const isRemote = comic.sourceType === "remote";
+  const hasCover = !!comic.coverImage || !!remoteCoverUrl;
 
   // Check offline status
   const refreshOfflineStatus = useCallback(async () => {
     try {
-      const status = await getOfflineStatus(comic.id)
-      setOfflineStatus(status)
+      const status = await getOfflineStatus(comic.id);
+      setOfflineStatus(status);
     } catch (error) {
-      console.error("[comic-card] Failed to get offline status:", error)
+      console.error("[comic-card] Failed to get offline status:", error);
     }
-  }, [comic.id])
+  }, [comic.id]);
 
   useEffect(() => {
-    refreshOfflineStatus()
-  }, [refreshOfflineStatus])
+    refreshOfflineStatus();
+  }, [refreshOfflineStatus]);
 
   // Load remote cover on demand
   useEffect(() => {
-    if (!isRemote || !comic.coverUrl || comic.coverImage) return
+    if (!isRemote || !comic.coverUrl || comic.coverImage) return;
 
-    let cancelled = false
-    setCoverLoading(true)
+    let cancelled = false;
+    setCoverLoading(true);
 
     loadRemoteImage(comic.coverUrl)
-      .then(url => {
+      .then((url) => {
         if (!cancelled) {
-          setRemoteCoverUrl(url)
-          setCoverLoading(false)
+          setRemoteCoverUrl(url);
+          setCoverLoading(false);
         }
       })
-      .catch(err => {
-        console.error('[comic-card] Failed to load remote cover:', err)
+      .catch((err) => {
+        console.error("[comic-card] Failed to load remote cover:", err);
         if (!cancelled) {
-          setCoverLoading(false)
+          setCoverLoading(false);
         }
-      })
+      });
 
     return () => {
-      cancelled = true
+      cancelled = true;
       if (remoteCoverUrl) {
-        revokeRemoteImage(comic.coverUrl!)
+        revokeRemoteImage(comic.coverUrl!);
       }
-    }
-  }, [isRemote, comic.coverUrl, comic.coverImage])
+    };
+  }, [isRemote, comic.coverUrl, comic.coverImage, remoteCoverUrl]);
 
   const handleCardClick = () => {
     if (onSelect) {
-      onSelect(comic)
+      onSelect(comic);
     }
-  }
+  };
 
   // Determine the cover image to display
-  const displayCover = comic.coverImage || remoteCoverUrl || "/placeholder.svg"
+  const displayCover = comic.coverImage || remoteCoverUrl || "/placeholder.svg";
 
   const CardInner = () => (
     <>
@@ -705,7 +743,6 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
             <Globe className="h-3 w-3 text-white" />
           </div>
         )}
-
 
         {/* Missing cover indicator */}
         {!hasCover && !coverLoading && !isRemote && (
@@ -746,7 +783,10 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
         {/* Progress and time */}
         <div className="flex items-center justify-between gap-2 pt-0.5">
           {hasProgress ? (
-            <ProgressDots current={comic.currentPage} total={comic.totalPages!} />
+            <ProgressDots
+              current={comic.currentPage}
+              total={comic.totalPages!}
+            />
           ) : (
             <span className="text-xs text-muted-foreground">
               {comic.totalPages ? `${comic.totalPages} pages` : ""}
@@ -755,13 +795,15 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
 
           {comic.lastRead && (
             <span className="text-[10px] text-muted-foreground truncate">
-              {formatDistanceToNow(new Date(comic.lastRead), { addSuffix: true })}
+              {formatDistanceToNow(new Date(comic.lastRead), {
+                addSuffix: true,
+              })}
             </span>
           )}
         </div>
       </div>
     </>
-  )
+  );
 
   return (
     <>
@@ -790,16 +832,17 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
 
         {/* Clickable area - local comics with files OR remote comics can be read */}
         {/* On desktop: clicking navigates to reader. On mobile: tap target above handles it */}
-        {(comic.hasFile || isRemote) ? (
+        {comic.hasFile || isRemote ? (
           onSelect ? (
+            // biome-ignore lint/a11y/useSemanticElements: interactive card with custom click behavior
             <div
               role="button"
               tabIndex={0}
               onClick={handleCardClick}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault()
-                  handleCardClick()
+                  e.preventDefault();
+                  handleCardClick();
                 }
               }}
               className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl [@media(hover:none)]:pointer-events-none"
@@ -826,7 +869,7 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
         open={attachDialogOpen}
         onOpenChange={setAttachDialogOpen}
         onFileAttached={() => {
-          onUpdate?.()
+          onUpdate?.();
         }}
       />
 
@@ -835,7 +878,7 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         onSave={() => {
-          onUpdate?.()
+          onUpdate?.();
         }}
       />
 
@@ -866,5 +909,5 @@ export function ComicCard({ comic, onDelete, onUpdate, onSelect }: ComicCardProp
         onOfflineStatusChange={refreshOfflineStatus}
       />
     </>
-  )
+  );
 }

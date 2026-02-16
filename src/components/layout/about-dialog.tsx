@@ -1,11 +1,16 @@
-"use client"
+"use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Github } from "lucide-react"
+import { Github } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface AboutDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
@@ -25,7 +30,9 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
           {/* Branding */}
           <div className="text-center">
             <h2 className="text-xl font-semibold">floppy.sh</h2>
-            <p className="text-sm text-muted-foreground">the open-source comic book app</p>
+            <p className="text-sm text-muted-foreground">
+              the open-source comic book app
+            </p>
           </div>
 
           {/* Version */}
@@ -44,5 +51,5 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

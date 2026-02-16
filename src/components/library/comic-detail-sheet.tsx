@@ -1,28 +1,41 @@
-"use client"
+"use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import type { Comic } from "@/lib/types"
-import { formatDistanceToNow } from "date-fns"
-import { BookOpen, Upload, Trash2, Play, Clock, FileText, FolderPlus } from "lucide-react"
-import Link from "next/link"
-import { AddToListDialog } from "./add-to-list-dialog"
-import { useState } from "react"
-import { AttachFileDialog } from "./attach-file-dialog"
+import { formatDistanceToNow } from "date-fns";
+import {
+  BookOpen,
+  Clock,
+  FileText,
+  FolderPlus,
+  Play,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import type { Comic } from "@/lib/types";
+import { AddToListDialog } from "./add-to-list-dialog";
+import { AttachFileDialog } from "./attach-file-dialog";
 
 interface ComicDetailSheetProps {
-  comic: Comic | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onDelete: (id: string) => void
-  onUpdate?: () => void
+  comic: Comic | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDelete: (id: string) => void;
+  onUpdate?: () => void;
 }
 
 function ProgressBar({ current, total }: { current: number; total: number }) {
-  const progress = total > 0 ? (current / total) * 100 : 0
+  const progress = total > 0 ? (current / total) * 100 : 0;
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-sm">
@@ -39,22 +52,28 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
         Page {current} of {total}
       </p>
     </div>
-  )
+  );
 }
 
-export function ComicDetailSheet({ comic, open, onOpenChange, onDelete, onUpdate }: ComicDetailSheetProps) {
-  const [attachDialogOpen, setAttachDialogOpen] = useState(false)
+export function ComicDetailSheet({
+  comic,
+  open,
+  onOpenChange,
+  onDelete,
+  onUpdate,
+}: ComicDetailSheetProps) {
+  const [attachDialogOpen, setAttachDialogOpen] = useState(false);
 
-  if (!comic) return null
+  if (!comic) return null;
 
-  const hasProgress = comic.currentPage > 0 && comic.totalPages
+  const hasProgress = comic.currentPage > 0 && comic.totalPages;
 
   const handleDelete = () => {
     if (confirm("Are you sure you want to delete this comic?")) {
-      onDelete(comic.id)
-      onOpenChange(false)
+      onDelete(comic.id);
+      onOpenChange(false);
     }
-  }
+  };
 
   return (
     <>
@@ -99,7 +118,10 @@ export function ComicDetailSheet({ comic, open, onOpenChange, onDelete, onUpdate
                         {comic.totalPages} pages
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="gap-1 text-muted-foreground">
+                      <Badge
+                        variant="outline"
+                        className="gap-1 text-muted-foreground"
+                      >
                         <BookOpen className="w-3 h-3" />
                         No file
                       </Badge>
@@ -109,7 +131,9 @@ export function ComicDetailSheet({ comic, open, onOpenChange, onDelete, onUpdate
                   {comic.lastRead && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                       <Clock className="w-3 h-3" />
-                      {formatDistanceToNow(new Date(comic.lastRead), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(comic.lastRead), {
+                        addSuffix: true,
+                      })}
                     </p>
                   )}
                 </div>
@@ -118,7 +142,10 @@ export function ComicDetailSheet({ comic, open, onOpenChange, onDelete, onUpdate
               {/* Progress */}
               {hasProgress && (
                 <>
-                  <ProgressBar current={comic.currentPage} total={comic.totalPages!} />
+                  <ProgressBar
+                    current={comic.currentPage}
+                    total={comic.totalPages!}
+                  />
                   <Separator className="my-6" />
                 </>
               )}
@@ -185,21 +212,24 @@ export function ComicDetailSheet({ comic, open, onOpenChange, onDelete, onUpdate
                       )}
                       {comic.releaseDate && (
                         <div className="flex justify-between">
-                          <dt className="text-muted-foreground">Release Date</dt>
+                          <dt className="text-muted-foreground">
+                            Release Date
+                          </dt>
                           <dd>{comic.releaseDate}</dd>
                         </div>
                       )}
                       {comic.fileSize && (
                         <div className="flex justify-between">
                           <dt className="text-muted-foreground">File Size</dt>
-                          <dd>{(comic.fileSize / 1024 / 1024).toFixed(1)} MB</dd>
+                          <dd>
+                            {(comic.fileSize / 1024 / 1024).toFixed(1)} MB
+                          </dd>
                         </div>
                       )}
                     </dl>
                   </div>
                 </>
               )}
-
             </div>
           </ScrollArea>
         </DialogContent>
@@ -210,9 +240,9 @@ export function ComicDetailSheet({ comic, open, onOpenChange, onDelete, onUpdate
         open={attachDialogOpen}
         onOpenChange={setAttachDialogOpen}
         onFileAttached={() => {
-          onUpdate?.()
+          onUpdate?.();
         }}
       />
     </>
-  )
+  );
 }

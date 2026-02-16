@@ -1,45 +1,60 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { StickyNote, Trash2, Plus, Edit2 } from "lucide-react"
-import type { Note } from "@/lib/types"
-import { getNotes, saveNote, deleteNote } from "@/lib/storage"
-import { formatDistanceToNow } from "date-fns"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
+import { formatDistanceToNow } from "date-fns";
+import { Edit2, Plus, StickyNote, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { deleteNote, getNotes, saveNote } from "@/lib/storage";
+import type { Note } from "@/lib/types";
 
 interface NotesPanelProps {
-  comicId: string
-  pages: string[]
-  currentPage: number
-  onPageSelect: (page: number) => void
-  variant?: "icon" | "menu"
+  comicId: string;
+  pages: string[];
+  currentPage: number;
+  onPageSelect: (page: number) => void;
+  variant?: "icon" | "menu";
 }
 
-export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant = "icon" }: NotesPanelProps) {
-  const [open, setOpen] = useState(false)
-  const [notes, setNotes] = useState<Note[]>([])
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editContent, setEditContent] = useState("")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showCurrentPageOnly, setShowCurrentPageOnly] = useState(false)
+export function NotesPanel({
+  comicId,
+  pages,
+  currentPage,
+  onPageSelect,
+  variant = "icon",
+}: NotesPanelProps) {
+  const [open, setOpen] = useState(false);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showCurrentPageOnly, setShowCurrentPageOnly] = useState(false);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loadNotes is stable
   useEffect(() => {
     if (open) {
-      loadNotes()
+      loadNotes();
     }
-  }, [open, comicId])
+  }, [open]);
 
   async function loadNotes() {
     try {
-      const loaded = await getNotes(comicId)
-      setNotes(loaded.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()))
+      const loaded = await getNotes(comicId);
+      setNotes(
+        loaded.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+      );
     } catch (error) {
-      console.error("[v0] Error loading notes:", error)
+      console.error("[v0] Error loading notes:", error);
     }
   }
 
@@ -50,7 +65,7 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
           ...note,
           content: editContent,
           updatedAt: new Date(),
-        })
+        });
       } else {
         const newNote: Note = {
           id: crypto.randomUUID(),
@@ -60,48 +75,51 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
           createdAt: new Date(),
           updatedAt: new Date(),
           color: "#e85d4d",
-        }
-        await saveNote(newNote)
+        };
+        await saveNote(newNote);
       }
 
-      setEditingId(null)
-      setEditContent("")
-      await loadNotes()
+      setEditingId(null);
+      setEditContent("");
+      await loadNotes();
     } catch (error) {
-      console.error("[v0] Error saving note:", error)
+      console.error("[v0] Error saving note:", error);
     }
   }
 
   async function handleDelete(id: string) {
     try {
-      await deleteNote(id)
-      await loadNotes()
+      await deleteNote(id);
+      await loadNotes();
     } catch (error) {
-      console.error("[v0] Error deleting note:", error)
+      console.error("[v0] Error deleting note:", error);
     }
   }
 
   const filteredNotes = notes
     .filter((n) => !showCurrentPageOnly || n.pageNumber === currentPage)
-    .filter((n) => n.content.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((n) => n.content.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const trigger = variant === "menu" ? (
-    <Button variant="ghost" size="sm" className="flex-col gap-1 h-auto py-2 px-3">
-      <StickyNote className="h-5 w-5" />
-      <span className="text-xs">Notes</span>
-    </Button>
-  ) : (
-    <Button variant="ghost" size="icon">
-      <StickyNote className="h-5 w-5" />
-      <span className="sr-only">View notes</span>
-    </Button>
-  )
+  const trigger =
+    variant === "menu" ? (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="flex-col gap-1 h-auto py-2 px-3"
+      >
+        <StickyNote className="h-5 w-5" />
+        <span className="text-xs">Notes</span>
+      </Button>
+    ) : (
+      <Button variant="ghost" size="icon">
+        <StickyNote className="h-5 w-5" />
+        <span className="sr-only">View notes</span>
+      </Button>
+    );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Notes</DialogTitle>
@@ -110,8 +128,8 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
         <div className="mt-4 space-y-3">
           <Button
             onClick={() => {
-              setEditingId("new")
-              setEditContent("")
+              setEditingId("new");
+              setEditContent("");
             }}
             className="w-full gap-2"
             size="sm"
@@ -139,7 +157,9 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
 
         {editingId === "new" && (
           <div className="mt-4 rounded-lg border border-border bg-card p-4">
-            <div className="mb-2 text-sm font-medium text-foreground">New Note - Page {currentPage + 1}</div>
+            <div className="mb-2 text-sm font-medium text-foreground">
+              New Note - Page {currentPage + 1}
+            </div>
             <Textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
@@ -155,8 +175,8 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  setEditingId(null)
-                  setEditContent("")
+                  setEditingId(null);
+                  setEditContent("");
                 }}
               >
                 Cancel
@@ -171,7 +191,9 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
               <div className="rounded-full bg-muted p-4">
                 <StickyNote className="h-8 w-8 text-muted-foreground" />
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">{searchQuery ? "No matching notes" : "No notes yet"}</p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                {searchQuery ? "No matching notes" : "No notes yet"}
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -179,7 +201,10 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
                 <div
                   key={note.id}
                   className="group relative overflow-hidden rounded-lg border border-border bg-card transition-all hover:shadow-md"
-                  style={{ borderLeftWidth: "4px", borderLeftColor: note.color || "#e85d4d" }}
+                  style={{
+                    borderLeftWidth: "4px",
+                    borderLeftColor: note.color || "#e85d4d",
+                  }}
                 >
                   {editingId === note.id ? (
                     <div className="p-4 space-y-3">
@@ -197,8 +222,8 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            setEditingId(null)
-                            setEditContent("")
+                            setEditingId(null);
+                            setEditContent("");
                           }}
                         >
                           Cancel
@@ -207,9 +232,10 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
                     </div>
                   ) : (
                     <button
+                      type="button"
                       onClick={() => {
-                        onPageSelect(note.pageNumber)
-                        setOpen(false)
+                        onPageSelect(note.pageNumber);
+                        setOpen(false);
                       }}
                       className="flex w-full items-start gap-3 p-3 text-left"
                     >
@@ -228,10 +254,16 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground">Page {note.pageNumber + 1}</p>
-                        <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground line-clamp-3">{note.content}</p>
+                        <p className="font-medium text-foreground">
+                          Page {note.pageNumber + 1}
+                        </p>
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground line-clamp-3">
+                          {note.content}
+                        </p>
                         <p className="mt-1.5 text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(note.updatedAt), {
+                            addSuffix: true,
+                          })}
                         </p>
                       </div>
                     </button>
@@ -244,9 +276,9 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
                         size="icon"
                         className="h-8 w-8"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          setEditingId(note.id)
-                          setEditContent(note.content)
+                          e.stopPropagation();
+                          setEditingId(note.id);
+                          setEditContent(note.content);
                         }}
                       >
                         <Edit2 className="h-4 w-4" />
@@ -257,8 +289,8 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
                         size="icon"
                         className="h-8 w-8"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          handleDelete(note.id)
+                          e.stopPropagation();
+                          handleDelete(note.id);
                         }}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -273,5 +305,5 @@ export function NotesPanel({ comicId, pages, currentPage, onPageSelect, variant 
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

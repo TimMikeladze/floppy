@@ -1,23 +1,24 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Trash2 } from "lucide-react"
-import { Button, buttonVariants } from "@/components/ui/button"
-import type { VariantProps } from "class-variance-authority"
-import { useConfirmDelete } from "@/lib/use-confirm-delete"
+import type { VariantProps } from "class-variance-authority";
+import { Trash2 } from "lucide-react";
+import * as React from "react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { useConfirmDelete } from "@/lib/use-confirm-delete";
 
-type ButtonVariant = VariantProps<typeof buttonVariants>["variant"]
+type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
 
-type DeleteButtonVariant = "inline" | "menu" | "dropdown"
+type DeleteButtonVariant = "inline" | "menu" | "dropdown";
 
-interface DeleteButtonProps extends Omit<React.ComponentProps<"button">, "onClick"> {
-  onDelete: () => void
-  confirmMessage?: string
-  skipConfirmation?: boolean
+interface DeleteButtonProps
+  extends Omit<React.ComponentProps<"button">, "onClick"> {
+  onDelete: () => void;
+  confirmMessage?: string;
+  skipConfirmation?: boolean;
   /** Layout variant: inline (icon + text), menu (stacked icon/label), dropdown (for dropdown menus) */
-  variant?: DeleteButtonVariant
-  buttonVariant?: ButtonVariant
-  size?: VariantProps<typeof buttonVariants>["size"]
+  variant?: DeleteButtonVariant;
+  buttonVariant?: ButtonVariant;
+  size?: VariantProps<typeof buttonVariants>["size"];
 }
 
 export function DeleteButton({
@@ -31,10 +32,14 @@ export function DeleteButton({
   className,
   ...props
 }: DeleteButtonProps) {
-  const handleDelete = useConfirmDelete(onDelete, { message: confirmMessage, skipConfirmation })
+  const handleDelete = useConfirmDelete(onDelete, {
+    message: confirmMessage,
+    skipConfirmation,
+  });
 
-  const content = children ?? (
-    variant === "menu" ? (
+  const content =
+    children ??
+    (variant === "menu" ? (
       <>
         <Trash2 className="h-5 w-5" />
         <span className="text-xs">Delete</span>
@@ -49,8 +54,7 @@ export function DeleteButton({
         <Trash2 className="h-4 w-4" />
         Delete
       </>
-    )
-  )
+    ));
 
   return (
     <Button
@@ -62,5 +66,5 @@ export function DeleteButton({
     >
       {content}
     </Button>
-  )
+  );
 }

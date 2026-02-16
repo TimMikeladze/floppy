@@ -1,29 +1,35 @@
-"use client"
+"use client";
 
-import { useRef, useState, useEffect } from "react"
-import { useWindowVirtualizer } from "@tanstack/react-virtual"
-import { ComicCard } from "./comic-card"
-import { LibraryEmptyState } from "./library-empty-state"
-import type { Comic } from "@/lib/types"
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { useEffect, useRef, useState } from "react";
+import type { Comic } from "@/lib/types";
+import { ComicCard } from "./comic-card";
+import { LibraryEmptyState } from "./library-empty-state";
 
 interface ComicGridProps {
-  comics: Comic[]
-  onDelete: (id: string) => void
-  onUpdate?: () => void
-  onSelect?: (comic: Comic) => void
-  onUpload?: () => void
+  comics: Comic[];
+  onDelete: (id: string) => void;
+  onUpdate?: () => void;
+  onSelect?: (comic: Comic) => void;
+  onUpload?: () => void;
 }
 
-export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: ComicGridProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [columns, setColumns] = useState(1)
+export function ComicGrid({
+  comics,
+  onDelete,
+  onUpdate,
+  onSelect,
+  onUpload,
+}: ComicGridProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [columns, setColumns] = useState(1);
 
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
+    const el = containerRef.current;
+    if (!el) return;
 
     const updateColumns = () => {
-      const width = el.offsetWidth
+      const width = el.offsetWidth;
       const gap =
         window.innerWidth >= 1024
           ? 24
@@ -31,28 +37,28 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
             ? 20
             : window.innerWidth >= 640
               ? 16
-              : 12
-      const minItemWidth = 140
-      setColumns(Math.max(1, Math.floor((width + gap) / (minItemWidth + gap))))
-    }
+              : 12;
+      const minItemWidth = 140;
+      setColumns(Math.max(1, Math.floor((width + gap) / (minItemWidth + gap))));
+    };
 
-    updateColumns()
-    const observer = new ResizeObserver(updateColumns)
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
+    updateColumns();
+    const observer = new ResizeObserver(updateColumns);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
-  const rowCount = Math.ceil(comics.length / columns)
+  const rowCount = Math.ceil(comics.length / columns);
 
   const virtualizer = useWindowVirtualizer({
     count: rowCount,
     estimateSize: () => 260,
     overscan: 3,
     scrollMargin: containerRef.current?.offsetTop ?? 0,
-  })
+  });
 
   if (comics.length === 0) {
-    return <LibraryEmptyState onUpload={onUpload} />
+    return <LibraryEmptyState onUpload={onUpload} />;
   }
 
   return (
@@ -65,8 +71,8 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
         }}
       >
         {virtualizer.getVirtualItems().map((virtualRow) => {
-          const startIndex = virtualRow.index * columns
-          const rowComics = comics.slice(startIndex, startIndex + columns)
+          const startIndex = virtualRow.index * columns;
+          const rowComics = comics.slice(startIndex, startIndex + columns);
 
           return (
             <div
@@ -84,7 +90,8 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
               <div
                 className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6"
                 style={{
-                  gridTemplateColumns: "repeat(auto-fill, minmax(min(140px, 100%), 1fr))",
+                  gridTemplateColumns:
+                    "repeat(auto-fill, minmax(min(140px, 100%), 1fr))",
                 }}
               >
                 {rowComics.map((comic) => (
@@ -98,9 +105,9 @@ export function ComicGrid({ comics, onDelete, onUpdate, onSelect, onUpload }: Co
                 ))}
               </div>
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

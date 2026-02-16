@@ -1,43 +1,52 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import type { Comic } from "@/lib/types"
-import { saveComic } from "@/lib/storage"
-import { Plus } from "lucide-react"
+import { Plus } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { saveComic } from "@/lib/storage";
+import type { Comic } from "@/lib/types";
 
 interface AddComicDialogProps {
-  onComicAdded: () => void
+  onComicAdded: () => void;
 }
 
 interface AddComicDialogControlledProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onComicAdded: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onComicAdded: () => void;
 }
 
 // Controlled version for external state management
-export function AddComicDialogControlled({ open, onOpenChange, onComicAdded }: AddComicDialogControlledProps) {
-  const [title, setTitle] = useState("")
-  const [series, setSeries] = useState("")
-  const [issue, setIssue] = useState("")
-  const [author, setAuthor] = useState("")
-  const [publisher, setPublisher] = useState("")
-  const [releaseDate, setReleaseDate] = useState("")
-  const [coverUrl, setCoverUrl] = useState("")
-  const [loading, setLoading] = useState(false)
+export function AddComicDialogControlled({
+  open,
+  onOpenChange,
+  onComicAdded,
+}: AddComicDialogControlledProps) {
+  const [title, setTitle] = useState("");
+  const [series, setSeries] = useState("");
+  const [issue, setIssue] = useState("");
+  const [author, setAuthor] = useState("");
+  const [publisher, setPublisher] = useState("");
+  const [releaseDate, setReleaseDate] = useState("");
+  const [coverUrl, setCoverUrl] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title.trim()) return
+    e.preventDefault();
+    if (!title.trim()) return;
 
-    setLoading(true)
+    setLoading(true);
     try {
       const comic: Comic = {
         id: crypto.randomUUID(),
@@ -47,46 +56,48 @@ export function AddComicDialogControlled({ open, onOpenChange, onComicAdded }: A
         author: author.trim() || undefined,
         publisher: publisher.trim() || undefined,
         releaseDate: releaseDate.trim() || undefined,
-        coverImage: coverUrl.trim() || `/placeholder.svg?height=400&width=300&query=${encodeURIComponent(title)}`,
+        coverImage:
+          coverUrl.trim() ||
+          `/placeholder.svg?height=400&width=300&query=${encodeURIComponent(title)}`,
         totalPages: null,
         currentPage: 0,
         hasFile: false,
-        sourceType: 'local',
+        sourceType: "local",
         addedAt: new Date(),
-      }
+      };
 
-      await saveComic(comic)
-      onComicAdded()
+      await saveComic(comic);
+      onComicAdded();
 
       // Reset form
-      setTitle("")
-      setSeries("")
-      setIssue("")
-      setAuthor("")
-      setPublisher("")
-      setReleaseDate("")
-      setCoverUrl("")
-      onOpenChange(false)
+      setTitle("");
+      setSeries("");
+      setIssue("");
+      setAuthor("");
+      setPublisher("");
+      setReleaseDate("");
+      setCoverUrl("");
+      onOpenChange(false);
     } catch (error) {
-      console.error("[v0] Error adding comic:", error)
+      console.error("[v0] Error adding comic:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
       // Reset form on close
-      setTitle("")
-      setSeries("")
-      setIssue("")
-      setAuthor("")
-      setPublisher("")
-      setReleaseDate("")
-      setCoverUrl("")
+      setTitle("");
+      setSeries("");
+      setIssue("");
+      setAuthor("");
+      setPublisher("");
+      setReleaseDate("");
+      setCoverUrl("");
     }
-    onOpenChange(newOpen)
-  }
+    onOpenChange(newOpen);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -119,7 +130,12 @@ export function AddComicDialogControlled({ open, onOpenChange, onComicAdded }: A
 
             <div className="space-y-2">
               <Label htmlFor="issue-controlled">Issue #</Label>
-              <Input id="issue-controlled" value={issue} onChange={(e) => setIssue(e.target.value)} placeholder="e.g., 1" />
+              <Input
+                id="issue-controlled"
+                value={issue}
+                onChange={(e) => setIssue(e.target.value)}
+                placeholder="e.g., 1"
+              />
             </div>
           </div>
 
@@ -162,11 +178,17 @@ export function AddComicDialogControlled({ open, onOpenChange, onComicAdded }: A
               placeholder="Enter cover image URL (optional)"
               rows={2}
             />
-            <p className="text-xs text-muted-foreground">Leave blank to use a placeholder image</p>
+            <p className="text-xs text-muted-foreground">
+              Leave blank to use a placeholder image
+            </p>
           </div>
 
           <div className="flex gap-2 justify-end pt-4">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={loading || !title.trim()}>
@@ -176,26 +198,26 @@ export function AddComicDialogControlled({ open, onOpenChange, onComicAdded }: A
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Uncontrolled version with its own trigger button
 export function AddComicDialog({ onComicAdded }: AddComicDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [title, setTitle] = useState("")
-  const [series, setSeries] = useState("")
-  const [issue, setIssue] = useState("")
-  const [author, setAuthor] = useState("")
-  const [publisher, setPublisher] = useState("")
-  const [releaseDate, setReleaseDate] = useState("")
-  const [coverUrl, setCoverUrl] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [series, setSeries] = useState("");
+  const [issue, setIssue] = useState("");
+  const [author, setAuthor] = useState("");
+  const [publisher, setPublisher] = useState("");
+  const [releaseDate, setReleaseDate] = useState("");
+  const [coverUrl, setCoverUrl] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title.trim()) return
+    e.preventDefault();
+    if (!title.trim()) return;
 
-    setLoading(true)
+    setLoading(true);
     try {
       const comic: Comic = {
         id: crypto.randomUUID(),
@@ -205,37 +227,43 @@ export function AddComicDialog({ onComicAdded }: AddComicDialogProps) {
         author: author.trim() || undefined,
         publisher: publisher.trim() || undefined,
         releaseDate: releaseDate.trim() || undefined,
-        coverImage: coverUrl.trim() || `/placeholder.svg?height=400&width=300&query=${encodeURIComponent(title)}`,
+        coverImage:
+          coverUrl.trim() ||
+          `/placeholder.svg?height=400&width=300&query=${encodeURIComponent(title)}`,
         totalPages: null,
         currentPage: 0,
         hasFile: false,
-        sourceType: 'local',
+        sourceType: "local",
         addedAt: new Date(),
-      }
+      };
 
-      await saveComic(comic)
-      onComicAdded()
+      await saveComic(comic);
+      onComicAdded();
 
       // Reset form
-      setTitle("")
-      setSeries("")
-      setIssue("")
-      setAuthor("")
-      setPublisher("")
-      setReleaseDate("")
-      setCoverUrl("")
-      setOpen(false)
+      setTitle("");
+      setSeries("");
+      setIssue("");
+      setAuthor("");
+      setPublisher("");
+      setReleaseDate("");
+      setCoverUrl("");
+      setOpen(false);
     } catch (error) {
-      console.error("[v0] Error adding comic:", error)
+      console.error("[v0] Error adding comic:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="default" className="gap-2 bg-transparent">
+        <Button
+          variant="outline"
+          size="default"
+          className="gap-2 bg-transparent"
+        >
           <Plus className="h-4 w-4" />
           Add Comic
         </Button>
@@ -269,7 +297,12 @@ export function AddComicDialog({ onComicAdded }: AddComicDialogProps) {
 
             <div className="space-y-2">
               <Label htmlFor="issue">Issue #</Label>
-              <Input id="issue" value={issue} onChange={(e) => setIssue(e.target.value)} placeholder="e.g., 1" />
+              <Input
+                id="issue"
+                value={issue}
+                onChange={(e) => setIssue(e.target.value)}
+                placeholder="e.g., 1"
+              />
             </div>
           </div>
 
@@ -312,11 +345,17 @@ export function AddComicDialog({ onComicAdded }: AddComicDialogProps) {
               placeholder="Enter cover image URL (optional)"
               rows={2}
             />
-            <p className="text-xs text-muted-foreground">Leave blank to use a placeholder image</p>
+            <p className="text-xs text-muted-foreground">
+              Leave blank to use a placeholder image
+            </p>
           </div>
 
           <div className="flex gap-2 justify-end pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={loading || !title.trim()}>
@@ -326,5 +365,5 @@ export function AddComicDialog({ onComicAdded }: AddComicDialogProps) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

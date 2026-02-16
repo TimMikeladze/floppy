@@ -1,53 +1,58 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import type { Comic } from "@/lib/types"
-import { saveComic } from "@/lib/storage"
-import { toast } from "sonner"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { saveComic } from "@/lib/storage";
+import type { Comic } from "@/lib/types";
 
 interface EditComicDialogProps {
-  comic: Comic
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSave?: () => void
+  comic: Comic;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave?: () => void;
 }
 
-export function EditComicDialog({ comic, open, onOpenChange, onSave }: EditComicDialogProps) {
-  const [title, setTitle] = useState(comic.title)
-  const [series, setSeries] = useState(comic.series || "")
-  const [issue, setIssue] = useState(comic.issue || "")
-  const [author, setAuthor] = useState(comic.author || "")
-  const [publisher, setPublisher] = useState(comic.publisher || "")
-  const [saving, setSaving] = useState(false)
+export function EditComicDialog({
+  comic,
+  open,
+  onOpenChange,
+  onSave,
+}: EditComicDialogProps) {
+  const [title, setTitle] = useState(comic.title);
+  const [series, setSeries] = useState(comic.series || "");
+  const [issue, setIssue] = useState(comic.issue || "");
+  const [author, setAuthor] = useState(comic.author || "");
+  const [publisher, setPublisher] = useState(comic.publisher || "");
+  const [saving, setSaving] = useState(false);
 
   // Reset form when comic changes or dialog opens
   useEffect(() => {
     if (open) {
-      setTitle(comic.title)
-      setSeries(comic.series || "")
-      setIssue(comic.issue || "")
-      setAuthor(comic.author || "")
-      setPublisher(comic.publisher || "")
+      setTitle(comic.title);
+      setSeries(comic.series || "");
+      setIssue(comic.issue || "");
+      setAuthor(comic.author || "");
+      setPublisher(comic.publisher || "");
     }
-  }, [open, comic])
+  }, [open, comic]);
 
   const handleSave = async () => {
     if (!title.trim()) {
-      toast.error("Title is required")
-      return
+      toast.error("Title is required");
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
       const updatedComic: Comic = {
         ...comic,
@@ -56,18 +61,18 @@ export function EditComicDialog({ comic, open, onOpenChange, onSave }: EditComic
         issue: issue.trim() || undefined,
         author: author.trim() || undefined,
         publisher: publisher.trim() || undefined,
-      }
-      await saveComic(updatedComic)
-      toast.success("Comic updated")
-      onOpenChange(false)
-      onSave?.()
+      };
+      await saveComic(updatedComic);
+      toast.success("Comic updated");
+      onOpenChange(false);
+      onSave?.();
     } catch (error) {
-      console.error("Failed to save comic:", error)
-      toast.error("Failed to save changes")
+      console.error("Failed to save comic:", error);
+      toast.error("Failed to save changes");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -134,5 +139,5 @@ export function EditComicDialog({ comic, open, onOpenChange, onSave }: EditComic
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

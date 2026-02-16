@@ -1,13 +1,19 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { ArrowLeft, HardDrive, RefreshCw, Trash2, CheckCircle2, XCircle, Cloud, FileWarning, Eraser } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Cloud,
+  Eraser,
+  FileWarning,
+  HardDrive,
+  RefreshCw,
+  Trash2,
+  XCircle,
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,116 +23,132 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
-  getStorageStats,
-  getComicStorageInfo,
-  revalidateFileHandles,
-  formatBytes,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  type ComicStorageInfo,
+  clearAllCachedPages,
   deleteComic,
   deletePagesForComic,
-  clearAllCachedPages,
+  formatBytes,
+  getComicStorageInfo,
+  getStorageStats,
+  revalidateFileHandles,
   type StorageStats,
-  type ComicStorageInfo,
-} from "@/lib/storage"
-import { toast } from "sonner"
+} from "@/lib/storage";
 
 export default function SettingsPage() {
-  const [stats, setStats] = useState<StorageStats | null>(null)
-  const [comicStorage, setComicStorage] = useState<ComicStorageInfo[]>([])
-  const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState(false)
-  const [clearingCache, setClearingCache] = useState(false)
+  const [stats, setStats] = useState<StorageStats | null>(null);
+  const [comicStorage, setComicStorage] = useState<ComicStorageInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [clearingCache, setClearingCache] = useState(false);
   const [syncResults, setSyncResults] = useState<{
-    valid: string[]
-    invalid: string[]
-    remote: string[]
-  } | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<ComicStorageInfo | null>(null)
-  const [showClearCacheDialog, setShowClearCacheDialog] = useState(false)
+    valid: string[];
+    invalid: string[];
+    remote: string[];
+  } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ComicStorageInfo | null>(
+    null,
+  );
+  const [showClearCacheDialog, setShowClearCacheDialog] = useState(false);
 
   const loadData = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const [storageStats, storageInfo] = await Promise.all([
         getStorageStats(),
         getComicStorageInfo(),
-      ])
-      setStats(storageStats)
-      setComicStorage(storageInfo)
+      ]);
+      setStats(storageStats);
+      setComicStorage(storageInfo);
     } catch (error) {
-      console.error("Failed to load storage stats:", error)
-      toast.error("Failed to load storage statistics")
+      console.error("Failed to load storage stats:", error);
+      toast.error("Failed to load storage statistics");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only effect
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   const handleResync = async () => {
-    setSyncing(true)
-    setSyncResults(null)
+    setSyncing(true);
+    setSyncResults(null);
     try {
-      const results = await revalidateFileHandles()
-      setSyncResults(results)
-      await loadData()
+      const results = await revalidateFileHandles();
+      setSyncResults(results);
+      await loadData();
 
       if (results.invalid.length === 0) {
-        toast.success("All local comics have valid file access")
+        toast.success("All local comics have valid file access");
       } else {
-        toast.warning(`${results.invalid.length} comic(s) have lost file access`)
+        toast.warning(
+          `${results.invalid.length} comic(s) have lost file access`,
+        );
       }
     } catch (error) {
-      console.error("Failed to resync:", error)
-      toast.error("Failed to resync file handles")
+      console.error("Failed to resync:", error);
+      toast.error("Failed to resync file handles");
     } finally {
-      setSyncing(false)
+      setSyncing(false);
     }
-  }
+  };
 
   const handleClearAllCache = async () => {
-    setClearingCache(true)
+    setClearingCache(true);
     try {
-      const count = await clearAllCachedPages()
-      toast.success(`Cleared cache for ${count} comic(s)`)
-      await loadData()
+      const count = await clearAllCachedPages();
+      toast.success(`Cleared cache for ${count} comic(s)`);
+      await loadData();
     } catch (error) {
-      console.error("Failed to clear cache:", error)
-      toast.error("Failed to clear cache")
+      console.error("Failed to clear cache:", error);
+      toast.error("Failed to clear cache");
     } finally {
-      setClearingCache(false)
-      setShowClearCacheDialog(false)
+      setClearingCache(false);
+      setShowClearCacheDialog(false);
     }
-  }
+  };
 
   const handleDeleteComic = async (comic: ComicStorageInfo) => {
     try {
-      await deleteComic(comic.id)
-      toast.success(`Deleted "${comic.title}"`)
-      await loadData()
+      await deleteComic(comic.id);
+      toast.success(`Deleted "${comic.title}"`);
+      await loadData();
     } catch (error) {
-      console.error("Failed to delete comic:", error)
-      toast.error("Failed to delete comic")
+      console.error("Failed to delete comic:", error);
+      toast.error("Failed to delete comic");
     }
-    setDeleteTarget(null)
-  }
+    setDeleteTarget(null);
+  };
 
   const handleClearPages = async (comic: ComicStorageInfo) => {
     try {
-      await deletePagesForComic(comic.id)
-      toast.success(`Cleared cache for "${comic.title}"`)
-      await loadData()
+      await deletePagesForComic(comic.id);
+      toast.success(`Cleared cache for "${comic.title}"`);
+      await loadData();
     } catch (error) {
-      console.error("Failed to clear pages:", error)
-      toast.error("Failed to clear pages")
+      console.error("Failed to clear pages:", error);
+      toast.error("Failed to clear pages");
     }
-  }
+  };
 
-  const estimatedQuota = 500 * 1024 * 1024
-  const usagePercent = stats ? Math.min((stats.totalSize / estimatedQuota) * 100, 100) : 0
+  const estimatedQuota = 500 * 1024 * 1024;
+  const usagePercent = stats
+    ? Math.min((stats.totalSize / estimatedQuota) * 100, 100)
+    : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -160,7 +182,9 @@ export default function SettingsPage() {
             ) : stats ? (
               <>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-bold">{formatBytes(stats.totalSize)}</span>
+                  <span className="text-2xl font-bold">
+                    {formatBytes(stats.totalSize)}
+                  </span>
                   <span className="text-sm text-muted-foreground">used</span>
                 </div>
                 <Progress value={usagePercent} className="h-2" />
@@ -196,7 +220,9 @@ export default function SettingsPage() {
                 )}
               </>
             ) : (
-              <p className="text-muted-foreground">Unable to load storage stats</p>
+              <p className="text-muted-foreground">
+                Unable to load storage stats
+              </p>
             )}
           </CardContent>
         </Card>
@@ -266,7 +292,9 @@ export default function SettingsPage() {
                 ))}
               </div>
             ) : comicStorage.length === 0 ? (
-              <p className="text-muted-foreground text-center py-6 text-sm">No comics in library</p>
+              <p className="text-muted-foreground text-center py-6 text-sm">
+                No comics in library
+              </p>
             ) : (
               <ScrollArea className="h-[300px]">
                 <div className="divide-y divide-border">
@@ -277,7 +305,9 @@ export default function SettingsPage() {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-sm truncate">{comic.title}</span>
+                          <span className="text-sm truncate">
+                            {comic.title}
+                          </span>
                           {comic.sourceType === "remote" ? (
                             <Cloud className="h-3 w-3 text-muted-foreground shrink-0" />
                           ) : !comic.hasValidHandle ? (
@@ -316,12 +346,16 @@ export default function SettingsPage() {
       </main>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={() => setDeleteTarget(null)}
+      >
         <AlertDialogContent className="max-w-[calc(100vw-2rem)]">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete comic?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{deleteTarget?.title}" and all associated data.
+              This will permanently delete "{deleteTarget?.title}" and all
+              associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -337,12 +371,17 @@ export default function SettingsPage() {
       </AlertDialog>
 
       {/* Clear Cache Confirmation Dialog */}
-      <AlertDialog open={showClearCacheDialog} onOpenChange={setShowClearCacheDialog}>
+      <AlertDialog
+        open={showClearCacheDialog}
+        onOpenChange={setShowClearCacheDialog}
+      >
         <AlertDialogContent className="max-w-[calc(100vw-2rem)]">
           <AlertDialogHeader>
             <AlertDialogTitle>Clear all cached pages?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will free up {stats ? formatBytes(stats.pagesSize) : "0 B"} of storage. Comics will need to reload pages from their source files.
+              This will free up {stats ? formatBytes(stats.pagesSize) : "0 B"}{" "}
+              of storage. Comics will need to reload pages from their source
+              files.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -357,5 +396,5 @@ export default function SettingsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }
