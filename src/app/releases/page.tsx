@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import { Sparkles } from "lucide-react";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { releasesFlag } from "@/flags";
