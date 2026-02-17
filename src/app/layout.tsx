@@ -22,10 +22,55 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Floppy",
-  description: "Minimalist comic book reader",
+  metadataBase: new URL("https://floppy.sh"),
+  title: {
+    default: "Floppy — The Comic Book App",
+    template: "%s | Floppy",
+  },
+  description:
+    "The comic book app. Read CBZ, CBR, PDF, and EPUB comics in your browser. Offline-first, no account needed. Free and open-source.",
   generator: "Next.js",
   manifest: "/manifest.json",
+  applicationName: "Floppy",
+  keywords: [
+    "comic book app",
+    "comic book reader",
+    "cbz reader",
+    "cbr reader",
+    "epub reader",
+    "pdf reader",
+    "pwa",
+    "offline comic reader",
+    "web comic reader",
+  ],
+  authors: [{ name: "Floppy", url: "https://floppy.sh" }],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://floppy.sh",
+    siteName: "Floppy",
+    title: "Floppy — The Comic Book App",
+    description:
+      "Read CBZ, CBR, PDF, and EPUB comics in your browser. Offline-first, no account needed.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Floppy — The Comic Book App",
+    description:
+      "Read CBZ, CBR, PDF, and EPUB comics in your browser. Offline-first, no account needed.",
+    creator: "@linesofcode",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       {

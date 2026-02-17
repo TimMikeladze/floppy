@@ -30,7 +30,7 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
   const [shareExpanded, setShareExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareText, setShareText] = useState(
-    "Check out floppy - open source comic book reader\nhttps://floppy.sh",
+    "Check out floppy - the comic book app\nhttps://floppy.sh",
   );
 
   const handleCopy = async () => {

@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import { Sparkles } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { releasesFlag } from "@/flags";
 import { ReleasesContent } from "./releases-content";
+
+export const metadata: Metadata = {
+  title: "New Releases",
+  description:
+    "Browse upcoming and recent comic book releases. Track new issues, trade paperbacks, and collected editions.",
+  alternates: {
+    canonical: "/releases",
+  },
+};
 
 function ReleasesLoadingFallback() {
   return (

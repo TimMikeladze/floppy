@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { HomePageClient } from "@/components/home-page-client";
 import { csvImportFlag, releasesFlag } from "@/flags";
+
+export const metadata: Metadata = {
+  title: "Library",
+  robots: { index: false, follow: false },
+};
 
 function LibraryLoading() {
   return (

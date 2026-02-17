@@ -1,7 +1,7 @@
 {
   "name": "Floppy",
   "short_name": "Floppy",
-  "description": "Minimalist comic book reader",
+  "description": "The comic book app",
   "start_url": "/",
   "display": "standalone",
   "display_override": ["standalone", "fullscreen"],
