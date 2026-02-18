@@ -30,9 +30,7 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
           {/* Branding */}
           <div className="text-center">
             <h2 className="text-xl font-semibold">floppy.sh</h2>
-            <p className="text-sm text-muted-foreground">
-              the comic book app
-            </p>
+            <p className="text-sm text-muted-foreground">the comic book app</p>
           </div>
 
           {/* Version */}
