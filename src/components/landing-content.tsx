@@ -24,7 +24,6 @@ import {
   Tablet,
   Twitter,
   Upload,
-  Users,
   WifiOff,
   Zap,
 } from "lucide-react";
@@ -177,10 +176,10 @@ const values = [
     description: "Fast load times, smooth scrolling, instant navigation.",
   },
   {
-    icon: Users,
-    title: "Community Driven",
+    icon: Heart,
+    title: "No Ads, No Fees",
     description:
-      "Features shaped by readers. Bug reports and pull requests welcome.",
+      "Completely free. No subscriptions, no in-app purchases, no upsells.",
   },
 ];
 
@@ -1280,8 +1279,8 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
               </h2>
               <div className="w-12 h-0.5 bg-foreground/20 mx-auto mb-4 animate-draw-line" />
               <p className="text-muted-foreground">
-                Open source from day one. Community-built, community-driven. A
-                comic book app that puts you first.
+                Open source from day one. A comic book app that puts you
+                first.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
