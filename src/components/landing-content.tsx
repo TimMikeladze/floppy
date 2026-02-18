@@ -1279,8 +1279,8 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
               </h2>
               <div className="w-12 h-0.5 bg-foreground/20 mx-auto mb-4 animate-draw-line" />
               <p className="text-muted-foreground">
-                Open source from day one. A comic book app that puts you
-                first.
+                An open source comic book app. Forever free, no ads, no
+                tracking.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
