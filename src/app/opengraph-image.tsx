@@ -35,19 +35,6 @@ export default async function Image() {
         }}
       />
 
-      {/* Square icon */}
-      <div
-        style={{
-          width: "100px",
-          height: "100px",
-          borderRadius: "24px",
-          background: "linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)",
-          border: "2px solid rgba(255,255,255,0.1)",
-          marginBottom: "40px",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-        }}
-      />
-
       {/* Title */}
       <div
         style={{
