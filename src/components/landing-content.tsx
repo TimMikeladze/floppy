@@ -1473,7 +1473,7 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
                   floppy
                 </div>
                 <div className="text-xs text-muted-foreground/60">
-                  The open-source comic book app
+                  the comic book app
                 </div>
               </div>
             </div>
