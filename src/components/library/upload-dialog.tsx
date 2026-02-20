@@ -23,7 +23,7 @@ interface UploadDialogProps {
 // iOS-friendly accept string - include common MIME types that iOS recognizes
 // Using * as fallback since iOS may not show .cbz/.cbr files with strict accept
 const IOS_FRIENDLY_ACCEPT =
-  ".cbz,.zip,.cbr,.rar,.pdf,application/zip,application/x-zip-compressed,application/pdf,application/x-rar-compressed,*/*";
+  ".cbz,.zip,.cbr,.rar,.pdf,.epub,application/zip,application/x-zip-compressed,application/pdf,application/x-rar-compressed,application/epub+zip,*/*";
 
 export function UploadDialog({
   open,
@@ -76,6 +76,7 @@ export function UploadDialog({
                 "application/zip": [".cbz", ".zip"],
                 "application/x-rar-compressed": [".cbr", ".rar"],
                 "application/pdf": [".pdf"],
+                "application/epub+zip": [".epub"],
               },
             },
           ],
