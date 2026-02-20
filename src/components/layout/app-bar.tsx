@@ -51,8 +51,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import { PreferencesDialog } from "./preferences-dialog";
 import { FeedbackDialog } from "./feedback-dialog";
+import { PreferencesDialog } from "./preferences-dialog";
 import { SupportDialog } from "./support-dialog";
 
 type ViewMode = "grid" | "table" | "series";
