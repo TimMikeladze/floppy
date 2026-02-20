@@ -11,12 +11,12 @@ import {
   LayoutGrid,
   Library,
   ListFilter,
+  Menu,
+  MessageCircle,
   Monitor,
   Moon,
   Plus,
   Search,
-  Settings,
-  Settings2,
   SortAsc,
   Sparkles,
   Sun,
@@ -50,7 +50,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import { PreferencesDialog } from "./preferences-dialog";
+import { FeedbackDialog } from "./feedback-dialog";
 import { SupportDialog } from "./support-dialog";
 
 type ViewMode = "grid" | "table" | "series";
@@ -95,7 +95,7 @@ export function AppBar({
   const [mounted, setMounted] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
-  const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   // Local search state for responsive input, debounced propagation to parent
@@ -327,7 +327,7 @@ export function AppBar({
                 <span className="hidden sm:inline sm:ml-2">Upload</span>
               </Button>
 
-              {/* Settings menu */}
+              {/* More menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -335,8 +335,8 @@ export function AppBar({
                     size="icon"
                     className="h-9 w-9 sm:w-auto sm:px-3 bg-transparent"
                   >
-                    <Settings className="h-4 w-4" />
-                    <span className="hidden sm:inline sm:ml-2">Settings</span>
+                    <Menu className="h-4 w-4" />
+                    <span className="hidden sm:inline sm:ml-2">More</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -400,16 +400,6 @@ export function AppBar({
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs text-muted-foreground">
-                    App
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={() => setPreferencesDialogOpen(true)}
-                  >
-                    <Settings2 className="mr-2 h-4 w-4" />
-                    Preferences
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">
                     Storage
                   </DropdownMenuLabel>
                   <Link href="/settings">
@@ -440,6 +430,10 @@ export function AppBar({
                   <DropdownMenuItem onClick={() => setSupportDialogOpen(true)}>
                     <Heart className="mr-2 h-4 w-4" />
                     Support
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFeedbackDialogOpen(true)}>
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Feedback
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -486,9 +480,9 @@ export function AppBar({
         open={supportDialogOpen}
         onOpenChange={setSupportDialogOpen}
       />
-      <PreferencesDialog
-        open={preferencesDialogOpen}
-        onOpenChange={setPreferencesDialogOpen}
+      <FeedbackDialog
+        open={feedbackDialogOpen}
+        onOpenChange={setFeedbackDialogOpen}
       />
     </header>
   );
