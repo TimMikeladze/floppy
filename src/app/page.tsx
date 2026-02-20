@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LandingPageClient } from "@/components/landing-page-client";
+import { UmamiAnalytics } from "@/components/umami-analytics";
 
 export const metadata: Metadata = {
   alternates: {
@@ -33,6 +34,7 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <LandingPageClient />
+      <UmamiAnalytics />
     </>
   );
 }
