@@ -44,6 +44,35 @@ export function EpubViewer({
   const flowMode =
     settings.layoutMode === "scrolling" ? "scrolled-doc" : "paginated";
 
+  // Apply theme based on dark/light mode
+  const applyTheme = useCallback((rendition: Rendition) => {
+    const isDark = document.documentElement.classList.contains("dark");
+
+    if (isDark) {
+      rendition.themes.override("color", "#e4e4e7");
+      rendition.themes.override("background", "#0d0d0d");
+    } else {
+      rendition.themes.override("color", "#1a1a1a");
+      rendition.themes.override("background", "#ffffff");
+    }
+
+    // Typography defaults
+    rendition.themes.default({
+      body: {
+        "font-family": "Georgia, 'Times New Roman', serif !important",
+        "line-height": "1.6 !important",
+        "font-size": "18px !important",
+      },
+      "p, div, span, li, td, th, blockquote, h1, h2, h3, h4, h5, h6": {
+        "font-family": "inherit !important",
+      },
+      img: {
+        "max-width": "100% !important",
+        height: "auto !important",
+      },
+    });
+  }, []);
+
   // Initialize book and rendition
   useEffect(() => {
     let cancelled = false;
@@ -141,8 +170,7 @@ export function EpubViewer({
         bookRef.current = null;
       }
     };
-    // Only re-init when file or flow mode changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: only re-init when file or flow mode changes
   }, [
     file,
     flowMode, // Apply theming
@@ -151,35 +179,6 @@ export function EpubViewer({
     onLocationChange,
     onReady,
   ]);
-
-  // Apply theme based on dark/light mode
-  function applyTheme(rendition: Rendition) {
-    const isDark = document.documentElement.classList.contains("dark");
-
-    if (isDark) {
-      rendition.themes.override("color", "#e4e4e7");
-      rendition.themes.override("background", "#0d0d0d");
-    } else {
-      rendition.themes.override("color", "#1a1a1a");
-      rendition.themes.override("background", "#ffffff");
-    }
-
-    // Typography defaults
-    rendition.themes.default({
-      body: {
-        "font-family": "Georgia, 'Times New Roman', serif !important",
-        "line-height": "1.6 !important",
-        "font-size": "18px !important",
-      },
-      "p, div, span, li, td, th, blockquote, h1, h2, h3, h4, h5, h6": {
-        "font-family": "inherit !important",
-      },
-      img: {
-        "max-width": "100% !important",
-        height: "auto !important",
-      },
-    });
-  }
 
   // Watch for dark mode changes
   useEffect(() => {
