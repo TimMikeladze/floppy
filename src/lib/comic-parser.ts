@@ -290,6 +290,128 @@ export const SUPPORTED_FORMATS = {
   description: "CBZ, CBR, PDF, EPUB",
 };
 
+/**
+ * Parse EPUB metadata without rasterizing content.
+ * Extracts title, author, publisher, cover image, and chapter count
+ * for fast import. The raw EPUB file is stored separately for epubjs.
+ */
+export async function parseEpubMetadata(file: File): Promise<{
+  title: string;
+  author?: string;
+  publisher?: string;
+  coverBlob: Blob | null;
+  chapterCount: number;
+  fileName: string;
+  fileSize: number;
+}> {
+  const zip = new JSZip();
+  const contents = await zip.loadAsync(file);
+
+  // Parse container.xml to find OPF
+  const containerXml = await contents
+    .file("META-INF/container.xml")
+    ?.async("text");
+  if (!containerXml) {
+    throw new EpubParseError("Invalid EPUB: Missing container.xml");
+  }
+
+  const rootfileMatch = containerXml.match(
+    /rootfile[^>]+full-path=["']([^"']+)["']/i,
+  );
+  const opfPath = rootfileMatch?.[1];
+  if (!opfPath) {
+    throw new EpubParseError("Invalid EPUB: Could not find OPF file path");
+  }
+
+  const opfDir = opfPath.substring(0, opfPath.lastIndexOf("/") + 1);
+  const opfContent = await contents.file(opfPath)?.async("text");
+  if (!opfContent) {
+    throw new EpubParseError(
+      `Invalid EPUB: Could not read OPF file at ${opfPath}`,
+    );
+  }
+
+  // Extract metadata
+  const titleMatch = opfContent.match(/<dc:title[^>]*>([^<]+)<\/dc:title>/i);
+  const authorMatch = opfContent.match(
+    /<dc:creator[^>]*>([^<]+)<\/dc:creator>/i,
+  );
+  const publisherMatch = opfContent.match(
+    /<dc:publisher[^>]*>([^<]+)<\/dc:publisher>/i,
+  );
+
+  // Count spine items (chapters)
+  const spineSection = opfContent.match(/<spine[^>]*>([\s\S]*?)<\/spine>/i);
+  let chapterCount = 0;
+  if (spineSection) {
+    const itemRefRegex = /<itemref[^>]+idref=["'][^"']+["'][^>]*\/?>/gi;
+    const matches = spineSection[1].match(itemRefRegex);
+    chapterCount = matches?.length ?? 0;
+  }
+
+  // Extract cover image from manifest
+  let coverBlob: Blob | null = null;
+
+  // Strategy 1: Look for meta cover element
+  const coverMetaMatch = opfContent.match(
+    /<meta[^>]+name=["']cover["'][^>]+content=["']([^"']+)["']/i,
+  );
+  // Strategy 2: Look for item with properties="cover-image"
+  const coverPropertyMatch = opfContent.match(
+    /<item[^>]+properties=["'][^"']*cover-image[^"']*["'][^>]+href=["']([^"']+)["']/i,
+  );
+
+  if (coverMetaMatch) {
+    // Find the manifest item with this id
+    const coverId = coverMetaMatch[1];
+    const coverItemRegex = new RegExp(
+      `<item[^>]+id=["']${coverId}["'][^>]+href=["']([^"']+)["']`,
+      "i",
+    );
+    const coverItemMatch = opfContent.match(coverItemRegex);
+    if (coverItemMatch) {
+      const coverPath = opfDir + decodeURIComponent(coverItemMatch[1]);
+      coverBlob = (await contents.file(coverPath)?.async("blob")) ?? null;
+    }
+  } else if (coverPropertyMatch) {
+    const coverPath = opfDir + decodeURIComponent(coverPropertyMatch[1]);
+    coverBlob = (await contents.file(coverPath)?.async("blob")) ?? null;
+  }
+
+  // Fallback: try to find first image in manifest
+  if (!coverBlob) {
+    const manifestSection = opfContent.match(
+      /<manifest[^>]*>([\s\S]*?)<\/manifest>/i,
+    );
+    if (manifestSection) {
+      const imageItemRegex =
+        /<item[^>]+href=["']([^"']+)["'][^>]+media-type=["']image\/[^"']+["'][^>]*\/?>/gi;
+      const firstImage = imageItemRegex.exec(manifestSection[1]);
+      if (firstImage) {
+        const imagePath = opfDir + decodeURIComponent(firstImage[1]);
+        coverBlob = (await contents.file(imagePath)?.async("blob")) ?? null;
+      }
+    }
+  }
+
+  const title =
+    titleMatch?.[1]?.trim() ||
+    file.name
+      .replace(/\.epub$/i, "")
+      .replace(/[-_]/g, " ")
+      .trim();
+
+  return {
+    title,
+    author: authorMatch?.[1]?.trim(),
+    publisher: publisherMatch?.[1]?.trim(),
+    coverBlob,
+    chapterCount,
+    fileName: file.name,
+    fileSize: file.size,
+  };
+}
+
 export { EpubParseError } from "./epub-parser";
 // Re-export error types for consumers
 export { PdfParseError, PdfPasswordError } from "./pdf-parser";

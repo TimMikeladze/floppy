@@ -47,6 +47,7 @@ interface ReaderMenuProps {
   onRefreshBookmarks: () => void;
   onDelete: () => void;
   onComicUpdate?: () => void;
+  readingFraction?: number;
 }
 
 export function ReaderMenu({
@@ -62,6 +63,7 @@ export function ReaderMenu({
   onRefreshBookmarks,
   onDelete,
   onComicUpdate,
+  readingFraction,
 }: ReaderMenuProps) {
   const { settings } = useReading();
   const [isDesktop, setIsDesktop] = useState(false);
@@ -74,6 +76,7 @@ export function ReaderMenu({
   const [coverManagerOpen, setCoverManagerOpen] = useState(false);
 
   const comicId = comic.id;
+  const isEpub = comic.format === "epub" && readingFraction !== undefined;
   const isComplete = comic.totalPages && currentPage >= comic.totalPages - 1;
   const hasProgress = currentPage > 0;
 
@@ -190,17 +193,38 @@ export function ReaderMenu({
         {/* Page Scrubber - Always visible at top */}
         <div className="px-4 pt-6 pb-2">
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium tabular-nums text-muted-foreground min-w-[4rem]">
-              {currentPage + 1} / {totalPages}
-            </span>
-            <Slider
-              value={[currentPage]}
-              min={0}
-              max={totalPages - 1}
-              step={1}
-              onValueChange={([value]) => onPageChange(value)}
-              className="flex-1"
-            />
+            {isEpub ? (
+              <>
+                <span className="text-sm font-medium tabular-nums text-muted-foreground min-w-[4rem]">
+                  {Math.round((readingFraction ?? 0) * 100)}%
+                </span>
+                <Slider
+                  value={[Math.round((readingFraction ?? 0) * 100)]}
+                  min={0}
+                  max={100}
+                  step={1}
+                  onValueChange={() => {
+                    /* EPUB scrubber is read-only for now — epubjs doesn't support seeking by percentage directly */
+                  }}
+                  className="flex-1"
+                  disabled
+                />
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-medium tabular-nums text-muted-foreground min-w-[4rem]">
+                  {currentPage + 1} / {totalPages}
+                </span>
+                <Slider
+                  value={[currentPage]}
+                  min={0}
+                  max={totalPages - 1}
+                  step={1}
+                  onValueChange={([value]) => onPageChange(value)}
+                  className="flex-1"
+                />
+              </>
+            )}
           </div>
         </div>
 
@@ -221,16 +245,18 @@ export function ReaderMenu({
               <span className="text-xs">Bookmark</span>
             </Button>
 
-            <PageNavigator
-              pages={pages}
-              currentPage={currentPage}
-              onPageSelect={(page) => {
-                onPageChange(page);
-                onOpenChange(false);
-              }}
-              bookmarks={bookmarks}
-              variant="menu"
-            />
+            {!isEpub && (
+              <PageNavigator
+                pages={pages}
+                currentPage={currentPage}
+                onPageSelect={(page) => {
+                  onPageChange(page);
+                  onOpenChange(false);
+                }}
+                bookmarks={bookmarks}
+                variant="menu"
+              />
+            )}
 
             <BookmarksPanel
               comicId={comicId}

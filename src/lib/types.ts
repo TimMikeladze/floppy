@@ -24,6 +24,7 @@ export interface Comic {
   sourceType: ComicSourceType;
   sourceId?: string; // Links to ComicSource for remote comics
   coverUrl?: string; // Remote cover URL (fetched on demand)
+  epubCfi?: string; // EPUB reading position (Canonical Fragment Identifier)
 }
 
 export interface ComicPage {
@@ -54,6 +55,7 @@ export interface Bookmark {
   note?: string;
   thumbnailUrl?: string;
   tags?: string[];
+  epubCfi?: string;
 }
 
 export interface Note {
@@ -68,6 +70,7 @@ export interface Note {
     y: number;
   };
   color?: string;
+  epubCfi?: string;
 }
 
 export interface ComicList {
