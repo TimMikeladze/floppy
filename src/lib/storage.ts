@@ -9,7 +9,7 @@ import type {
 } from "./types";
 
 const DB_NAME = "comic-reader-db";
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 const COMICS_STORE = "comics";
 const PAGES_STORE = "pages"; // For iOS/Safari - stores pages when File System Access unavailable
 const BOOKMARKS_STORE = "bookmarks";
@@ -17,6 +17,7 @@ const NOTES_STORE = "notes";
 const LISTS_STORE = "lists";
 const SOURCES_STORE = "sources"; // Data sources (CSV imports)
 const REMOTE_PAGES_STORE = "remotePages"; // Page URLs for remote comics
+const EPUB_FILES_STORE = "epubFiles"; // Raw EPUB blobs for reflowable reader
 // Release tracker stores
 const RELEASES_OVERRIDES_STORE = "releasesOverrides";
 const CUSTOM_RELEASES_STORE = "customReleases";
@@ -180,6 +181,11 @@ async function initDB(): Promise<IDBDatabase> {
           keyPath: "releaseId",
         });
       }
+
+      // EPUB files store (raw EPUB blobs for reflowable reader)
+      if (!database.objectStoreNames.contains(EPUB_FILES_STORE)) {
+        database.createObjectStore(EPUB_FILES_STORE, { keyPath: "comicId" });
+      }
     };
   });
 }
@@ -231,6 +237,7 @@ export async function deleteComic(id: string): Promise<void> {
         NOTES_STORE,
         LISTS_STORE,
         REMOTE_PAGES_STORE,
+        EPUB_FILES_STORE,
       ],
       "readwrite",
     );
@@ -246,6 +253,10 @@ export async function deleteComic(id: string): Promise<void> {
     // Delete remote pages (for remote comics)
     const remotePagesStore = transaction.objectStore(REMOTE_PAGES_STORE);
     remotePagesStore.delete(id);
+
+    // Delete EPUB file (for reflowable reader)
+    const epubFilesStore = transaction.objectStore(EPUB_FILES_STORE);
+    epubFilesStore.delete(id);
 
     // Delete all bookmarks for this comic
     const bookmarksStore = transaction.objectStore(BOOKMARKS_STORE);
@@ -765,6 +776,7 @@ export async function clearAllData(): Promise<void> {
         LISTS_STORE,
         SOURCES_STORE,
         REMOTE_PAGES_STORE,
+        EPUB_FILES_STORE,
       ],
       "readwrite",
     );
@@ -775,6 +787,7 @@ export async function clearAllData(): Promise<void> {
     transaction.objectStore(LISTS_STORE).clear();
     transaction.objectStore(SOURCES_STORE).clear();
     transaction.objectStore(REMOTE_PAGES_STORE).clear();
+    transaction.objectStore(EPUB_FILES_STORE).clear();
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
@@ -1361,6 +1374,72 @@ async function preCacheReaderPage(comicId: string): Promise<void> {
  */
 export async function removeOfflineCache(comicId: string): Promise<void> {
   await deletePagesForComic(comicId);
+}
+
+// ============ EPUB FILES ============
+
+/**
+ * Save a raw EPUB file blob to IndexedDB for the reflowable reader.
+ */
+export async function saveEpubFile(comicId: string, file: Blob): Promise<void> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([EPUB_FILES_STORE], "readwrite");
+    const store = transaction.objectStore(EPUB_FILES_STORE);
+    const request = store.put({ comicId, file });
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/**
+ * Get a raw EPUB file blob from IndexedDB.
+ */
+export async function getEpubFile(comicId: string): Promise<Blob | null> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([EPUB_FILES_STORE], "readonly");
+    const store = transaction.objectStore(EPUB_FILES_STORE);
+    const request = store.get(comicId);
+
+    request.onsuccess = () => {
+      const result = request.result;
+      resolve(result ? result.file : null);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/**
+ * Update EPUB reading progress by saving a CFI string to the comic record.
+ */
+export async function updateEpubProgress(
+  comicId: string,
+  cfi: string,
+  currentPage?: number,
+): Promise<void> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction([COMICS_STORE], "readwrite");
+    const store = transaction.objectStore(COMICS_STORE);
+    const request = store.get(comicId);
+
+    request.onsuccess = () => {
+      const comic = request.result;
+      if (comic) {
+        comic.epubCfi = cfi;
+        comic.lastRead = new Date();
+        if (currentPage !== undefined) {
+          comic.currentPage = currentPage;
+        }
+        store.put(comic);
+      }
+    };
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
 }
 
 // ============ RELEASE TRACKER ============

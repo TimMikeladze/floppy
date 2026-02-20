@@ -2,6 +2,7 @@
 
 import {
   BookOpen,
+  BookText,
   FileArchive,
   FileText,
   FolderOpen,
@@ -59,6 +60,12 @@ export function LibraryEmptyState({ onUpload }: LibraryEmptyStateProps) {
         <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-secondary/50 border border-border/50">
           <FileText className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs font-medium text-muted-foreground">PDF</span>
+        </div>
+        <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-secondary/50 border border-border/50">
+          <BookText className="w-6 h-6 text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground">
+            EPUB
+          </span>
         </div>
         <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-secondary/50 border border-border/50">
           <FolderOpen className="w-6 h-6 text-muted-foreground" />

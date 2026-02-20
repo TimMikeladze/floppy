@@ -7,6 +7,7 @@ import { use, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AttachFileDialog } from "@/components/library/attach-file-dialog";
 import { ComicViewer } from "@/components/reader/comic-viewer";
+import { EpubViewer } from "@/components/reader/epub-viewer";
 import { NextIssueOverlay } from "@/components/reader/next-issue-overlay";
 import { PageIndicator } from "@/components/reader/page-indicator";
 import { PdfViewer } from "@/components/reader/pdf-viewer";
@@ -23,12 +24,14 @@ import {
   getAllComics,
   getBookmarks,
   getComic,
+  getEpubFile,
   getFileFromHandle,
   getPagesForComic,
   getRemotePages,
   loadPagesFromHandle,
   saveBookmark,
   saveNote,
+  updateEpubProgress,
   updateReadingProgress,
 } from "@/lib/storage";
 import type { Bookmark, Comic, RemotePage } from "@/lib/types";
@@ -57,6 +60,14 @@ export default function ReaderPage({
   // Native PDF viewing state
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [useNativePdf, setUseNativePdf] = useState(false);
+  // EPUB reflowable viewer state
+  const [epubFile, setEpubFile] = useState<Blob | null>(null);
+  const [useEpubViewer, setUseEpubViewer] = useState(false);
+  const [epubLocation, setEpubLocation] = useState<string | undefined>(
+    undefined,
+  );
+  const [epubChapter, setEpubChapter] = useState<string | undefined>(undefined);
+  const [readingFraction, setReadingFraction] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -301,6 +312,36 @@ export default function ReaderPage({
     }
 
     try {
+      // EPUB reflowable viewer: load the raw EPUB file for epubjs
+      if (comic.format === "epub") {
+        let blob: Blob | null = null;
+
+        // Try file handle first (desktop, avoids IndexedDB storage)
+        if (comic.fileHandle) {
+          try {
+            const f = await getFileFromHandle(comic.fileHandle);
+            if (f) blob = f;
+          } catch {
+            // fall through to IndexedDB
+          }
+        }
+
+        // Fall back to stored epub file
+        if (!blob) {
+          blob = await getEpubFile(comic.id);
+        }
+
+        if (blob) {
+          setEpubFile(blob);
+          setUseEpubViewer(true);
+          setEpubLocation(comic.epubCfi || undefined);
+          setIsLoading(false);
+          return;
+        }
+
+        // No EPUB file found — fall through to legacy rasterized pages
+      }
+
       let pages: Blob[] | null = null;
 
       // For PDFs with a file handle, try native PDF viewing first
@@ -378,6 +419,38 @@ export default function ReaderPage({
     },
     [comic],
   );
+
+  // EPUB location change handler with debounced progress save
+  const epubProgressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const handleEpubLocationChange = useCallback(
+    (cfi: string, fraction: number, chapter?: string) => {
+      setReadingFraction(fraction);
+      setEpubChapter(chapter);
+
+      // Debounce progress save
+      if (epubProgressTimerRef.current) {
+        clearTimeout(epubProgressTimerRef.current);
+      }
+      epubProgressTimerRef.current = setTimeout(() => {
+        if (comic) {
+          const approxPage = Math.floor(fraction * (comic.totalPages || 1));
+          updateEpubProgress(comic.id, cfi, approxPage);
+        }
+      }, 1000);
+    },
+    [comic],
+  );
+
+  // Cleanup epub progress timer
+  useEffect(() => {
+    return () => {
+      if (epubProgressTimerRef.current) {
+        clearTimeout(epubProgressTimerRef.current);
+      }
+    };
+  }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: loadBookmarks is stable
   const handleBookmark = useCallback(async () => {
@@ -473,9 +546,11 @@ export default function ReaderPage({
   const isRemote = comic.sourceType === "remote";
   const hasContent = isRemote
     ? remotePageData.length > 0 || usingCachedPages
-    : useNativePdf
-      ? pdfFile !== null
-      : comic.hasFile && comic.totalPages;
+    : useEpubViewer
+      ? epubFile !== null
+      : useNativePdf
+        ? pdfFile !== null
+        : comic.hasFile && comic.totalPages;
 
   if (!hasContent) {
     return (
@@ -553,7 +628,14 @@ export default function ReaderPage({
       />
 
       <main className="h-full w-full" onClick={toggleControls}>
-        {useNativePdf && pdfFile ? (
+        {useEpubViewer && epubFile ? (
+          <EpubViewer
+            file={epubFile}
+            initialCfi={epubLocation}
+            onLocationChange={handleEpubLocationChange}
+            onReady={handleTotalPagesChange}
+          />
+        ) : useNativePdf && pdfFile ? (
           <PdfViewer
             file={pdfFile}
             currentPage={currentPage}
@@ -579,6 +661,8 @@ export default function ReaderPage({
           (settings.showPageNumbers ?? false) &&
           settings.layoutMode !== "scrolling"
         }
+        chapterTitle={useEpubViewer ? epubChapter : undefined}
+        fraction={useEpubViewer ? readingFraction : undefined}
       />
 
       <ReaderMenu
@@ -594,6 +678,7 @@ export default function ReaderPage({
         onRefreshBookmarks={loadBookmarks}
         onDelete={handleDelete}
         onComicUpdate={loadComic}
+        readingFraction={useEpubViewer ? readingFraction : undefined}
       />
 
       <QuickNoteDialog

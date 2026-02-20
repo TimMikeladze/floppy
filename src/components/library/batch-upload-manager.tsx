@@ -20,10 +20,21 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { generateCoverImage, parseComicFile } from "@/lib/comic-parser";
+import {
+  detectFormat,
+  generateCoverImage,
+  generateThumbnail,
+  parseComicFile,
+  parseEpubMetadata,
+} from "@/lib/comic-parser";
 import { type DuplicateMatch, findDuplicates } from "@/lib/duplicate-detection";
 import { parseComicTitle } from "@/lib/series-utils";
-import { getAllComics, saveComic, savePagesForComic } from "@/lib/storage";
+import {
+  getAllComics,
+  saveComic,
+  saveEpubFile,
+  savePagesForComic,
+} from "@/lib/storage";
 import type { Comic } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { FileWithHandle } from "./upload-dialog";
@@ -133,6 +144,61 @@ export function BatchUploadManager({
       );
 
       try {
+        const format = detectFormat(file);
+        const comicId = crypto.randomUUID();
+
+        // EPUB: fast metadata-only import
+        if (format === "epub") {
+          const epubMeta = await parseEpubMetadata(file);
+
+          setFileStatuses((prev) =>
+            prev.map((f, i) => (i === index ? { ...f, progress: 50 } : f)),
+          );
+
+          let coverImage = "";
+          if (epubMeta.coverBlob) {
+            coverImage = await generateThumbnail(epubMeta.coverBlob);
+          }
+
+          setFileStatuses((prev) =>
+            prev.map((f, i) => (i === index ? { ...f, progress: 75 } : f)),
+          );
+
+          const parsed = parseComicTitle(epubMeta.title);
+          const comic: Comic = {
+            id: comicId,
+            title: epubMeta.title,
+            coverImage,
+            totalPages: epubMeta.chapterCount,
+            currentPage: 0,
+            fileName: epubMeta.fileName,
+            fileSize: epubMeta.fileSize,
+            hasFile: true,
+            format: "epub",
+            author: epubMeta.author,
+            publisher: epubMeta.publisher,
+            fileHandle: handle,
+            sourceType: "local",
+            series: parsed.seriesName,
+            issue: parsed.issueNumber?.toString(),
+            addedAt: new Date(),
+          };
+
+          await saveComic(comic);
+          await saveEpubFile(comicId, file);
+
+          setFileStatuses((prev) =>
+            prev.map((f, i) =>
+              i === index
+                ? { ...f, status: "success" as const, progress: 100 }
+                : f,
+            ),
+          );
+
+          return true;
+        }
+
+        // Non-EPUB: existing rasterize flow
         const { pages, metadata } = await parseComicFile(file);
 
         setFileStatuses((prev) =>
@@ -145,7 +211,6 @@ export function BatchUploadManager({
           prev.map((f, i) => (i === index ? { ...f, progress: 75 } : f)),
         );
 
-        const comicId = crypto.randomUUID();
         const parsed = parseComicTitle(metadata.title);
 
         const comic: Comic = {

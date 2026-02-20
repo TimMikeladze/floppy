@@ -4,8 +4,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { FileWithHandle } from "@/components/library/upload-dialog";
 import {
+  detectFormat,
   generateCoverImage,
+  generateThumbnail,
   parseComicFile,
+  parseEpubMetadata,
   SUPPORTED_FORMATS,
 } from "@/lib/comic-parser";
 import {
@@ -13,6 +16,7 @@ import {
   exportLibrary,
   importLibrary,
   saveComic,
+  saveEpubFile,
   savePagesForComic,
 } from "@/lib/storage";
 import type { Comic } from "@/lib/types";
@@ -60,10 +64,42 @@ export function useAppActions(onDataChange?: () => Promise<void>) {
       handle,
     }: FileWithHandle): Promise<boolean> {
       try {
+        const format = detectFormat(file);
+        const comicId = crypto.randomUUID();
+
+        // EPUB: fast metadata-only import, store raw file for epubjs
+        if (format === "epub") {
+          const epubMeta = await parseEpubMetadata(file);
+          let coverImage = "";
+          if (epubMeta.coverBlob) {
+            coverImage = await generateThumbnail(epubMeta.coverBlob);
+          }
+
+          const comic: Comic = {
+            id: comicId,
+            title: epubMeta.title,
+            coverImage,
+            totalPages: epubMeta.chapterCount,
+            currentPage: 0,
+            fileName: epubMeta.fileName,
+            fileSize: epubMeta.fileSize,
+            hasFile: true,
+            format: "epub",
+            author: epubMeta.author,
+            publisher: epubMeta.publisher,
+            fileHandle: handle,
+            sourceType: "local",
+            addedAt: new Date(),
+          };
+
+          await saveComic(comic);
+          await saveEpubFile(comicId, file);
+          return true;
+        }
+
+        // Non-EPUB: existing rasterize flow
         const { pages, metadata } = await parseComicFile(file);
         const coverImage = await generateCoverImage(pages[0]);
-
-        const comicId = crypto.randomUUID();
 
         const comic: Comic = {
           id: comicId,

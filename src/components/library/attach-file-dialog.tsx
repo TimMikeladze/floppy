@@ -102,6 +102,7 @@ export function AttachFileDialog({
               "application/zip": [".cbz", ".zip"],
               "application/x-rar-compressed": [".cbr", ".rar"],
               "application/pdf": [".pdf"],
+              "application/epub+zip": [".epub"],
             },
           },
         ],
