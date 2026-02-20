@@ -3,7 +3,6 @@
 import {
   Database,
   Download,
-  EllipsisVertical,
   FolderUp,
   HardDrive,
   Heart,
@@ -12,12 +11,12 @@ import {
   LayoutGrid,
   Library,
   ListFilter,
+  Menu,
   MessageCircle,
   Monitor,
   Moon,
   Plus,
   Search,
-  Settings2,
   SortAsc,
   Sparkles,
   Sun,
@@ -52,7 +51,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { FeedbackDialog } from "./feedback-dialog";
-import { PreferencesDialog } from "./preferences-dialog";
 import { SupportDialog } from "./support-dialog";
 
 type ViewMode = "grid" | "table" | "series";
@@ -98,7 +96,6 @@ export function AppBar({
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
-  const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   // Local search state for responsive input, debounced propagation to parent
@@ -338,7 +335,7 @@ export function AppBar({
                     size="icon"
                     className="h-9 w-9 sm:w-auto sm:px-3 bg-transparent"
                   >
-                    <EllipsisVertical className="h-4 w-4" />
+                    <Menu className="h-4 w-4" />
                     <span className="hidden sm:inline sm:ml-2">More</span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -400,16 +397,6 @@ export function AppBar({
                     {mounted && theme === "system" && (
                       <span className="ml-auto text-xs">✓</span>
                     )}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">
-                    App
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={() => setPreferencesDialogOpen(true)}
-                  >
-                    <Settings2 className="mr-2 h-4 w-4" />
-                    Preferences
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs text-muted-foreground">
@@ -496,10 +483,6 @@ export function AppBar({
       <FeedbackDialog
         open={feedbackDialogOpen}
         onOpenChange={setFeedbackDialogOpen}
-      />
-      <PreferencesDialog
-        open={preferencesDialogOpen}
-        onOpenChange={setPreferencesDialogOpen}
       />
     </header>
   );
