@@ -3,6 +3,12 @@
 import Script from "next/script";
 import { useEffect, useState } from "react";
 
+declare global {
+  interface Window {
+    umami?: { track: (event?: string) => void };
+  }
+}
+
 const VISITED_KEY = "floppy:visited";
 
 export function UmamiAnalytics() {
@@ -25,7 +31,14 @@ export function UmamiAnalytics() {
     <Script
       src={scriptUrl}
       data-website-id={websiteId}
+      data-auto-track="false"
       strategy="afterInteractive"
+      onLoad={() => {
+        // Manually track only this page view (the landing page)
+        if (typeof window !== "undefined" && window.umami) {
+          window.umami.track();
+        }
+      }}
     />
   );
 }
