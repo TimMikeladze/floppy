@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart } from "lucide-react";
+import { Github, Heart } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useIsPwa } from "@/hooks/use-is-pwa";
@@ -49,6 +49,15 @@ export function AppFooter() {
               >
                 <Heart className="w-4 h-4 text-pink-400/70 fill-pink-400/20 transition-all duration-200 group-hover:text-pink-500 group-hover:fill-pink-500/40 group-hover:scale-110" />
               </button>
+              <a
+                href="https://github.com/TimMikeladze/floppy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative"
+                aria-label="GitHub"
+              >
+                <Github className="w-4 h-4 text-muted-foreground/70 transition-all duration-200 group-hover:text-foreground group-hover:scale-110" />
+              </a>
             </div>
           </div>
         </div>
