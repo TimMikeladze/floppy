@@ -41,14 +41,6 @@ export function AppFooter() {
 
             {/* Right side - Icon actions */}
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setSupportOpen(true)}
-                className="group relative"
-                aria-label="Support"
-              >
-                <Heart className="w-4 h-4 text-pink-400/70 fill-pink-400/20 transition-all duration-200 group-hover:text-pink-500 group-hover:fill-pink-500/40 group-hover:scale-110" />
-              </button>
               <a
                 href="https://github.com/TimMikeladze/floppy"
                 target="_blank"
@@ -58,6 +50,14 @@ export function AppFooter() {
               >
                 <Github className="w-4 h-4 text-muted-foreground/70 transition-all duration-200 group-hover:text-foreground group-hover:scale-110" />
               </a>
+              <button
+                type="button"
+                onClick={() => setSupportOpen(true)}
+                className="group relative"
+                aria-label="Support"
+              >
+                <Heart className="w-4 h-4 text-pink-400/70 fill-pink-400/20 transition-all duration-200 group-hover:text-pink-500 group-hover:fill-pink-500/40 group-hover:scale-110" />
+              </button>
             </div>
           </div>
         </div>
