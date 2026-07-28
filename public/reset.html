@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Reset Floppy</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: #0d0d0d;
+        color: #fafafa;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        line-height: 1.5;
+      }
+      main {
+        max-width: 30rem;
+        width: 100%;
+        text-align: center;
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem;
+      }
+      p {
+        color: #a1a1aa;
+        margin: 0 0 1rem;
+      }
+      .note {
+        font-size: 0.875rem;
+        border: 1px solid #27272a;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        margin: 1.5rem 0;
+        text-align: left;
+      }
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      button,
+      .link {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font: inherit;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        border: 1px solid transparent;
+      }
+      .primary {
+        background: #fafafa;
+        color: #0d0d0d;
+      }
+      .primary:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .secondary {
+        background: transparent;
+        color: #a1a1aa;
+        border-color: #27272a;
+      }
+      #status {
+        margin-top: 1.25rem;
+        font-size: 0.875rem;
+        min-height: 1.25rem;
+      }
+      .ok {
+        color: #4ade80;
+      }
+      .err {
+        color: #ef4444;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Reset Floppy</h1>
+      <p>
+        This clears Floppy's offline cache and reinstalls its service worker. Use
+        it if the app is showing a blank page, raw text, or refusing to load.
+      </p>
+
+      <div class="note">
+        <strong>Your library is safe.</strong> This only clears cached copies of
+        the app itself. Your comics, bookmarks, notes, and reading progress are
+        stored separately and are not touched.
+      </div>
+
+      <div class="actions">
+        <button type="button" class="primary" id="reset">
+          Clear cache &amp; reinstall
+        </button>
+        <a class="link secondary" href="/">Back to Floppy</a>
+      </div>
+
+      <p id="status" aria-live="polite"></p>
+    </main>
+
+    <script>
+      // Deliberately dependency-free: this page has to work when the app
+      // bundle cannot run at all.
+      (() => {
+        const button = document.getElementById("reset");
+        const status = document.getElementById("status");
+
+        function say(message, className) {
+          status.textContent = message;
+          status.className = className || "";
+        }
+
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          say("Clearing…");
+
+          try {
+            if ("caches" in window) {
+              const names = await caches.keys();
+              await Promise.all(
+                names
+                  .filter((name) => name.indexOf("floppy-") === 0)
+                  .map((name) => caches.delete(name)),
+              );
+            }
+
+            if ("serviceWorker" in navigator) {
+              const registrations =
+                await navigator.serviceWorker.getRegistrations();
+              await Promise.all(
+                registrations.map((registration) => registration.unregister()),
+              );
+            }
+
+            say("Done. Reloading…", "ok");
+            // Cache-busted so the reload cannot be answered from any stale
+            // cache layer that survived.
+            setTimeout(() => {
+              window.location.replace(`/?sw-reset=${Date.now()}`);
+            }, 600);
+          } catch (error) {
+            console.error("[reset] Failed:", error);
+            say(
+              "Reset failed. Try clearing site data in your browser settings.",
+              "err",
+            );
+            button.disabled = false;
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

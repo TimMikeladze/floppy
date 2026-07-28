@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Offline — Floppy</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: #0d0d0d;
+        color: #fafafa;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        line-height: 1.5;
+        text-align: center;
+      }
+      main {
+        max-width: 28rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem;
+      }
+      p {
+        color: #a1a1aa;
+        margin: 0 0 1.5rem;
+      }
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      button,
+      a {
+        display: block;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font: inherit;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+      .primary {
+        background: #fafafa;
+        color: #0d0d0d;
+      }
+      .secondary {
+        background: transparent;
+        color: #a1a1aa;
+        border-color: #27272a;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>You're offline</h1>
+      <p>
+        Floppy couldn't load this page. Comics already saved to your device are
+        still available from your library.
+      </p>
+      <div class="actions">
+        <button type="button" class="primary" onclick="window.location.reload()">
+          Try again
+        </button>
+        <a class="secondary" href="/library">Go to library</a>
+        <a class="secondary" href="/reset.html">Reset the app</a>
+      </div>
+    </main>
+  </body>
+</html>
