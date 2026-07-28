@@ -145,7 +145,13 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js');
+                  // updateViaCache: 'none' keeps the browser's HTTP cache from
+                  // pinning a stale sw.js for up to 24h, so a fix to the worker
+                  // reaches users on their next load.
+                  navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+                    .catch(function(error) {
+                      console.error('[sw] Registration failed:', error);
+                    });
                 });
               }
             `,

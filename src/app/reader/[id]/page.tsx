@@ -36,12 +36,37 @@ import {
 } from "@/lib/storage";
 import type { Bookmark, Comic, RemotePage } from "@/lib/types";
 
+/**
+ * Resolve the comic id from the browser URL, falling back to the route params.
+ *
+ * When the service worker serves a cached reader document as an offline shell,
+ * the params baked into that document belong to whichever comic happened to be
+ * cached — not the one the user is opening. The pathname is always correct.
+ *
+ * Safe against hydration mismatches: the id is only read inside effects, never
+ * rendered.
+ */
+function resolveComicId(fallback: string): string {
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+  const match = window.location.pathname.match(/^\/reader\/([^/?#]+)/);
+  if (!match?.[1]) {
+    return fallback;
+  }
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
 export default function ReaderPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  const { id: routeId } = use(params);
   const { settings } = useReading();
   const [comic, setComic] = useState<Comic | null>(null);
   const [pageUrls, setPageUrls] = useState<string[]>([]);
@@ -251,7 +276,7 @@ export default function ReaderPage({
 
   async function loadComic() {
     try {
-      const loadedComic = await getComic(id);
+      const loadedComic = await getComic(resolveComicId(routeId));
       if (!loadedComic) {
         toast.error("Comic not found", {
           description: "This comic could not be loaded",
