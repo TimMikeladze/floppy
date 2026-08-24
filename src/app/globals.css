@@ -202,30 +202,35 @@
   --safe-area-left: env(safe-area-inset-left, 0px);
 }
 
-/* Safe area utility classes */
+/* Safe area utility classes
+ *
+ * These live outside Tailwind's `utilities` layer, so their padding wins over a
+ * `px-*` / `py-*` utility on the same element. Set `--safe-px` / `--safe-py`
+ * instead: it is the padding the element keeps when the device reports no
+ * inset, and the inset takes over once it grows past it. */
 .safe-top {
-  padding-top: var(--safe-area-top);
+  padding-top: max(var(--safe-py, 0px), var(--safe-area-top));
 }
 
 .safe-bottom {
-  padding-bottom: var(--safe-area-bottom);
+  padding-bottom: max(var(--safe-py, 0px), var(--safe-area-bottom));
 }
 
 .safe-x {
-  padding-left: var(--safe-area-left);
-  padding-right: var(--safe-area-right);
+  padding-left: max(var(--safe-px, 0px), var(--safe-area-left));
+  padding-right: max(var(--safe-px, 0px), var(--safe-area-right));
 }
 
 .safe-y {
-  padding-top: var(--safe-area-top);
-  padding-bottom: var(--safe-area-bottom);
+  padding-top: max(var(--safe-py, 0px), var(--safe-area-top));
+  padding-bottom: max(var(--safe-py, 0px), var(--safe-area-bottom));
 }
 
 .safe-all {
-  padding-top: var(--safe-area-top);
-  padding-right: var(--safe-area-right);
-  padding-bottom: var(--safe-area-bottom);
-  padding-left: var(--safe-area-left);
+  padding-top: max(var(--safe-py, 0px), var(--safe-area-top));
+  padding-right: max(var(--safe-px, 0px), var(--safe-area-right));
+  padding-bottom: max(var(--safe-py, 0px), var(--safe-area-bottom));
+  padding-left: max(var(--safe-px, 0px), var(--safe-area-left));
 }
 
 /* Touch target utility for mobile accessibility */
