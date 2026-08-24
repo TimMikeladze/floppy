@@ -42,7 +42,7 @@ export function ReaderToolbar({
         isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
       }`}
     >
-      <div className="relative flex items-center gap-1 px-2 py-3 safe-top safe-x">
+      <div className="relative flex items-center gap-1 safe-top safe-x [--safe-px:0.75rem] [--safe-py:0.75rem] pb-3">
         <Button
           asChild
           variant="ghost"

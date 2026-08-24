@@ -154,7 +154,7 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="safe-top safe-x bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" />
-        <div className="flex items-center h-14 px-3 sm:px-4 md:px-6 gap-3 mx-auto w-full max-w-screen-2xl safe-x">
+        <div className="flex items-center h-14 gap-3 mx-auto w-full max-w-screen-2xl safe-x [--safe-px:0.75rem] sm:[--safe-px:1rem] md:[--safe-px:1.5rem]">
           <Link href="/library">
             <Button variant="ghost" size="icon" className="h-9 w-9">
               <ArrowLeft className="h-5 w-5" />

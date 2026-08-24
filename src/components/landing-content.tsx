@@ -285,7 +285,7 @@ export function LandingContent({ onGetStarted }: LandingContentProps) {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border/40 bg-background/80 backdrop-blur-xl">
         <div className="safe-top safe-x bg-background/80 backdrop-blur-xl" />
-        <div className="flex items-center justify-between h-14 px-4 sm:px-6 md:px-8 mx-auto w-full max-w-screen-xl safe-x">
+        <div className="flex items-center justify-between h-14 mx-auto w-full max-w-screen-xl safe-x [--safe-px:1rem] sm:[--safe-px:1.5rem] md:[--safe-px:2rem]">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-foreground rounded-sm flex items-center justify-center">
               <div className="w-3 h-3 bg-background rounded-[2px]" />
